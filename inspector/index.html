@@ -201,6 +201,18 @@ html:not(.simple) .panel { overflow:visible; }
   html.dk table.dkt td.dka { width:1%; white-space:nowrap; }
   html.dk table.dkt td .btn { margin:0 0 4px; width:auto; min-height:34px; padding:4px 12px; }
 }
+/* UXD-212 (the owner, 2026-11-24): on a desktop the sign-in screens are a two-column web page: a panel on the left (what
+   the portal is for, help, the licence holders' sign-in, the SIMULATED note) and the form on the right, shown whole with no
+   scrollbar inside its box. On a phone nothing changes. */
+@media (min-width:821px) {
+  html.j1 .phone .j1main { flex:1 1 auto; min-height:0; overflow:auto; display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 460px); gap:56px; width:calc(100% - 48px); max-width:1060px; margin:0 auto; padding:28px 0; align-items:center; align-content:center; }
+  html.j1 .phone .j1main > .scr { margin:0; width:auto; max-width:none; overflow:visible; flex:none; }
+  html.j1 .j1side { font-size:14px; line-height:1.5; }
+  html.j1 .j1side h2 { font-size:24px; margin:0 0 8px; }
+  html.j1 .j1side h3 { font-size:14px; margin:20px 0 6px; }
+  html.j1 .j1side .lnk { display:block; margin:4px 0; padding:0; text-align:left; }
+  html.j1 .j1side .sim { margin-top:20px; font-size:12px; }
+}
 html.simple .banner, html.simple .panel, html.simple #where { display:none !important; }
 html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:center; }
 </style>
@@ -6829,6 +6841,24 @@ function dkLayout() {
 const dkRender = render;
 render = function (...a) { const r = dkRender(...a); dkLayout(); return r; };
 DK_WIDE.addEventListener('change', () => render());
+render();
+/* ---------------- UXD-212 (the owner, 2026-11-24): the desktop sign-in as a two-column web page. After the page is drawn,
+   on a desktop sign-in screen: a left panel (what the portal is for; help; the licence holders' link from the foot; the
+   SIMULATED notes taken out of the form) and the form on the right, whole, with no scrollbar inside its box. ---------------- */
+function j1Layout() {
+  const ph = $('phone'); if (!ph || !document.documentElement.classList.contains('j1') || !DK_WIDE.matches) return;
+  const scr = ph.querySelector(':scope > .scr'); if (!scr || ph.querySelector('.j1main')) return;
+  const main = document.createElement('div'); main.className = 'j1main';
+  const side = document.createElement('aside'); side.className = 'j1side';
+  side.innerHTML = '<h2>Input Quality Control</h2><p>The Agriculture Department\'s portal for the quality of seeds, fertilisers and insecticides: inspections, samples, notices and the acts that follow, for its inspectors and officers.</p>'
+    + `<h3>Need help?</h3>${S.screen === 'lost' ? '' : '<button class="lnk" data-act="lost">No longer have this mobile?</button>'}`;
+  const foot = ph.querySelector(':scope > .foot');
+  if (foot && foot.textContent.trim()) { const h = document.createElement('h3'); h.textContent = 'Licence holders'; side.appendChild(h); [...foot.children].forEach((c) => side.appendChild(c)); foot.remove(); }
+  scr.querySelectorAll(':scope > .sim').forEach((x) => side.appendChild(x));
+  ph.insertBefore(main, scr); main.append(side, scr);
+}
+const j1Render = render;
+render = function (...a) { const r = j1Render(...a); j1Layout(); return r; };
 render();
 
 // The owner of the shared page sees the prototype controls; everyone else only the phone screen.
