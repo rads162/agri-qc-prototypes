@@ -177,6 +177,8 @@ body { display:flex; flex-direction:column; height:100vh; height:100dvh; overflo
   .panel { margin:16px 8px; }
 }
 html.simple .banner, html.simple .panel, html.simple #where { display:none !important; }
+/* RMD-60 (the owner, 2026-11-24): the Role and Layout buttons only on the link with the prototype controls */
+html.simple .bar { display:none !important; }
 </style>
 </head>
 <body>
@@ -1020,6 +1022,12 @@ function renderControls() {
 }
 const QJUMP = [['home', 'Q-01 Home: Due for you'], ['mfg', 'Q-02 Manufacturers due'], ['unit:M5', 'Q-03 An overdue unit'], ['grades', 'Q-04 Sampling by company and grade'], ['forum', 'Q-05 Consumer-forum register'], ['fcase:C1', 'Q-06 A case with a hearing soon'], ['inspect', 'Q-07 Inspect'], ['alerts', 'Q-08 Alerts'], ['dash', 'D-18 Dashboard (shared)'], ['people', 'D-19 Inspectors in your area (shared)'], ['who:A.O.(TAO) Baramati', 'D-11 An inspector\'s items (shared)'], ['ann', 'D-16 Announcements (shared)'], ['refs', 'A DSAO screen (refused)']];
 const DJUMP = [['home', 'D-01 Home'], ['refs', 'D-02 Licence referrals'], ['ref:R1', 'D-03 Referral (Patil Traders)'], ['ref:R5', 'D-03 State-level licence (exception)'], ['orders', 'D-04 Orders and suspensions'], ['order:0139', 'D-05 Order with condition met'], ['divs', 'D-06 Shop divisions'], ['div:Baramati', 'D-07 Division to approve'], ['late', 'D-08 Late steps'], ['insp', 'D-09 Inspections'], ['who:A.O.(TAO) Baramati', 'D-11 An inspector\'s items'], ['samp', 'D-12 Sampling watch'], ['court', 'D-13 Court cases'], ['seized', 'D-14 Seized stock'], ['intel', 'D-15 Intelligence sent'], ['ann', 'D-16 Announcements'], ['dash', 'D-18 Dashboard'], ['people', 'D-19 Inspectors in your area'], ['inspect', 'D-20 Inspect'], ['alerts', 'D-21 Alerts']];
+/* RMD-60: without the controls there is no Layout switch, so the layout follows the screen, also when the
+   window is resized (the phone layout at 820 px wide or less, RMD-56) */
+if (document.documentElement.classList.contains('simple') && window.matchMedia) {
+  const narrow = matchMedia('(max-width:820px)');
+  narrow.addEventListener('change', () => { S.view = narrow.matches ? 'phone' : 'desk'; S.sheet = false; render(); });
+}
 renderControls();
 log('Prototype loaded. All data is sample; every answer is simulated.');
 render();
