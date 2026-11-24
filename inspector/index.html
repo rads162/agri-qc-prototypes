@@ -134,6 +134,15 @@ body { display:flex; flex-direction:column; height:100vh; height:100dvh; overflo
   .phone { max-width:none; border:0; border-radius:0; }
   .panel { margin:0 8px 16px; }
 }
+/* UXD-208 (the owner, 2026-11-24): on the link with the prototype controls, the controls sit below the screen, not
+   beside it. The screen (phone or desktop) still fills the window under the banner; scroll down to the controls. */
+html:not(.simple) body { display:block; height:auto; overflow:visible; }
+html:not(.simple) .wrap { grid-template-columns:minmax(0,1fr); grid-template-rows:none; }
+html:not(.simple) .wrap > :first-child { width:100%; max-width:380px; justify-self:center; height:calc(100vh - var(--above, 0px) - 32px); height:calc(100dvh - var(--above, 0px) - 32px); }
+html:not(.simple) .panel { overflow:visible; }
+@media (max-width:500px) {
+  html:not(.simple) .wrap > :first-child { max-width:none; height:calc(100vh - var(--above, 0px)); height:calc(100dvh - var(--above, 0px)); }
+}
 html.simple .banner, html.simple .panel, html.simple #where { display:none !important; }
 html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:center; }
 </style>
@@ -6551,6 +6560,9 @@ $('scenarios').addEventListener('click', (e) => { const b = e.target.closest('[d
 
 reset(); render();
 hint('Pick a scenario, or sign in with a made-up officer below.');
+/* UXD-208: the height of what sits above the screen (the banner), so the screen fills the rest of the window */
+(() => { const fit = () => { const h = [...document.querySelectorAll('.banner, .page > .bar')].reduce((a, el) => a + el.offsetHeight, 0);
+  document.documentElement.style.setProperty('--above', `${h}px`); }; fit(); addEventListener('resize', fit); })();
 
 // The owner of the shared page sees the prototype controls; everyone else only the phone screen.
 (async () => {

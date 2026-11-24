@@ -127,6 +127,15 @@ body { display:flex; flex-direction:column; height:100vh; height:100dvh; overflo
   .phone { max-width:none; border:0; border-radius:0; }
   .panel { margin:0 8px 16px; }
 }
+/* SXD-18 (the owner, 2026-11-24): on the link with the prototype controls, the controls sit below the screen, not
+   beside it. The screen (phone or desktop) still fills the window under the banner; scroll down to the controls. */
+html:not(.simple) body { display:block; height:auto; overflow:visible; }
+html:not(.simple) .wrap { grid-template-columns:minmax(0,1fr); grid-template-rows:none; }
+html:not(.simple) .wrap > :first-child { width:100%; max-width:380px; justify-self:center; height:calc(100vh - var(--above, 0px) - 32px); height:calc(100dvh - var(--above, 0px) - 32px); }
+html:not(.simple) .panel { overflow:visible; }
+@media (max-width:500px) {
+  html:not(.simple) .wrap > :first-child { max-width:none; height:calc(100vh - var(--above, 0px)); height:calc(100dvh - var(--above, 0px)); }
+}
 html.simple .banner, html.simple .panel, html.simple #where { display:none !important; }
 html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:center; }
 </style>
@@ -889,6 +898,9 @@ $('restart').addEventListener('click', () => { D = freshData(); reset(S.biz); lo
 ['cLink', 'cAddr'].forEach((id) => $(id).addEventListener('change', () => { if ($('cAddr').checked && S.screen === 'sms') { S.arrived = 'address'; S.screen = 'signin'; log('opened the portal’s address directly'); } render(); }));
 ['cApp', 'cTwo'].forEach((id) => $(id).addEventListener('change', () => render()));
 reset('patil'); log('scenario: Patil Traders, Baramati; the Department’s SMS has arrived'); hint(SCEN[0][2]); render();
+/* SXD-18: the height of what sits above the screen (the banner), so the screen fills the rest of the window */
+(() => { const fit = () => { const h = [...document.querySelectorAll('.banner, .page > .bar')].reduce((a, el) => a + el.offsetHeight, 0);
+  document.documentElement.style.setProperty('--above', `${h}px`); }; fit(); addEventListener('resize', fit); })();
 
 // The owner of the shared page sees the prototype controls; everyone else only the phone screen.
 (async () => {
