@@ -213,6 +213,34 @@ html:not(.simple) .panel { overflow:visible; }
   html.j1 .j1side .lnk { display:block; margin:4px 0; padding:0; text-align:left; }
   html.j1 .j1side .sim { margin-top:20px; font-size:12px; }
 }
+/* UXD-218 (the owner, 2026-11-24; phase 10): a tablet held upright (a window 501 to 820 px wide) gets the app layout
+   filling the screen: no phone outline, the bottom bar across the width, the content in a reading column of about 640 px
+   in the middle. Turned sideways (821 px or more) it gets the desktop web portal (UXD-211); a phone is unchanged. */
+@media (min-width:501px) and (max-width:820px) {
+  .wrap { padding:0; }
+  .wrap > :first-child { height:100vh; height:100dvh; }
+  html:not(.simple) .wrap > :first-child { max-width:none; height:calc(100vh - var(--above, 0px)); height:calc(100dvh - var(--above, 0px)); }
+  .phone { max-width:none; border:0; border-radius:0; }
+  .panel { margin:0 8px 16px; }
+  .phone > .scr { padding-left:max(16px, calc(50% - 320px)); padding-right:max(16px, calc(50% - 320px)); }
+  .phone > .top { padding-left:max(8px, calc(50% - 328px)); padding-right:max(8px, calc(50% - 328px)); }
+  .phone .sheet, .phone .menu { max-width:640px; margin-left:auto; margin-right:auto; }
+}
+/* UXD-220 (the owner, 2026-11-24; phase 10): the app view on the link with the controls: the phone screens inside an app
+   frame (status bar, the Android Back / Home bar or the iPhone home bar) with the app's own behaviours, UXD-176 to UXD-184 */
+html.appv .phone > .appstat { flex:none; display:flex; justify-content:space-between; align-items:center; gap:6px; font-size:11px; padding:3px 12px; background:#111; color:#fff; }
+html.appv .appstat button { background:none; border:1px solid #777; color:#fff; border-radius:8px; font-size:10px; padding:0 6px; cursor:pointer; min-height:18px; }
+html.appv .phone > .appnav { flex:none; display:flex; justify-content:space-around; align-items:center; background:#111; min-height:36px; }
+html.appv .appnav button { background:none; border:0; color:#fff; font-size:13px; cursor:pointer; min-width:64px; min-height:32px; }
+html.appv .appnav .homebar { width:120px; height:5px; border-radius:3px; background:#fff; }
+html.appv .appov { position:absolute; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:40; }
+html.appv .appdlg { background:#fff; border-radius:16px; padding:16px; width:86%; font-size:14px; text-align:left; }
+html.appv .appdlg b { display:block; margin-bottom:6px; }
+html.appv .appdlg button { display:block; width:100%; margin-top:8px; min-height:40px; border:1px solid var(--line); border-radius:20px; background:#fff; cursor:pointer; font-size:14px; }
+html.appv .appdlg button.main { background:var(--ink); color:#fff; border-color:var(--ink); }
+html.appv .appnote { position:absolute; top:24px; left:8px; right:8px; z-index:41; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,.25); padding:10px 12px; font-size:13px; text-align:left; cursor:pointer; width:auto; }
+html.appv .phone > .appkb { flex:none; display:flex; justify-content:space-between; align-items:center; gap:8px; background:#e8e8ea; border-top:1px solid var(--line); padding:8px 12px; font-size:13px; }
+html.appv .appkb button { border:1px solid var(--line); background:#fff; border-radius:8px; padding:4px 10px; cursor:pointer; min-height:32px; }
 /* UXD-213 (the owner, 2026-11-24): on the link with the prototype controls, Layout buttons switch between the desktop web
    portal and the phone app, as on the officer and seller prototypes; the link without the controls follows the screen. */
 .lbar { display:flex; flex-wrap:wrap; gap:6px 12px; align-items:center; max-width:1180px; margin:0 auto; padding:10px 16px 0; }
@@ -230,7 +258,7 @@ html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:cente
 <script>document.documentElement.classList.add("simple");</script>
 <div class="banner"><b>PROTOTYPE</b> · Inspector's web portal, journeys J1 (getting in), J2 (finding your way), J3 (My work, Dashboard and reports), J4 (finding a firm and inspecting it), J5 (drawing and sending a sample), J6 (notice and the firm's reply), J7 (enforcement acts), J8 (laboratory result and what follows) and J9 (targets, time limits and profile) · Low fidelity · <b>Every server answer here is SIMULATED</b>: nothing is sent, no SMS goes out, all names and codes are made up.</div>
 
-<div class="lbar"><span class="lbl">Layout</span><div class="seg" role="group" aria-label="Layout" id="layout"><button type="button" data-view="desk" aria-pressed="true">Desktop (web portal)</button><button type="button" data-view="phone" aria-pressed="false">Phone (app)</button></div><span class="lbl" id="layoutNote">The same screens, rules and words in both; only the layout differs (UXD-211, UXD-213)</span></div>
+<div class="lbar"><span class="lbl">Layout</span><div class="seg" role="group" aria-label="Layout" id="layout"><button type="button" data-view="desk" aria-pressed="true">Desktop (web portal)</button><button type="button" data-view="phone" aria-pressed="false">Phone (app)</button><button type="button" data-view="app" aria-pressed="false">App (Android / iPhone)</button></div><span class="lbl" id="layoutNote">The same screens, rules and words in both; only the layout differs (UXD-211, UXD-213)</span></div>
 
 <div class="wrap">
   <div>
@@ -6921,6 +6949,134 @@ PLACES.before = (...a) => {
   const h = tgBefore(...a); const card = tgtReminder(); if (!card) return h;
   const at = h.indexOf('</h2>'); return at < 0 ? card + h : h.slice(0, at + 5) + card + h.slice(at + 5);
 };
+/* ---------------- UXD-220 (the owner, 2026-11-24; phase 10): the app view. On the link with the controls the third Layout
+   button, "App (Android / iPhone)", shows the phone screens inside an app frame with the app's behaviours decided in
+   UXD-176 to UXD-184, each marked SIMULATED where a browser can only imitate it: the phone-lock unlock (176), entries kept
+   on the phone (177, as built), the one-tap code (178), the tab bar and the phone's Back (179), the notification that names
+   nothing (180), permissions at first use (181), Scan next / Done (182), the app on Profile's devices (183) and the quiet
+   update line (184). The public link and the web portal are unchanged. ---------------- */
+const APP = { on: false, os: 'Android', dlg: null, perm: { notif: null, loc: null, cam: null }, noteSeen: false, smsDone: false };
+const appSim = '<span class="hint" style="display:block;margin-top:6px">SIMULATED: the phone does this, not the portal.</span>';
+function appDialog() {
+  const plat = APP.os === 'Android';
+  const D = {
+    lock: `<b>Agri QC is locked</b>Use your fingerprint, face or screen lock to open it (UXD-176). Anything you were typing is kept.<button class="main" data-act="appUnlock">Unlock</button><button data-act="appClose">Cancel</button>${appSim}`,
+    sms: `<b>Allow Agri QC to read this message?</b>"Your one-time code is ${esc((S.otp && S.otp.value) || '')}"<button class="main" data-act="appSmsAllow">Allow</button><button data-act="appSmsDeny">Deny</button>${appSim}`,
+    notif1: '<b>Alerts</b>Alerts for acts due. They never name a firm or a case.<button class="main" data-act="appNotifAsk">Continue</button>',
+    notif2: `<b>Allow Agri QC to send you notifications?</b><button class="main" data-act="appNotif" data-v="1">Allow</button><button data-act="appNotif" data-v="0">Don't allow</button>${appSim}`,
+    loc1: '<b>Location</b>Agri QC records where each inspection is made. Choose Precise and While using the app.<button class="main" data-act="appLocAsk">Continue</button>',
+    loc2: `<b>Allow Agri QC to access this device's location?</b><label class="check" style="margin:6px 0"><input type="checkbox" id="appPrecise" checked> Precise</label><button class="main" data-act="appLoc" data-v="use">While using the app</button><button data-act="appLoc" data-v="once">Only this time</button><button data-act="appLoc" data-v="no">Don't allow</button>${appSim}`,
+    locNo: '<b>Allow precise location for Agri QC</b>The inspection cannot start without your precise position; a made-up location is not accepted.<button class="main" data-act="appLocAsk">Try again</button><button data-act="appLocSettings">Open settings</button><button data-act="appLocBack">Back to My work</button>',
+    cam1: '<b>Camera</b>The camera reads product codes and licence QR codes, and takes the photos.<button class="main" data-act="appCamAsk">Continue</button>',
+    cam2: `<b>Allow Agri QC to take pictures and record video?</b><button class="main" data-act="appCam" data-v="1">While using the app</button><button data-act="appCam" data-v="1">Only this time</button><button data-act="appCam" data-v="0">Don't allow</button>${appSim}`,
+  };
+  if (!plat && APP.dlg === 'sms') return '';
+  return D[APP.dlg] ? `<div class="appov"><div class="appdlg" role="dialog" aria-modal="true">${D[APP.dlg]}</div></div>` : '';
+}
+function appLayout() {
+  const root = document.documentElement; root.classList.toggle('appv', APP.on);
+  const lay = document.getElementById('layout');
+  if (lay && APP.on) lay.querySelectorAll('[data-view]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === 'app')));
+  if (!APP.on) return;
+  const ph = $('phone'); if (!ph) return;
+  const inside = S.screen === 'inside' && S.me;
+  // the frame
+  const st = document.createElement('div'); st.className = 'appstat';
+  st.innerHTML = `<span>9:41</span><button data-act="appOs" title="Switch Android / iPhone">${APP.os} ▾</button><span>${noSignal() ? 'No signal' : '4G ▮▮▮'} · 80 %</span>`;
+  ph.insertBefore(st, ph.firstChild);
+  const nav = document.createElement('div'); nav.className = 'appnav';
+  nav.innerHTML = APP.os === 'Android' ? '<button data-act="appBack" aria-label="Back">◁ Back</button><button data-act="appHome" aria-label="Home">○</button><button data-act="appRecent" aria-label="Recent apps">□</button>' : '<span class="homebar" aria-hidden="true"></span>';
+  ph.appendChild(nav);
+  const scr = ph.querySelector(':scope > .scr');
+  // UXD-176: no "Remember this device"; a remembered phone opens with the phone's own lock
+  if (S.screen === 'signin' && scr) {
+    const rem = scr.querySelector('#remember'); if (rem) { const c = rem.closest('.check'); if (c) c.remove(); }
+    const card = document.createElement('div'); card.className = 'sim';
+    card.innerHTML = 'SIMULATED · On a phone where you have signed in before, the app opens with the phone\'s own lock instead of this screen, and again after 5 minutes away (UXD-176). <button class="lnk" data-act="appLock" style="margin:0">Reopen the app on a remembered phone</button>';
+    scr.insertBefore(card, scr.firstChild);
+  }
+  // UXD-178: the code filled in with one tap (sign-in and forgotten password only)
+  if (!inside && scr && scr.querySelector('#otp') && S.otp && S.otp.arrived && S.otp.value && !APP.smsDone) {
+    if (APP.os === 'Android') { if (!APP.dlg) APP.dlg = 'sms'; }
+    else { const kb = document.createElement('div'); kb.className = 'appkb'; kb.innerHTML = `<span>From Messages</span><button data-act="appFill">${esc(S.otp.value)}</button>`; ph.insertBefore(kb, nav); }
+  }
+  if (inside) {
+    // UXD-181: notifications asked after the first sign-in
+    if (APP.perm.notif === null && !APP.dlg) APP.dlg = 'notif1';
+    // UXD-181: location at the first Start of an inspection, camera at the first scan
+    if (S.place === 'before' && APP.perm.loc === null && !APP.dlg) APP.dlg = 'loc1';
+    if (S.jsheet === 'product' && J() && J().ps && J().ps.step === 'scan' && APP.perm.cam === null && !APP.dlg) APP.dlg = 'cam1';
+    if (S.jsheet === 'product' && APP.perm.cam === false) { const sh = ph.querySelector('.sheet'); if (sh && !sh.querySelector('.appcamoff')) sh.insertAdjacentHTML('afterbegin', '<div class="msg note appcamoff">Camera off: use No code on the product and type the details. A product with no code still needs its photo.</div>'); }
+    // UXD-182: Scan next / Done after each read
+    const add = ph.querySelector('.sheet [data-act="j4addProd"]');
+    if (add) add.outerHTML = '<button data-act="appScanNext" class="btn main" style="text-align:center;color:#fff">Scan next</button><button data-act="appScanDone" class="btn alt" style="text-align:center">Done</button><p class="hint">A short vibration confirms each read (UXD-182, SIMULATED).</p>';
+    // UXD-184: the quiet update line on My work
+    if (S.place === 'mywork' && scr) scr.insertAdjacentHTML('afterbegin', '<p class="hint" style="margin:0 0 8px">A new version is ready · <button class="lnk" data-act="appUpdate" style="margin:0;min-height:24px">Update</button></p>');
+    // UXD-183: the app among the remembered devices; UXD-181: notifications off
+    if (S.place === 'profile' && scr) {
+      const me = [...scr.querySelectorAll('.card')].find((c) => c.querySelector('.tag') && /This device/.test(c.textContent));
+      if (me) { const b = me.querySelector('b'); if (b && b.firstChild) b.firstChild.textContent = APP.os === 'Android' ? 'Agri QC app · Galaxy A14 · Android ' : 'Agri QC app · iPhone 13 · iPhone '; me.insertAdjacentHTML('afterend', '<p class="hint">Signing out a phone also clears it, including anything not yet sent from it.</p>'); }
+      if (APP.perm.notif === false) scr.insertAdjacentHTML('afterbegin', '<div class="msg note">Notifications are off. <button class="lnk" data-act="appSettings" style="margin:0">Open settings</button></div>');
+    }
+    // UXD-180: the notification names nothing
+    const n = unread();
+    if (APP.perm.notif === true && n && !APP.noteSeen && S.place !== 'alerts' && !APP.dlg) {
+      ph.insertAdjacentHTML('beforeend', `<button class="appnote" data-act="appNote"><b>Agri QC</b> · now<br>Agri QC: ${n} new alert${n === 1 ? '' : 's'}<span class="hint" style="display:block">SIMULATED: a phone notification; it never names a firm, case or person (UXD-180).</span></button>`);
+    }
+  }
+  const d = appDialog(); if (d) ph.insertAdjacentHTML('beforeend', d);
+}
+function appSignIn(code) {
+  const o = officer(code); S.me = { code, ...o }; S.signedIn = true; S.acting = o.posts[0][0]; S.place = 'home'; go('inside');
+}
+Object.assign(ACT, {
+  appOs: () => { APP.os = APP.os === 'Android' ? 'iPhone' : 'Android'; log(`app view: ${APP.os}`); render(); },
+  appClose: () => { APP.dlg = null; render(); },
+  appLock: () => { APP.dlg = 'lock'; render(); },
+  appUnlock: () => { APP.dlg = null; log('app: unlocked with the phone\'s own lock (UXD-176); no password asked'); appSignIn('101101'); },
+  appSmsAllow: () => { APP.dlg = null; APP.smsDone = true; const v = S.otp && S.otp.value; render(); const el = $('otp'); if (el && v) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } log('app: the one-time code filled in from the message (UXD-178)'); },
+  appSmsDeny: () => { APP.dlg = null; APP.smsDone = true; render(); },
+  appFill: () => { APP.smsDone = true; const v = S.otp && S.otp.value; render(); const el = $('otp'); if (el && v) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } log('app: the one-time code filled in From Messages (UXD-178)'); },
+  appNotifAsk: () => { APP.dlg = 'notif2'; render(); },
+  appNotif: (b) => { APP.perm.notif = b.dataset.v === '1'; APP.dlg = null; log(`app: notifications ${APP.perm.notif ? 'allowed' : 'refused (nothing is blocked)'}`); render(); },
+  appLocAsk: () => { APP.dlg = 'loc2'; render(); },
+  appLoc: (b) => {
+    const precise = !!($('appPrecise') && $('appPrecise').checked);
+    if (b.dataset.v === 'no' || !precise) { APP.dlg = 'locNo'; log('app: location refused or approximate: the inspection cannot start (UXD-181)'); return render(); }
+    APP.perm.loc = b.dataset.v; APP.dlg = null; log(`app: precise location ${b.dataset.v === 'use' ? 'while using the app' : 'this time only'}`); render();
+  },
+  appLocSettings: () => toast('Opens the phone\'s settings for Agri QC (SIMULATED).'),
+  appLocBack: () => { APP.dlg = null; ACT.nav({ dataset: { place: 'mywork' } }); },
+  appCamAsk: () => { APP.dlg = 'cam2'; render(); },
+  appCam: (b) => { APP.perm.cam = b.dataset.v === '1'; APP.dlg = null; log(`app: camera ${APP.perm.cam ? 'allowed' : 'refused: scanning falls back to typing'}`); render(); },
+  appScanNext: () => { const j = J(); const inp = j.ps.input; ACT.j4addProd(); j.ps = { input: inp, step: 'scan', photo: false, v: {}, lot: '', typed: false, tname: '', card: null, msg: '' }; S.jsheet = 'product'; render(); },
+  appScanDone: () => ACT.j4addProd(),
+  appUpdate: () => toast('Opens Agri QC in Google Play or the App Store (SIMULATED). Entries on the phone survive the update.'),
+  appSettings: () => toast('Opens the phone\'s notification settings for Agri QC (SIMULATED).'),
+  appNote: () => { APP.noteSeen = true; ACT.nav({ dataset: { place: 'alerts' } }); },
+  appHome: () => toast('Home: the app keeps your place and your entries (SIMULATED).'),
+  appRecent: () => toast('Recent apps (SIMULATED).'),
+  appBack: () => {
+    if (APP.dlg) { APP.dlg = null; return render(); }
+    if (S.sheet || S.menu || S.dialog || S.jsheet || S.filtOpen) { S.sheet = false; S.menu = false; S.dialog = null; S.jsheet = null; S.filtOpen = false; return render(); }
+    const ph = $('phone');
+    const back = [...ph.querySelectorAll('.top button, .scr button')].find((b) => /^‹/.test(b.textContent.trim()) || b.dataset.act === 'back');
+    if (back) { log('app: Back = the ‹ link at the top (UXD-179)'); return back.click(); }
+    if (S.screen === 'inside' && S.place !== 'mywork' && S.place !== 'area') return ACT.nav({ dataset: { place: S.me && S.me.kind === 'supervisory' ? 'area' : 'mywork' } });
+    toast('Back from My work leaves the app; it asks nothing (UXD-179).');
+  },
+});
+(() => {
+  const lay = document.getElementById('layout'); if (!lay) return;
+  lay.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-view]'); if (!b || b.disabled) return;
+    const on = b.dataset.view === 'app'; if (on === APP.on) return;
+    APP.on = on; log(on ? `layout: the Android / iPhone app (UXD-176 to UXD-184, ${APP.os})` : 'layout: app view off'); render();
+  });
+})();
+const appRender = render;
+render = function (...a) { const r = appRender(...a); appLayout(); return r; };
+render();
 
 // The owner of the shared page sees the prototype controls; everyone else only the phone screen.
 (async () => {
