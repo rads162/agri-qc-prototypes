@@ -158,6 +158,49 @@ html:not(.simple) .panel { overflow:visible; }
   html.j1 .phone .scr { flex:0 1 auto; min-height:0; width:calc(100% - 32px); max-width:440px; margin:32px auto 16px; background:#fff; border:1px solid var(--line); border-radius:8px; padding:24px 28px; }
   html.j1 .phone .foot { flex:none; border-top:0; padding:0 0 24px; }
 }
+/* UXD-211 (the owner, 2026-11-24; phase 9, desktop): after an inspector signs in, a desktop browser (wider than 820 px)
+   shows the web portal, not a phone: the top bar across the width and a left menu in place of the bottom bar and More
+   (the officers' desktop frame). Lists and reports are tables; records are two columns (details and papers left, what
+   follows and the act's buttons right); field steps (checklist, sample, notice, stop sale, seizure forms) keep one centred
+   column of about 720 px with the phone's steps and buttons. Same features as the phone; on a phone nothing changes. */
+@media (min-width:821px) {
+  html.dk body .wrap > :first-child { max-width:none; }
+  html.dk body .phone { max-width:none; max-height:none; border-radius:8px; display:grid; grid-template-columns:220px minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) auto; }
+  html.dk.simple body .wrap { grid-template-columns:minmax(0,1fr); max-width:none; padding:0; }
+  html.dk.simple body .phone { border:0; border-radius:0; }
+  html.dk .phone > * { grid-column:2; min-width:0; }
+  html.dk .phone > .top { grid-column:1 / -1; grid-row:1; padding:0 16px; min-height:52px; }
+  html.dk .phone > .dside { grid-column:1; grid-row:2 / 4; }
+  html.dk .phone > .scr { grid-row:2; padding:18px 28px 28px; }
+  html.dk .phone > .bbar { display:none; }
+  html.dk .dside { border-right:1px solid var(--line); overflow:auto; padding:8px 0; background:#fff; }
+  html.dk .dside .grp { font-size:11px; color:var(--soft, #666); text-transform:uppercase; letter-spacing:.05em; padding:12px 16px 4px; }
+  html.dk .dside button { display:flex; justify-content:space-between; align-items:center; width:100%; text-align:left; border:0; background:#fff; padding:8px 16px; cursor:pointer; font-size:13px; min-height:38px; }
+  html.dk .dside button.on { font-weight:700; background:var(--fill); }
+  html.dk .dside .n { border:1px solid var(--ink); border-radius:9px; font-size:10px; padding:0 5px; font-weight:700; font-style:normal; }
+  html.dk .sheet, html.dk .menu { max-width:420px; }
+  /* field steps: one centred column, no left menu */
+  html.dk.dkf .phone { grid-template-columns:minmax(0,1fr); }
+  html.dk.dkf .phone > * { grid-column:1; }
+  html.dk.dkf .phone > .dside { display:none; }
+  html.dk.dkf .phone > :not(.top):not(.shade) { width:min(720px, 100%); justify-self:center; }
+  /* My work and the Dashboard: the sections side by side */
+  html.dk .scr.dkgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:14px 18px; align-content:start; }
+  html.dk .scr.dkgrid > * { grid-column:1 / -1; }
+  html.dk .scr.dkgrid > .secc { grid-column:auto; margin:0; }
+  /* lists of choices: one row each, the name then the details */
+  html.dk .scr .choice { display:grid; grid-template-columns:minmax(180px, 30%) minmax(0, 1fr); column-gap:16px; align-items:baseline; text-align:left; }
+  /* records: two columns */
+  html.dk .dk2 { display:grid; grid-template-columns:minmax(0, 3fr) minmax(300px, 2fr); gap:28px; align-items:start; }
+  html.dk .dk2 > * { min-width:0; }
+  /* reports: tables */
+  html.dk table.dkt { width:100%; border-collapse:collapse; font-size:13px; margin-top:8px; }
+  html.dk table.dkt th { text-align:left; font-size:12px; color:var(--soft, #666); border-bottom:2px solid var(--ink); padding:6px 8px; }
+  html.dk table.dkt td { border-bottom:1px solid var(--line); padding:8px; vertical-align:top; }
+  html.dk table.dkt td.dkn { font-weight:700; width:22%; }
+  html.dk table.dkt td.dka { width:1%; white-space:nowrap; }
+  html.dk table.dkt td .btn { margin:0 0 4px; width:auto; min-height:34px; padding:4px 12px; }
+}
 html.simple .banner, html.simple .panel, html.simple #where { display:none !important; }
 html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:center; }
 </style>
@@ -6713,6 +6756,79 @@ render();
 /* UXD-208: the height of what sits above the screen (the banner), so the screen fills the rest of the window */
 (() => { const fit = () => { const h = [...document.querySelectorAll('.banner, .page > .bar')].reduce((a, el) => a + el.offsetHeight, 0);
   document.documentElement.style.setProperty('--above', `${h}px`); }; fit(); addEventListener('resize', fit); })();
+/* ---------------- UXD-211 (the owner, 2026-11-24; phase 9, desktop): the inspector's screens as the web portal on a desktop
+   browser. The page is drawn as on the phone, then laid out by the kind of screen: main places (with the bottom bar on
+   the phone) get the left menu and, for My work and the Dashboard, the sections side by side; reports get tables; records
+   get two columns; field steps keep one centred column. Nothing is added or removed. ---------------- */
+const DK_WIDE = matchMedia('(min-width:821px)');
+const DK_RECORDS = ['srecord', 'nrec', 'lres', 'sorec', 'szrec', 'firm'];
+const DK_LISTS = ['tlim', 'div', 'lwatch', 'cases', 'alerts', 'targets', 'profile', 'area'];
+const DK_RIGHT = /^(What follows|What has happened|Report to the Magistrate|History)/;
+function dkSide() {
+  const sup = S.me.kind === 'supervisory'; const n = unread(); const at = S.place;
+  const item = (k, t, extra) => `<button data-act="nav" data-place="${k}" class="${at === k ? 'on' : ''}" ${at === k ? 'aria-current="page"' : ''}>${t}${extra || ''}</button>`;
+  const nav = document.createElement('nav'); nav.className = 'dside'; nav.setAttribute('aria-label', 'Main places');
+  nav.innerHTML = (sup ? item('area', 'Inspectors in your area') : '') + item('mywork', 'My work') + (sup ? '' : item('dash', 'Dashboard'))
+    + item('alerts', 'Alerts', n ? `<em class="n">${n}</em>` : '') + item('cases', 'Cases') + (sup ? '' : item('targets', 'My targets'))
+    + item('tlim', 'My time limits') + (sup ? item('div', 'Division of shops') : '')
+    + '<div class="grp">Account</div>' + item('profile', 'Profile');
+  return nav;
+}
+function dkSplit(scr) {
+  const kids = [...scr.children]; let at = kids.findIndex((c) => c.tagName === 'H3' && DK_RIGHT.test(c.textContent.trim()));
+  if (at < 0) at = kids.length;
+  const right = []; const left = [];
+  kids.forEach((c, k) => {
+    const btn = c.matches('button.btn, .row') && k > 0;
+    const after = k > 0 && right.includes(kids[k - 1]) && c.matches('p.hint') && k < at;
+    if (k >= at || btn || after) right.push(c); else left.push(c);
+  });
+  if (!right.length || !left.length) return;
+  const wrap = document.createElement('div'); wrap.className = 'dk2';
+  const l = document.createElement('div'); const r = document.createElement('div');
+  left.forEach((c) => l.appendChild(c)); right.forEach((c) => r.appendChild(c));
+  wrap.append(l, r); scr.appendChild(wrap);
+}
+function dkTables(scr) {
+  const isRow = (c) => c && c.matches('.card') && c.firstElementChild && c.firstElementChild.tagName === 'B' && c.querySelector('.tag') && c.querySelector('button[data-act]');
+  const kids = [...scr.children]; let k = 0;
+  while (k < kids.length) {
+    if (!isRow(kids[k])) { k += 1; continue; }
+    let e = k; while (e + 1 < kids.length && isRow(kids[e + 1])) e += 1;
+    const rows = kids.slice(k, e + 1);
+    const t = document.createElement('table'); t.className = 'dkt';
+    t.innerHTML = '<thead><tr><th>Name</th><th>Details</th><th>Status</th><th></th></tr></thead><tbody></tbody>';
+    rows.forEach((card) => {
+      const tr = document.createElement('tr'); const name = card.firstElementChild.textContent; const tag = card.querySelector('.tag');
+      const btns = [...card.querySelectorAll('button[data-act]')];
+      const rest = card.cloneNode(true); rest.firstElementChild.remove(); rest.querySelectorAll('.tag, button[data-act]').forEach((x) => x.remove());
+      const after = (tag.nextSibling && tag.nextSibling.nodeType === 3) ? tag.nextSibling.textContent.trim() : '';
+      if (after) [...rest.childNodes].forEach((x) => { if (x.nodeType === 3 && x.textContent.trim() === after) x.remove(); });
+      tr.innerHTML = `<td class="dkn"></td><td>${rest.innerHTML.replace(/^(\s*<br>)+|(<br>\s*)+$/g, '')}</td><td><span class="tag" style="margin-left:0"></span>${after ? `<br><span class="hint">${esc(after)}</span>` : ''}</td><td class="dka"></td>`;
+      tr.firstElementChild.textContent = name; tr.querySelector('.tag').textContent = tag.textContent;
+      btns.forEach((b) => tr.lastElementChild.appendChild(b));
+      t.tBodies[0].appendChild(tr); card.remove();
+    });
+    scr.insertBefore(t, kids[e + 1] || null); k = e + 1;
+  }
+}
+function dkLayout() {
+  const root = document.documentElement; const ph = $('phone');
+  ['dk', 'dkm', 'dkf', 'dkr', 'dkc'].forEach((c) => root.classList.remove(c));
+  const scr = ph && ph.querySelector(':scope > .scr');
+  if (!S || S.screen !== 'inside' || !S.me || !DK_WIDE.matches || !scr) return;
+  const main = !!ph.querySelector(':scope > .bbar');
+  const kind = main ? 'dkm' : DK_RECORDS.includes(S.place) ? 'dkc' : (S.place === 'report' || DK_LISTS.includes(S.place) || scr.querySelector('#repq')) ? 'dkr' : 'dkf';
+  root.classList.add('dk', kind);
+  if (kind !== 'dkf') ph.insertBefore(dkSide(), scr);
+  if (kind === 'dkm' && ['mywork', 'dash'].includes(S.place)) scr.classList.add('dkgrid');
+  if (kind === 'dkr') dkTables(scr);
+  if (kind === 'dkc') dkSplit(scr);
+}
+const dkRender = render;
+render = function (...a) { const r = dkRender(...a); dkLayout(); return r; };
+DK_WIDE.addEventListener('change', () => render());
+render();
 
 // The owner of the shared page sees the prototype controls; everyone else only the phone screen.
 (async () => {
