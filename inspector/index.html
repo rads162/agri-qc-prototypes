@@ -7077,6 +7077,13 @@ Object.assign(ACT, {
 const appRender = render;
 render = function (...a) { const r = appRender(...a); appLayout(); return r; };
 render();
+/* ---------------- Fix (the owner, 2026-11-24; divfix): Division of shops opened from the menu (More, or the desktop's left
+   menu), not from its scenario, found no division set up and stopped with a script error. The screens now set up the same
+   starting division the scenario uses (j9DivNew) when none is there. No design change. ---------------- */
+['div', 'divdecide'].forEach((k) => {
+  const prev = PLACES[k]; if (typeof prev !== 'function') return;
+  PLACES[k] = (...a) => { const s = j9State(); if (!s.dv) s.dv = j9DivNew(false); return prev(...a); };
+});
 
 // The owner of the shared page sees the prototype controls; everyone else only the phone screen.
 (async () => {
