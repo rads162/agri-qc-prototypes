@@ -196,7 +196,7 @@ html.simple .bar { display:none !important; }
 </style>
 </head>
 <body>
-<div class="banner"><b>PROTOTYPE</b> · Officer modules · <b>DSAO and D.Q.C.I. so far</b> (journeys J-D1 to J-D7, J-Q1 to J-Q6); the Director QC, DJDA and Commissioner are not designed yet · Low fidelity · <b>All data is SAMPLE and every server answer is SIMULATED</b>: nothing is sent, no SMS goes out, all names and numbers are made up.</div>
+<div class="banner"><b>PROTOTYPE</b> · Officer modules · <b>DSAO, D.Q.C.I. and DJDA so far</b> (journeys J-D1 to J-D7, J-Q1 to J-Q6, J-J1 to J-J8); the Director QC and Commissioner are not designed yet · Low fidelity · <b>All data is SAMPLE and every server answer is SIMULATED</b>: nothing is sent, no SMS goes out, all names and numbers are made up.</div>
 
 <div class="page">
   <div class="bar">
@@ -261,16 +261,19 @@ const TODAY = '23 Nov 2026';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const TALUKAS = ['Haveli', 'Baramati', 'Indapur', 'Junnar', 'Maval'];
 const INSPECTORS = TALUKAS.flatMap((t) => [`A.O.(TAO) ${t}`, `A.O.(PS) ${t}`]);
-const ROLES = [['Inspector', true], ['DSAO', true], ['D.Q.C.I.', true], ['DJDA', false], ['Director QC', false], ['Commissioner', false]];
+const ROLES = [['Inspector', true], ['DSAO', true], ['D.Q.C.I.', true], ['DJDA', true], ['Director QC', false], ['Commissioner', false]];
 // RMD-53: "Inspector" opens the inspector prototype (the inspector workstream's file) as its sample field inspector, 101101
 const FIELD_INSPECTOR_CODE = '101101';
-const ROLE_OF_CODE = { '150028':'DSAO', '150041':'DQCI' };
-const CODE_OF_ROLE = { DSAO:'150028', DQCI:'150041' };
-const ROLE_NAME = { DSAO:'DSAO', DQCI:'D.Q.C.I.' };
+const ROLE_OF_CODE = { '150028':'DSAO', '150041':'DQCI', '170012':'DJDA' };
+const CODE_OF_ROLE = { DSAO:'150028', DQCI:'150041', DJDA:'170012' };
+const ROLE_NAME = { DSAO:'DSAO', DQCI:'D.Q.C.I.', DJDA:'DJDA' };
+// the DJDA's out-of-state referee laboratories (a list kept as configuration, proposed; RMD-51); here because jfresh() uses it at start
+const JLABS = ['Referee laboratory A (out of state, sample)', 'Referee laboratory B (out of state, sample)', 'Referee laboratory C (out of state, sample)'];
 
 function fresh() {
   return {
     ...qfresh(),
+    ...jfresh(),
     referrals: [
       { id:'R1', firm:'Patil Traders', taluka:'Baramati', village:'Katewadi', lic:'PUN/SEED/2024/0412', valid:'31 Mar 2027', level:'District (retail counter)', varieties:['Soybean · SB-21 (sample)', 'Cotton · CT-7 (sample)', 'Gram · GR-3 (sample)'],
         point:'11', pointText:'Sale bill carries full particulars (buyer, crop and variety, producer, weight, lot no., amount and rate)', clause:'Seeds (Control) Order cl.9 (as in the action sheet)',
@@ -368,7 +371,7 @@ const MENU_DQCI = [
   ['Communicate', [['ann', 'Announcements']]],
   ['My own work', [['inspect', 'Inspect (inspector module)']]],
 ];
-const menu = () => (S.role === 'DQCI' ? MENU_DQCI : MENU_DSAO);
+const menu = () => (S.role === 'DQCI' ? MENU_DQCI : S.role === 'DJDA' ? MENU_DJDA : MENU_DSAO);
 const DSAO_ONLY = new Set(['refs', 'ref', 'orders', 'order', 'divs', 'div', 'late']);
 const TOP = new Set(['home', 'refs', 'orders', 'divs', 'late', 'insp', 'samp', 'court', 'seized', 'intel', 'dash', 'people', 'ann', 'inspect', 'alerts', 'mfg', 'grades', 'forum']);
 
@@ -558,14 +561,14 @@ const SCREENS = {
     const iss = S.D.orders.length, sus = S.D.orders.filter((o) => o.out === 'suspend').length, can = S.D.orders.filter((o) => o.out === 'cancel').length;
     const sum = (i) => Object.values(S.D.insp).reduce((a, v) => a + v[i], 0);
     return { id:'D-18', title:'Dashboard', refs:'F10 · UXD-150 (figures open their records)', html:`
-      <h2>District dashboard · Pune</h2>
+      <h2>${S.role === 'DJDA' ? 'Division dashboard · Pune division' : 'District dashboard · Pune'}</h2>${S.role === 'DJDA' ? jdivTable() : ''}
       <div class="chips"><button type="button" aria-pressed="true">Plan year 2026-27</button><button type="button" aria-pressed="false">Rabi 2026</button><button type="button" aria-pressed="false">November 2026</button></div>
       <div class="sim">Sample figures. Each figure's written definition and source are settled before it is built (brief 13.1).</div>
-      ${S.role === 'DQCI' ? '<p class="sub">The licensing figures and late-step findings are the DSAO\'s; they are not shown to the D.Q.C.I. (matrix).</p>' : `<h3>Licensing</h3><div class="figs">${fig(w.refs, 'Referrals waiting', 'refs')}${fig(S.empty ? 0 : iss, 'Orders issued', 'orders')}${fig(S.empty ? 0 : sus, 'Suspensions', 'orders')}${fig(S.empty ? 0 : can, 'Cancellations', 'orders')}</div>`}
+      ${S.role !== 'DSAO' ? `<p class="sub">The licensing figures and late-step findings are the DSAO's; they are not shown to the ${ROLE_NAME[S.role]} (matrix).${S.role === 'DJDA' ? ' The figures below are Pune district\'s, as a sample of each district.' : ''}</p>` : `<h3>Licensing</h3><div class="figs">${fig(w.refs, 'Referrals waiting', 'refs')}${fig(S.empty ? 0 : iss, 'Orders issued', 'orders')}${fig(S.empty ? 0 : sus, 'Suspensions', 'orders')}${fig(S.empty ? 0 : can, 'Cancellations', 'orders')}</div>`}
       <h3>Inspections</h3><div class="figs">${fig(sum(0), 'Seed and fertiliser shops', 'insp')}${fig(sum(1), 'Inspected before Rabi', 'insp')}${fig(d.ov, 'Overdue', 'insp')}</div>
       <h3>Samples</h3><div class="figs">${fig(S.D.samplesByInsp.reduce((a, r) => a + r[1], 0), 'Samples drawn', 'samp')}${fig(d.near, 'Shops near the limit', 'samp')}</div>
       <h3>Court cases and seizures</h3><div class="figs">${fig(d.court, 'Court cases late', 'court')}${fig(d.seized, 'Seized stock over 3 months', 'seized')}</div>
-      ${S.role === 'DQCI' ? '' : `<h3>Time limits</h3><div class="figs">${fig(w.late, 'Late steps to find on', 'late')}</div>`}` };
+      ${S.role !== 'DSAO' ? '' : `<h3>Time limits</h3><div class="figs">${fig(w.late, 'Late steps to find on', 'late')}</div>`}` };
   },
   people() {
     return { id:'D-19', title:'Inspectors in your area', refs:'F11 · built · UXD-10', html:`
@@ -697,14 +700,14 @@ function modalHtml() {
 /* ---------- render ---------- */
 function screen() {
   if (S.loading) return { id:'', title:'Loading', refs:'loading state', html:'<div class="skel w6"></div><div class="skel box"></div><div class="skel w8"></div><div class="skel box"></div>' };
-  if (S.role === 'DQCI' && DSAO_ONLY.has(S.route)) return SCREENS.qdenied();
+  if ((S.role !== 'DSAO' && DSAO_ONLY.has(S.route)) || (S.role !== 'DQCI' && DQCI_ONLY.has(S.route)) || (S.role !== 'DJDA' && DJDA_ONLY.has(S.route))) return SCREENS.qdenied();
   const f = SCREENS[S.route]; return f ? f(S.p) : SCREENS.home();
 }
-function counts() { return S.role === 'DQCI' ? qdue() : waiting(); }
+function counts() { return S.role === 'DQCI' ? qdue() : S.role === 'DJDA' ? jdue() : waiting(); }
 function render() {
-  const sc = screen(), w = counts(), alerts = S.empty ? 0 : (S.role === 'DQCI' ? S.D.qalerts : S.D.alerts).length;
+  const sc = screen(), w = counts(), alerts = S.empty ? 0 : (S.role === 'DQCI' ? S.D.qalerts : S.role === 'DJDA' ? S.D.jalerts : S.D.alerts).length;
   const MENU = menu();
-  const post = S.role === 'DQCI' ? 'D.Q.C.I., Pune (sample post)' : 'DSAO, Pune (sample post)';
+  const post = S.role === 'DQCI' ? 'D.Q.C.I., Pune (sample post)' : S.role === 'DJDA' ? 'DJDA, Pune division (sample post)' : 'DSAO, Pune (sample post)';
   const fr = document.getElementById('frame');
   document.getElementById('stage').className = 'stage' + (S.view === 'phone' ? ' phone-mode' : '');
   const toastHtml = S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : '';
@@ -714,11 +717,12 @@ function render() {
       <div class="inner"><div class="wide"><nav class="side" aria-label="Menu">${side}</nav><main class="dmain">${sc.html}</main></div></div>${modalHtml()}${toastHtml}</div>`;
   } else {
     const isTop = TOP.has(S.route);
-    const q = S.role === 'DQCI';
+    const q = S.role === 'DQCI', jj = S.role === 'DJDA';
     const bb = q ? [['home', 'Home', ''], ['mfg', 'Manufacturers', 'mfg'], ['dash', 'District', ''], ['ann', 'Announce', ''], ['more', 'More', '']]
+      : jj ? [['home', 'Home', ''], ['jcons', 'Consent', 'cons'], ['dash', 'Division', ''], ['ann', 'Announce', ''], ['more', 'More', '']]
       : [['home', 'Home', ''], ['refs', 'Referrals', 'refs'], ['dash', 'District', ''], ['ann', 'Announce', ''], ['more', 'More', '']];
-    const inBar = q ? ['mfg', 'ann'] : ['refs', 'ann'];
-    const moreN = q ? w.grades + w.forum : w.divs + w.lift + w.late;
+    const inBar = q ? ['mfg', 'ann'] : jj ? ['jcons', 'ann'] : ['refs', 'ann'];
+    const moreN = q ? w.grades + w.forum : jj ? w.ref + w.tgt + w.late : w.divs + w.lift + w.late;
     fr.innerHTML = `<div class="phone"><div class="ptop">${isTop ? '' : '<button type="button" class="topbtn" data-act="back" aria-label="Back">‹ Back</button>'}<span class="grow">${esc(sc.title)}</span><button type="button" class="topbtn" data-go="alerts" aria-label="Alerts">Alerts${alerts ? ` ${alerts}` : ''}</button></div>
       <main class="pmain">${sc.html}</main>
       <nav class="bbar" aria-label="Main">${bb.map(([r, t, n]) => `<button type="button" ${r === 'more' ? 'data-act="more"' : `data-go="${r}"`} class="${(r === 'more' ? S.sheet : navOn(r)) ? 'on' : ''}">${esc(t)}${n && w[n] ? `<i class="badge">${w[n]}</i>` : ''}${r === 'more' && moreN ? `<i class="badge">${moreN}</i>` : ''}</button>`).join('')}</nav>
@@ -730,7 +734,7 @@ function render() {
   S.err = '';
 }
 function navOn(r) {
-  const map = { ref:'refs', order:'orders', div:'divs', taluka:'insp', who:'insp', unit:'mfg', fcase:'forum', fnew:'forum' };
+  const map = { ref:'refs', order:'orders', div:'divs', taluka:'insp', who:'insp', unit:'mfg', fcase:'forum', fnew:'forum', jcon:'jcons', jre:'jref' };
   return S.route === r || map[S.route] === r;
 }
 
@@ -887,7 +891,7 @@ SCREENS.alerts = () => (S.role === 'DQCI' ? { id:'Q-08', title:'Alerts', refs:'A
   <h2>Alerts</h2><p class="sub">On the phone app each alert is also a notification that says only "Agri QC: 1 new alert" (App Q5).</p>
   ${list(['Alert'], (S.empty ? [] : S.D.qalerts).map((a) => ({ go:a[1], cells:[esc(a[0])] })), { empty:'No alerts.' })}` } : alertsDSAO());
 SCREENS.qdenied = () => ({ id:'', title:'Not available', refs:'Gate 1 rule G5 · matrix', html:`
-  <h2>Not available to the D.Q.C.I.</h2><div class="msg err">This screen is the DSAO's (licensing, shop divisions, late-step findings). The server refuses it for the D.Q.C.I.'s post; hiding the menu item is not the permission (brief 15.5).</div>
+  <h2>Not available to the ${ROLE_NAME[S.role]}</h2><div class="msg err">This screen belongs to another role's work (the DSAO's licensing, divisions and late-step findings; the D.Q.C.I.'s register and watches; the DJDA's consent, referee and targets). The server refuses it for the ${ROLE_NAME[S.role]}'s post; hiding the menu item is not the permission (brief 15.5).</div>
   <button type="button" class="btn alt" data-go="home">Go to Home</button>` });
 SCREENS.qhome = () => {
   const w = qdue(), d = district(), none = !(w.mfg + w.forum + w.grades);
@@ -1023,15 +1027,273 @@ function setRole(r) {
   renderControls(); go('home', null, false);
 }
 
+/* ---------- the DJDA: screens J-01 to J-12 (RMD-49 to RMD-70; djda/04) ---------- */
+const DIVISION = ['Pune', 'Satara', 'Sangli', 'Solapur', 'Kolhapur']; // Pune division, as in the inspector prototype (sample)
+const DQCI_ONLY = new Set(['mfg', 'unit', 'grades', 'forum', 'fcase', 'fnew']);
+const DJDA_ONLY = new Set(['jcons', 'jcon', 'jref', 'jre', 'jtgt', 'jlate', 'jmfg', 'jseed']);
+['jcons', 'jref', 'jtgt', 'jlate', 'jmfg', 'jseed'].forEach((r) => TOP.add(r));
+const MENU_DJDA = [
+  [null, [['home', 'Home']]],
+  ['Decide', [['jcons', 'Consent requests', 'cons'], ['jref', 'Referee appeals', 'ref'], ['jtgt', 'Inspector-wise targets', 'tgt'], ['jlate', 'Late steps escalated', 'late']]],
+  ['Watch', [['jmfg', 'Manufacturers'], ['jseed', 'Seed sampling'], ['insp', 'Inspections (Pune, sample)'], ['court', 'Court cases (Pune, sample)'], ['seized', 'Seized stock (Pune, sample)'], ['intel', 'Intelligence sent']]],
+  ['Division', [['dash', 'Dashboard'], ['people', 'Inspectors in your area']]],
+  ['Communicate', [['ann', 'Announcements']]],
+  ['My own work', [['inspect', 'Inspect (inspector module)']]],
+];
+const JINSP = (d) => (d === 'Pune' ? ['A.O.(TAO) Haveli', 'A.O.(PS) Haveli', 'A.O.(TAO) Baramati', 'A.O.(PS) Baramati'] : [1, 2, 3, 4].map((n) => `A.O. ${d} ${n} (sample)`));
+function jfresh() {
+  return {
+    cons: [
+      { id:'K1', product:'Chlorpyrifos 20% EC (sample brand)', mfr:'Deccan Pesticides (sample)', seller:'Shiv Agro, Baramati', district:'Pune', inspector:'A.O.(TAO) Baramati', sample:'S-2026-0412', drawn:'02 Oct 2026', report:'Active ingredient 16.1 % against 20 % declared (sample figures); report of 18 Nov 2026', filing:'Immediately: no reanalysis was asked (Guideline p.29)', persons:['Shiv Agro (dealer), the person in charge', 'Deccan Pesticides (manufacturer), its nominated person'], received:'21 Nov 2026', due:'28 Nov 2026', status:'waiting' },
+      { id:'K2', product:'Imidacloprid 17.8% SL (sample brand)', mfr:'Kesar Crop Care (sample)', seller:'Ganesh Agro, Haveli', district:'Pune', inspector:'A.O.(TAO) Haveli', sample:'S-2026-0377', drawn:'12 Sep 2026', report:'Reanalysis report of 05 Nov 2026 confirms the failure (sample figures)', filing:'By 05 Dec 2026: within one month of the reanalysis report (Guideline p.29)', persons:['Ganesh Agro (dealer), the person in charge'], received:'14 Nov 2026', due:'21 Nov 2026', status:'waiting' },
+      { id:'K3', product:'Mancozeb 75% WP (sample brand)', mfr:'Satara Agrochem (sample)', seller:'Sai Krushi Kendra, Karad', district:'Satara', inspector:'A.O. Satara 2 (sample)', sample:'S-2026-0455', drawn:'20 Oct 2026', report:'Active ingredient 61 % against 75 % declared (sample figures); report of 19 Nov 2026', filing:'Immediately: no reanalysis was asked (Guideline p.29)', persons:['Sai Krushi Kendra (dealer), the person in charge'], received:'22 Nov 2026', due:'29 Nov 2026', status:'waiting' },
+    ],
+    refs: [
+      { id:'F1', seller:'Patil Traders, Baramati', product:'DAP 18:46:0, Krishna Fertilisers (sample)', district:'Pune', report:'P2O5 41.2 % against 46 % (sample figures)', appealed:'18 Nov 2026', state:'r1', hist:['18 Nov 2026: appeal for referee analysis (seller portal)'] },
+      { id:'F2', seller:'Sai Krushi Kendra, Karad', product:'10:26:26, Sahyadri Chemicals (sample)', district:'Satara', report:'K2O 22.0 % against 26 % (sample figures)', appealed:'20 Oct 2026', state:'r2req', lab1:JLABS[0], hist:['20 Oct 2026: appeal for referee analysis', '22 Oct 2026: round 1 approved, the seller\'s retained sample to Referee laboratory A', '08 Nov 2026: round 1 failed', '15 Nov 2026: the seller asks for round 2'] },
+      { id:'F3', seller:'Om Fertilisers, Miraj', product:'Urea 46% N, Godavari Agro Inputs (sample)', district:'Sangli', report:'N 43.9 % against 46 % (sample figures)', appealed:'05 Nov 2026', state:'r1lab', lab1:JLABS[1], hist:['05 Nov 2026: appeal for referee analysis', '07 Nov 2026: round 1 approved, the seller\'s retained sample to Referee laboratory B'] },
+    ],
+    tgt: { year:'2026-27', version:1, status:'draft', imported:false,
+      dqc: { Pune:{ S:120, F:160, I:80 }, Satara:{ S:90, F:120, I:60 }, Sangli:{ S:80, F:110, I:50 }, Solapur:{ S:100, F:130, I:40 }, Kolhapur:{ S:70, F:100, I:50 } },
+      split: {} },
+    jmfgs: { Pune:[5, 3, 1], Satara:[3, 2, 1], Sangli:[4, 4, 0], Solapur:[2, 1, 2], Kolhapur:[3, 1, 2] }, // units, inspected before Rabi, with no sample yet
+    jnosample: [['Baramati Crop Science (unit)', 'Pune', 'D.Q.C.I., Pune'], ['Satara Agrochem (unit)', 'Satara', 'D.Q.C.I., Satara'], ['Solapur Pesticides (unit)', 'Solapur', 'D.Q.C.I., Solapur'], ['Modnimb Chemicals (unit)', 'Solapur', 'D.Q.C.I., Solapur'], ['Kolhapur Agro Care (unit)', 'Kolhapur', 'D.Q.C.I., Kolhapur'], ['Shirol Crop Science (unit)', 'Kolhapur', 'D.Q.C.I., Kolhapur']],
+    seedco: [['Company P (private, sample)', 'Private', [9, 7, 6, 5, 4]], ['Mahabeej (public undertaking)', 'Public', [6, 4, 3, 2, 3]], ['Company Q (private, sample)', 'Private', [5, 0, 2, 1, 0]], ['University seed (sample)', 'University', [0, 1, 0, 0, 0]], ['Farmer group R (sample)', 'Farmer group', [0, 0, 0, 0, 0]]],
+    seedcrop: [['Soybean · SB-21 (sample)', [8, 5, 4, 3, 2]], ['Cotton · CT-7 (sample)', [4, 3, 3, 4, 2]], ['Gram · GR-3 (sample)', [3, 2, 1, 1, 2]], ['Maize · MZ-4 (sample)', [0, 0, 1, 0, 0]], ['Paddy · PD-1 (sample)', [0, 0, 0, 0, 1]]],
+    seedmix: { truthful:64, certified:18 },
+    seedlab: [['Seed testing laboratory 1 (sample)', 22, 24], ['Seed testing laboratory 2 (sample)', 18, 18]], // sent this month, month's share of the target (RMD-59)
+    jlate: [
+      { id:'JL1', who:'A.O.(PS) Indapur', step:'Verify the reply to notice N-2211', due:'14 Nov 2026', days:9, why:'Level 2 of the escalation ladder (the DSAO was alerted at level 1)' },
+      { id:'JL2', who:'D.Q.C.I., Satara', step:'Inspect Satara Agrochem (unit) before Rabi', due:'15 Nov 2026', days:8, why:'A D.Q.C.I.\'s act, level 1' },
+    ],
+    jchip:'Pune', jinput:'S', jseedview:'company', jreminded:{},
+    jalerts: [['Consent request late: Imidacloprid, Ganesh Agro (K2)', 'jcon:K2'], ['Referee appeal, round 2 asked: Sai Krushi Kendra (F2)', 'jre:F2'], ['Targets to finalise: 2026-27', 'jtgt'], ['Late step escalated: A.O.(PS) Indapur', 'jlate']],
+  };
+}
+function jdue() {
+  if (S.empty) return { cons:0, ref:0, tgt:0, late:0 };
+  const D = S.D;
+  return { cons:D.cons.filter((k) => k.status === 'waiting').length, ref:D.refs.filter((f) => f.state === 'r1' || f.state === 'r2req').length, tgt:D.tgt.status === 'draft' ? 1 : 0, late:D.jlate.length };
+}
+const jdaysLeft = (k) => daysTo(k.due);
+const jdueTag = (k) => { const n = jdaysLeft(k); return n === null ? '' : n < 0 ? `<span class="tag solid">Late ${-n} days</span>` : n <= 2 ? `<span class="tag solid">Due in ${n} days</span>` : `<span class="tag">${n} days left</span>`; };
+function jdivTable() {
+  const m = S.D.jmfgs;
+  return `<h3>The division, district by district</h3>${list(['District', 'Inspections overdue', 'Manufacturer inspections left', 'Manufacturers with no sample', 'Court cases late', 'Seized stock over 3 months'], DIVISION.map((d, i) => ({ go:d === 'Pune' ? 'insp' : '', cells:[esc(d) + (d === 'Pune' ? '' : ' <span class="ghost">(sample)</span>'), S.empty ? 0 : [45, 22, 18, 30, 15][i], S.empty ? 0 : m[d][0] - m[d][1], S.empty ? 0 : m[d][2], S.empty ? 0 : [2, 1, 0, 3, 1][i], S.empty ? 0 : [2, 0, 1, 1, 0][i]] })))}`;
+}
+const homeQ = SCREENS.home, inspectQ = SCREENS.inspect, alertsQ = SCREENS.alerts;
+SCREENS.home = () => (S.role === 'DJDA' ? SCREENS.jhome() : homeQ());
+SCREENS.inspect = () => (S.role === 'DJDA' ? { id:'J-11', title:'Inspect', refs:'H12 · UXD-13', html:`
+  <h2>Inspect</h2><div class="msg note">The DJDA inspects as a supervisory inspector in the inspector module (UXD-13). Those screens are the inspector workstream's; in this prototype they do not yet open for the DJDA's code (observation O15).</div>` } : inspectQ());
+SCREENS.alerts = () => (S.role === 'DJDA' ? { id:'J-12', title:'Alerts', refs:'Alerts bell · App Q5', html:`
+  <h2>Alerts</h2><p class="sub">On the phone app each alert is also a notification that says only "Agri QC: 1 new alert" (App Q5).</p>
+  ${list(['Alert'], (S.empty ? [] : S.D.jalerts).map((a) => ({ go:a[1], cells:[esc(a[0])] })), { empty:'No alerts.' })}` } : alertsQ());
+SCREENS.jhome = () => {
+  const w = jdue(), none = !(w.cons + w.ref + w.tgt + w.late);
+  return { id:'J-01', title:'Home', refs:'H1, H10 · J-J4 · RMD-57', html:`
+    <h2>Waiting on you</h2><p class="sub">DJDA, Pune division (sample post) · ${TODAY}</p>
+    ${none ? '<div class="msg ok">Nothing waits on you.</div>' : `<div class="wait">
+      <button type="button" data-go="jcons" ${w.cons ? '' : 'disabled'}><b>${w.cons}</b><span>Consent requests to decide</span></button>
+      <button type="button" data-go="jref" ${w.ref ? '' : 'disabled'}><b>${w.ref}</b><span>Referee appeals to decide</span></button>
+      <button type="button" data-go="jtgt" ${w.tgt ? '' : 'disabled'}><b>${w.tgt}</b><span>Target set to finalise (2026-27)</span></button>
+      <button type="button" data-go="jlate" ${w.late ? '' : 'disabled'}><b>${w.late}</b><span>Late steps escalated</span></button></div>`}
+    ${jdivTable()}
+    <p class="sub" style="margin-top:12px">Pune's figures open their lists; the other districts work the same way (sample). <button type="button" class="lnk" data-go="jmfg">Manufacturers</button> · <button type="button" class="lnk" data-go="people">Inspectors in your area</button></p>` };
+};
+SCREENS.jcons = () => {
+  const rows = S.empty ? [] : S.D.cons.slice().sort((a, b) => (a.status === 'waiting' ? 0 : 1) - (b.status === 'waiting' ? 0 : 1) || (jdaysLeft(a) ?? 99) - (jdaysLeft(b) ?? 99));
+  return { id:'J-02', title:'Consent requests', refs:'H2 · J-J1 · RMD-52, RMD-68', html:`
+    <h2>Consent requests</h2><p class="sub">Insecticide prosecutions need the DJDA's written consent before the inspector files the case (Insecticides Act s.31(1), as cited in the enforcement review; the consenting officer awaits the notification, DQ-86).</p>
+    ${list(['Product', 'Seller', 'District', 'From', 'Received', 'Consent due (7 days, customised)', 'Court filing', 'State'], rows.map((k) => ({ go:`jcon:${k.id}`, cells:[esc(k.product), esc(k.seller), esc(k.district), esc(k.inspector), esc(k.received), k.status === 'waiting' ? `${esc(k.due)} ${jdueTag(k)}` : '—', esc(k.filing), ({ waiting:'<span class="tag solid">To decide</span>', given:'<span class="tag">Consent given</span>', refused:'<span class="tag">Refused</span>', back:'<span class="tag">Sent back</span>' })[k.status]] })), { empty:'No consent requests.' })}
+    <p class="hint">Consent is never deemed given; a late request is escalated (to the Director QC after the DJDA) and the days it waited stay on the case (RMD-68).</p>` };
+};
+SCREENS.jcon = (id) => {
+  const k = S.D.cons.find((x) => x.id === id); if (!k) return SCREENS.jcons();
+  if (S.Q.k !== id) S.Q = { k:id, out:'', text:'' };
+  const file = `
+    <details class="sec" open><summary>Laboratory report</summary><div>${esc(k.report)} <button type="button" class="lnk" data-act="doc">Open</button></div></details>
+    <details class="sec" open><summary>The sample and its papers</summary><div>${esc(k.sample)}, drawn ${esc(k.drawn)} by ${esc(k.inspector)}; Form V(C) and the receipt <button type="button" class="lnk" data-act="doc">Open</button></div></details>
+    <details class="sec" open><summary>Product, manufacturer, seller</summary><div>${esc(k.product)} · ${esc(k.mfr)} · ${esc(k.seller)}</div></details>
+    <details class="sec" open><summary>Persons named by the inspector</summary><div><ul class="steps">${k.persons.map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div></details>
+    <details class="sec" open><summary>Time</summary><div>Consent due ${esc(k.due)} ${jdueTag(k)} (7 days, a customised service level, FD-08). Court filing: ${esc(k.filing)}.</div></details>`;
+  let side;
+  if (k.status === 'given') side = `<div class="msg ok">Consent given on ${esc(k.when)}.</div><div class="doc"><div class="hd">WRITTEN CONSENT (SIMULATED)</div><p class="ghost" style="margin-top:0">The wording is the Department's (no form supplied, DQ-86).</p><div class="kv"><span>Sample</span><span>${esc(k.sample)}</span><span>Persons</span><span>${k.persons.map(esc).join('; ')}</span><span>By</span><span>DJDA, Pune division (sample post), with the act's own button</span></div></div><p class="sub">Fixed (never changed); the inspector can file the complaint. The days the request waited stay on the case.</p>`;
+  else if (k.status === 'refused') side = `<div class="msg ok">Consent refused on ${esc(k.when)}.</div><p class="sub">Reasons: ${esc(k.text)}. The inspector records what follows on the case (proposed).</p>`;
+  else if (k.status === 'back') side = `<div class="msg ok">Sent back to ${esc(k.inspector)} on ${esc(k.when)}.</div><p class="sub">What is missing: ${esc(k.text)}</p>`;
+  else {
+    const o = (v, t, s) => `<label class="opt ${S.Q.out === v ? 'on' : ''}"><input type="radio" name="jcon" value="${v}" data-bind="q.out" ${S.Q.out === v ? 'checked' : ''}><span><b>${t}</b><span>${s}</span></span></label>`;
+    const need = S.Q.out === 'refuse' ? 'Reasons (required)' : S.Q.out === 'back' ? 'What is missing (required)' : 'Note (optional)';
+    side = `${o('give', 'Give consent', 'A written consent is generated and fixed; the inspector files the case')}${o('refuse', 'Refuse consent', 'With reasons; the case does not go to court on this request')}${o('back', 'Send back to the inspector', 'Say what is missing')}
+      ${S.Q.out ? `<label class="f">${need}</label><textarea class="t" data-bind="q.text">${esc(S.Q.text)}</textarea>` : ''}
+      ${S.err ? `<div class="msg err">${esc(S.err)}</div>` : ''}
+      <button type="button" class="btn main full" id="j-con-btn" data-act="j-con" data-id="${k.id}" ${jconOk() ? '' : 'disabled'}>${esc(({ give:'Give consent', refuse:'Refuse consent', back:'Send back to the inspector' })[S.Q.out] || 'Choose an outcome')}</button>
+      <p class="hint">Pressing it takes the act at once; no confirm step (UXD-146).</p>`;
+  }
+  return { id:'J-03', title:`Consent · ${k.id}`, refs:'H2 · J-J1 · RMD-52, RMD-68', html:`
+    <h2>${esc(k.product)}</h2><p class="sub">${esc(k.seller)} · ${esc(k.district)} · from ${esc(k.inspector)} · received ${esc(k.received)}</p>
+    <div class="two"><div>${file}</div><div class="sticky"><h3 style="margin-top:0">Your decision</h3>${side}</div></div>` };
+};
+function jconOk() { return !!(S.Q.out && (S.Q.out === 'give' || (S.Q.text || '').trim())); }
+const JSTATE = { r1:'<span class="tag solid">Round 1 to decide</span>', r1lab:'Round 1 at the laboratory', r1fail:'Round 1 failed; the seller may ask for round 2', r2req:'<span class="tag solid">Round 2 to decide</span>', r2lab:'Round 2 at the laboratory', rejected:'Rejected', court:'Court proceedings', passed:'Passed at referee' };
+SCREENS.jref = () => {
+  const rows = S.empty ? [] : S.D.refs;
+  return { id:'J-04', title:'Referee appeals', refs:'H3 · J-J2 · RMD-51, RMD-67', html:`
+    <h2>Fertiliser referee appeals</h2><p class="sub">Two rounds, each on your approval: round 1 the seller's retained sample, round 2 the inspector's, each to an out-of-state laboratory (the owner's matrix; RMD-51, for every fertiliser, RMD-67).</p>
+    ${list(['Seller', 'Product', 'District', 'Appealed', 'State'], rows.map((f) => ({ go:`jre:${f.id}`, cells:[esc(f.seller), esc(f.product), esc(f.district), esc(f.appealed), JSTATE[f.state]] })), { empty:'No referee appeals.' })}
+    <p class="hint">No hearing step; the time for completing an analysis is a setting to be confirmed (RMQ-17). What follows a pass at referee is the Department's (DQ-07, DQ-90).</p>` };
+};
+SCREENS.jre = (id) => {
+  const f = S.D.refs.find((x) => x.id === id); if (!f) return SCREENS.jref();
+  if (S.Q.f !== id) S.Q = { f:id, lab:'', reasons:'' };
+  const round = f.state === 'r2req' ? 2 : 1;
+  const labs = JLABS.filter((l) => round === 1 || l !== f.lab1);
+  let act = '';
+  if (f.state === 'r1' || f.state === 'r2req') act = `<label class="f">Out-of-state laboratory (from the list, proposed)</label><select class="t" data-bind="q.lab"><option value="">Choose a laboratory</option>${labs.map((l) => `<option ${S.Q.lab === l ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>
+      ${round === 2 ? `<p class="hint">Another laboratory than round 1's (${esc(f.lab1)}).</p>` : ''}
+      ${S.err ? `<div class="msg err">${esc(S.err)}</div>` : ''}
+      <button type="button" class="btn main full" id="j-approve" data-act="j-approve" data-id="${f.id}" ${S.Q.lab ? '' : 'disabled'}>Approve referee analysis, round ${round}</button>
+      <label class="f">Or reject, with reasons</label><textarea class="t" data-bind="q.reasons">${esc(S.Q.reasons)}</textarea>
+      <button type="button" class="btn alt full" id="j-reject" data-act="j-reject" data-id="${f.id}" ${(S.Q.reasons || '').trim() ? '' : 'disabled'}>Reject</button>
+      <p class="hint">After a rejection no further referee analysis is allowed, and you may direct court proceedings.</p>`;
+  else if (f.state === 'rejected') act = `<div class="msg ok">Rejected: ${esc(f.reasons)}</div><button type="button" class="btn main full" data-act="j-court" data-id="${f.id}">Direct court proceedings</button>`;
+  else if (f.state === 'r1lab' || f.state === 'r2lab') act = `<div class="msg note">Round ${f.state === 'r1lab' ? 1 : 2} at ${esc(f.state === 'r1lab' ? f.lab1 : f.lab2)}; result awaited. The result is entered on the manual path (eLab later, ADR-001).</div>`;
+  else if (f.state === 'r1fail') act = '<div class="msg note">Round 1 failed. The seller may ask for round 2 in the seller portal.</div>';
+  else if (f.state === 'court') act = '<div class="msg ok">Court proceedings: the inspector\'s court case is prepared.</div>';
+  else if (f.state === 'passed') act = '<div class="msg ok">Passed at referee. What follows is the Department\'s (DQ-07, DQ-90).</div>';
+  return { id:'J-05', title:`Referee · ${f.id}`, refs:'H3 · J-J2 · RMD-51, RMD-67', html:`
+    <h2>${esc(f.seller)}</h2><p class="sub">${esc(f.product)} · ${esc(f.district)} · ${JSTATE[f.state]}</p>
+    <div class="two"><div>
+      <details class="sec" open><summary>The failed report</summary><div>${esc(f.report)} <button type="button" class="lnk" data-act="doc">Open</button></div></details>
+      <details class="sec" open><summary>History</summary><div><ul class="steps">${f.hist.map((h) => `<li>${esc(h)}</li>`).join('')}</ul></div></details>
+    </div><div class="sticky"><h3 style="margin-top:0">Your decision</h3>${act}</div></div>` };
+};
+function jsplitOf(d, i) { const T = S.D.tgt; return (T.split[d] && T.split[d][i]) || null; }
+function jtotal(d, i) { const s = jsplitOf(d, i); return s ? s.reduce((a, b) => a + (+b || 0), 0) : 0; }
+function jallMatch() { const T = S.D.tgt; return DIVISION.every((d) => ['S', 'F', 'I'].every((i) => jsplitOf(d, i) && jtotal(d, i) === T.dqc[d][i])); }
+SCREENS.jtgt = () => {
+  const T = S.D.tgt, d = S.D.jchip, i = S.D.jinput, names = { S:'Seed', F:'Fertiliser', I:'Insecticide' };
+  const s = jsplitOf(d, i), insp = JINSP(d), final = T.status === 'final';
+  const diff = s ? jtotal(d, i) - T.dqc[d][i] : null;
+  const rows = insp.map((p, n) => ({ cells:[esc(p), final || !s ? String(s ? s[n] : '—') : `<input class="t" style="width:110px" type="number" min="0" value="${esc(s[n])}" data-jt="${d}.${i}.${n}" aria-label="Target for ${esc(p)}">`] }));
+  const status = DIVISION.map((x) => { const ok = ['S', 'F', 'I'].every((y) => jsplitOf(x, y) && jtotal(x, y) === T.dqc[x][y]); return `<button type="button" data-jchip="${x}" aria-pressed="${x === d}">${x}${ok ? ' ✓' : ''}</button>`; }).join('');
+  return { id:'J-06', title:'Inspector-wise targets', refs:'H4 · J-J3 · RMD-54, RMD-59 · UXD-68', html:`
+    <h2>Inspector-wise targets · ${esc(T.year)} · version ${T.version} ${final ? '<span class="tag">Final</span>' : '<span class="tag solid">Draft</span>'}</h2>
+    <p class="sub">The Director QC's district targets for the division. Start from the Commissionerate's inspector-wise split where it is sent, adjust within each district, then finalise (RMD-54). This prototype shows one total per input; the real split carries grades, crops, manufacturers, talukas and months (the seed months are the schedule for sending seed samples, RMD-59).</p>
+    ${!T.imported && !final ? '<button type="button" class="btn alt" data-act="j-import">Import the Commissionerate\'s split</button><button type="button" class="btn alt" data-act="j-blank">Enter the split myself</button>' : ''}
+    <div class="chips">${status}</div>
+    <div class="chips">${['S', 'F', 'I'].map((x) => `<button type="button" data-jinput="${x}" aria-pressed="${x === i}">${names[x]}</button>`).join('')}</div>
+    ${s ? list(['Inspector', `${names[i]} target`], rows) : '<div class="msg note">No split yet for this district: import the Commissionerate\'s split or enter it.</div>'}
+    ${s ? `<div class="msg ${diff === 0 ? 'ok' : 'err'}" id="j-tot">${esc(d)} · ${names[i]}: ${jtotal(d, i)} of the Director QC's ${T.dqc[d][i]}${diff === 0 ? '' : ` · ${diff < 0 ? `${-diff} short` : `${diff} over`}`}</div>` : ''}
+    ${S.err ? `<div class="msg err">${esc(S.err)}</div>` : ''}
+    ${final ? `<div class="msg ok">Finalised on ${esc(T.when)}: in each inspector's My targets, binding as issued (UXD-68).</div><button type="button" class="btn alt" data-act="j-newver">Make a new version</button>` : `<button type="button" class="btn main" id="j-final" data-act="j-final" ${jallMatch() ? '' : 'disabled'}>Finalise targets</button><p class="hint" id="j-final-hint">${jallMatch() ? '' : 'Finalise targets is enabled when every district\'s totals equal the Director QC\'s (a ✓ on each district).'}</p>`}` };
+};
+SCREENS.jmfg = () => {
+  const m = S.D.jmfgs;
+  return { id:'J-07', title:'Manufacturers', refs:'H5, H6 · J-J5, J-J8 · RMD-55', html:`
+    <h2>Manufacturers of the division</h2><p class="sub">Every insecticide manufacturing unit inspected twice a year (the district's D.Q.C.I. holds it, RMD-37) and every manufacturer sampled. Plain counts; no sampling plan per manufacturer (RMD-55).</p>
+    <button type="button" class="btn alt" data-act="j-download" data-f="pdf">Download the monthly report (PDF)</button><button type="button" class="btn alt" data-act="j-download" data-f="xlsx">Excel</button>
+    <h3>Inspections before Rabi 2026</h3>${list(['District', 'Units', 'Inspected', 'Left', 'No sample yet'], DIVISION.map((d) => ({ cells:[esc(d), m[d][0], S.empty ? m[d][0] : m[d][1], S.empty ? 0 : `<b>${m[d][0] - m[d][1]}</b>`, S.empty ? 0 : m[d][2]] })))}
+    <h3>Manufacturers with no sample yet this year</h3>${list(['Unit', 'District', 'Held by', ''], (S.empty ? [] : S.D.jnosample).map((u) => ({ cells:[esc(u[0]), esc(u[1]), esc(u[2]) + (S.D.jreminded[u[2]] ? ' <span class="tag">Reminded</span>' : ''), `<button type="button" class="lnk" data-act="j-remind" data-who="${esc(u[2])}">Remind</button> · <button type="button" class="lnk" data-act="q-intel" data-input="Insecticides" data-firm="${esc(u[0])}" data-note="${esc(`${u[0]}: no sample drawn this year; please sample at the unit.`)}" data-who="">Send intelligence</button>`] })), { empty:'Every manufacturer has a sample this year.' })}
+    <p class="hint">Groups A to D of manufacturers (sample shares) wait until their criteria are read (RMQ-18).</p>` };
+};
+SCREENS.jseed = () => {
+  const v = S.D.jseedview, mix = S.D.seedmix, tot = mix.truthful + mix.certified;
+  const rowsC = (S.empty ? [] : S.D.seedco).map((c) => ({ n:c[2].reduce((a, b) => a + b, 0), c })).sort((a, b) => a.n - b.n);
+  const rowsV = (S.empty ? [] : S.D.seedcrop).map((c) => ({ n:c[1].reduce((a, b) => a + b, 0), c })).sort((a, b) => a.n - b.n);
+  const where = (arr) => DIVISION.map((d, i) => (arr[i] ? `${d} ${arr[i]}` : '')).filter(Boolean).join(', ') || '—';
+  return { id:'J-08', title:'Seed sampling', refs:'H7 · J-J5 · RMD-58, RMD-59', html:`
+    <h2>Seed sampling across the division · Rabi 2026</h2><p class="sub">Plain counts; no written plan (RMD-58). "High-selling varieties" come later, with sales figures.</p>
+    <div class="chips"><button type="button" data-jseed="company" aria-pressed="${v === 'company'}">By company</button><button type="button" data-jseed="crop" aria-pressed="${v === 'crop'}">By crop and variety</button></div>
+    ${v === 'company' ? list(['Company', 'Kind', 'Samples', 'Where', ''], rowsC.map(({ n, c }) => ({ cells:[esc(c[0]) + (n ? '' : '<span class="tag solid">No sample yet</span>'), esc(c[1]), String(n), esc(where(c[2])), `<button type="button" class="lnk" data-act="samples" data-shop="${esc(c[0])}">Samples</button> · <button type="button" class="lnk" data-act="q-intel" data-input="Seeds" data-firm="${esc(c[0])}" data-note="${esc(`${c[0]}: few or no seed samples this season; please sample.`)}" data-who="">Send intelligence</button>`] }))) : list(['Crop and variety', 'Samples', 'Where'], rowsV.map(({ n, c }) => ({ cells:[esc(c[0]) + (n ? '' : '<span class="tag solid">No sample yet</span>'), String(n), esc(where(c[1]))] })))}
+    <h3>Truthful and certified</h3><div class="msg note">${mix.truthful} truthful : ${mix.certified} certified (${Math.round(mix.truthful * 100 / tot)} : ${Math.round(mix.certified * 100 / tot)}) against the Guideline's 75 : 25 (a setting)</div>
+    <h3>Seed samples sent this month, per laboratory</h3>${list(['Laboratory', 'Sent', 'The month\'s share of the target'], S.D.seedlab.map((l) => ({ cells:[esc(l[0]), String(l[1]), String(l[2])] })))}
+    <p class="hint">The month-wise seed target is the schedule for sending samples (RMD-59): a laboratory refuses samples sent off schedule (Guideline p.5).</p>` };
+};
+SCREENS.jlate = () => ({ id:'J-09', title:'Late steps escalated', refs:'H9 · J-J6 · built (S6, D-121)', html:`
+  <h2>Late steps escalated to the division</h2><p class="sub">What reaches the DJDA by the built escalation ladder (interim, D-121): an inspector's act late at level 2, a D.Q.C.I.'s act late at level 1.</p>
+  ${(S.empty ? [] : S.D.jlate).map((l) => `<div class="card"><b>${esc(l.who)}</b> · ${esc(l.step)}<div class="k">Due ${esc(l.due)} · ${l.days} days late · ${esc(l.why)}</div>${S.D.jreminded[l.who] ? '<span class="tag">Reminded today</span>' : `<button type="button" class="btn alt" data-act="j-remind" data-who="${esc(l.who)}">Remind</button>`}</div>`).join('') || '<div class="msg note">No late steps escalated.</div>'}
+  <p class="hint">Findings and more time stay where the built Time limits screen gives them (S6 part 2).</p>` });
+const qactJBase = qact;
+qact = function (a, t) {
+  if (a === 'j-import' || a === 'j-blank') {
+    const T = S.D.tgt;
+    DIVISION.forEach((d) => { T.split[d] = {}; ['S', 'F', 'I'].forEach((i) => { const n = JINSP(d).length, tot = T.dqc[d][i]; const base = Math.floor(tot / n); const arr = Array(n).fill(base); arr[0] += tot - base * n; if (a === 'j-import' && d === 'Satara' && i === 'F') arr[1] -= 4; T.split[d][i] = a === 'j-import' ? arr : Array(n).fill(0); }); });
+    T.imported = true; log(a === 'j-import' ? 'Commissionerate\'s inspector-wise split imported (simulated); Satara fertiliser 4 short of the Director QC\'s target' : 'Split started blank for the DJDA to enter'); render(); return true;
+  }
+  return qactJBase(a, t);
+};
+const qactCommitJBase = qactCommit;
+qactCommit = function (a, t) {
+  const D = S.D;
+  if (a === 'j-con') {
+    const k = D.cons.find((x) => x.id === t.dataset.id); if (!jconOk()) return true;
+    k.status = ({ give:'given', refuse:'refused', back:'back' })[S.Q.out]; k.text = (S.Q.text || '').trim(); k.when = TODAY;
+    log(({ given:`Consent given for ${k.sample} (written consent fixed, hash); ${k.inspector} can file; the DSAO of ${k.district} sees it`, refused:`Consent refused for ${k.sample}: ${k.text}; ${k.inspector} told`, back:`Consent request ${k.id} sent back to ${k.inspector}: ${k.text}` })[k.status]);
+    S.Q = {}; toast(({ given:'Consent given.', refused:'Consent refused.', back:'Sent back to the inspector.' })[k.status]); render(); return true;
+  }
+  if (a === 'j-approve') {
+    const f = D.refs.find((x) => x.id === t.dataset.id); if (!S.Q.lab) return true;
+    if (f.state === 'r1') { f.lab1 = S.Q.lab; f.state = 'r1lab'; f.hist.push(`${TODAY}: round 1 approved, the seller's retained sample to ${S.Q.lab}`); }
+    else { f.lab2 = S.Q.lab; f.state = 'r2lab'; f.hist.push(`${TODAY}: round 2 approved, the inspector's retained sample to ${S.Q.lab}`); }
+    log(`${f.id}: referee analysis approved (${f.state === 'r1lab' ? 'round 1' : 'round 2'}), dispatch prepared to ${S.Q.lab}`); S.Q = {}; toast('Approved.'); render(); return true;
+  }
+  if (a === 'j-reject') { const f = D.refs.find((x) => x.id === t.dataset.id); if (!(S.Q.reasons || '').trim()) return true; f.reasons = S.Q.reasons.trim(); f.state = 'rejected'; f.hist.push(`${TODAY}: rejected (${f.reasons})`); log(`${f.id}: referee request rejected; no further referee analysis`); S.Q = {}; toast('Rejected.'); render(); return true; }
+  if (a === 'j-court') { const f = D.refs.find((x) => x.id === t.dataset.id); f.state = 'court'; f.hist.push(`${TODAY}: court proceedings directed by the DJDA`); log(`${f.id}: court proceedings directed; the inspector's court case prepared`); toast('Court proceedings directed.'); render(); return true; }
+  if (a === 'j-final') { const T = D.tgt; if (!jallMatch()) return true; T.status = 'final'; T.when = TODAY; log(`Targets ${T.year} version ${T.version} finalised (fixed); each inspector's My targets updated, binding as issued (UXD-68)`); toast('Targets finalised.'); render(); return true; }
+  if (a === 'j-newver') { const T = D.tgt; T.version += 1; T.status = 'draft'; log(`Targets ${T.year}: version ${T.version} started from version ${T.version - 1}`); render(); return true; }
+  if (a === 'j-remind') { D.jreminded[t.dataset.who] = TODAY; log(`Reminder sent to ${t.dataset.who}`); toast(`Reminder sent to ${t.dataset.who}.`); render(); return true; }
+  if (a === 'j-download') { log(`Downloaded manufacturer-inspections-pune-division-2026-11.${t.dataset.f} (simulated)`); toast(`Downloaded (simulated).`); render(); return true; }
+  return qactCommitJBase(a, t);
+};
+const qButtonsJBase = qButtons;
+qButtons = function () {
+  qButtonsJBase();
+  const b = document.getElementById('j-con-btn'); if (b) b.disabled = !jconOk();
+  const ap = document.getElementById('j-approve'); if (ap) ap.disabled = !S.Q.lab;
+  const rj = document.getElementById('j-reject'); if (rj) rj.disabled = !(S.Q.reasons || '').trim();
+};
+const bindJBase = bind;
+bind = function (el, changed) {
+  if (el.dataset && el.dataset.jt) {
+    const [d, i, n] = el.dataset.jt.split('.'); S.D.tgt.split[d][i][+n] = +el.value || 0;
+    if (changed) { render(); return; }
+    const T = S.D.tgt, diff = jtotal(d, i) - T.dqc[d][i], m = document.getElementById('j-tot');
+    if (m) { m.className = `msg ${diff === 0 ? 'ok' : 'err'}`; m.textContent = `${d} · ${({ S:'Seed', F:'Fertiliser', I:'Insecticide' })[i]}: ${jtotal(d, i)} of the Director QC's ${T.dqc[d][i]}${diff === 0 ? '' : ` · ${diff < 0 ? `${-diff} short` : `${diff} over`}`}`; }
+    const fb = document.getElementById('j-final'); if (fb) fb.disabled = !jallMatch();
+    return;
+  }
+  if (el.dataset && el.dataset.bind === 'q.out') { S.Q.out = el.value; render(); return; }
+  return bindJBase(el, changed);
+};
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-jchip],[data-jinput],[data-jseed]'); if (!t) return;
+  if (t.dataset.jchip) S.D.jchip = t.dataset.jchip; if (t.dataset.jinput) S.D.jinput = t.dataset.jinput; if (t.dataset.jseed) S.D.jseedview = t.dataset.jseed;
+  render();
+});
+const fireEventJBase = fireEvent;
+fireEvent = function (ev) {
+  const R = S.D.refs;
+  if (ev === 'j-fail') { const f = R.find((x) => x.state === 'r1lab' || x.state === 'r2lab'); if (f) { if (f.state === 'r1lab') { f.state = 'r1fail'; f.hist.push(`${TODAY}: round 1 failed`); } else { f.state = 'court'; f.hist.push(`${TODAY}: round 2 failed; court proceedings start`); } log(`${f.id}: referee result entered: fail`); } else log('No referee analysis is at a laboratory'); render(); return; }
+  if (ev === 'j-pass') { const f = R.find((x) => x.state === 'r1lab' || x.state === 'r2lab'); if (f) { f.state = 'passed'; f.hist.push(`${TODAY}: passed at referee`); log(`${f.id}: referee result entered: pass`); } else log('No referee analysis is at a laboratory'); render(); return; }
+  if (ev === 'j-r2') { const f = R.find((x) => x.state === 'r1fail'); if (f) { f.state = 'r2req'; f.hist.push(`${TODAY}: the seller asks for round 2 (seller portal)`); log(`${f.id}: the seller asks for round 2`); } else log('No appeal is waiting for the seller after a failed round 1'); render(); return; }
+  return fireEventJBase(ev);
+};
+const qactJIntel = qact;
+qact = function (a, t) { const r = qactJIntel(a, t); if (a === 'q-intel' && t.dataset.input && S.modal) { S.modal.input = t.dataset.input; render(); } return r; };
+(() => { const g = document.querySelector('[data-ev="reset"]'); if (g) g.insertAdjacentHTML('beforebegin', '<button type="button" class="sc" data-djda-only data-ev="j-fail">Referee result arrives: fail</button><button type="button" class="sc" data-djda-only data-ev="j-pass">Referee result arrives: pass</button><button type="button" class="sc" data-djda-only data-ev="j-r2">Seller asks for round 2</button>'); })();
+const renderControlsJBase = renderControls;
+renderControls = function () { renderControlsJBase(); document.querySelectorAll('[data-djda-only]').forEach((el) => { el.style.display = S.role === 'DJDA' ? '' : 'none'; }); };
+const JJUMP = [['home', 'J-01 Home: Waiting on you'], ['jcons', 'J-02 Consent requests'], ['jcon:K2', 'J-03 A late consent request'], ['jref', 'J-04 Referee appeals'], ['jre:F1', 'J-05 Round 1 to decide'], ['jre:F2', 'J-05 Round 2 to decide'], ['jtgt', 'J-06 Inspector-wise targets'], ['jmfg', 'J-07 Manufacturers'], ['jseed', 'J-08 Seed sampling'], ['jlate', 'J-09 Late steps escalated'], ['dash', 'J-10 Division dashboard'], ['inspect', 'J-11 Inspect'], ['alerts', 'J-12 Alerts'], ['people', 'D-19 Inspectors in your area (shared)'], ['ann', 'D-16 Announcements (shared)'], ['refs', 'A DSAO screen (refused)']];
+
 /* ---------- controls ---------- */
 function renderControls() {
   document.getElementById('roles').innerHTML = ROLES.map(([r, on]) => {
     const key = r === 'D.Q.C.I.' ? 'DQCI' : r;
-    const title = r === 'Inspector' ? `title="Opens the inspector prototype as its sample field inspector (${FIELD_INSPECTOR_CODE}); the inspector screens are the inspector workstream's"` : (r === 'DJDA' ? 'title="Being designed: its Gate 2 is in progress"' : (on ? '' : 'title="Not designed yet: its Gate 2 has not started"'));
+    const title = r === 'Inspector' ? `title="Opens the inspector prototype as its sample field inspector (${FIELD_INSPECTOR_CODE}); the inspector screens are the inspector workstream's"` : (on ? '' : 'title="Not designed yet: its Gate 2 has not started"');
     return `<button type="button" ${on ? `data-role="${key}"` : 'disabled'} aria-pressed="${key === S.role}" ${title}>${esc(r)}${on ? '' : ' · not yet'}</button>`;
   }).join('');
   document.getElementById('c-empty-label').textContent = `Nothing waits on the ${ROLE_NAME[S.role]} (empty states)`;
-  document.getElementById('jump').innerHTML = (S.role === 'DQCI' ? QJUMP : DJUMP).map(([g, t]) => `<button type="button" class="sc" data-go="${esc(g)}">${esc(t)}</button>`).join('');
+  document.getElementById('jump').innerHTML = (S.role === 'DQCI' ? QJUMP : S.role === 'DJDA' ? JJUMP : DJUMP).map(([g, t]) => `<button type="button" class="sc" data-go="${esc(g)}">${esc(t)}</button>`).join('');
   document.querySelectorAll('[data-dsao-only]').forEach((el) => { el.style.display = S.role === 'DSAO' ? '' : 'none'; });
 }
 const QJUMP = [['home', 'Q-01 Home: Due for you'], ['mfg', 'Q-02 Manufacturers due'], ['unit:M5', 'Q-03 An overdue unit'], ['grades', 'Q-04 Sampling by company and grade'], ['forum', 'Q-05 Consumer-forum register'], ['fcase:C1', 'Q-06 A case with a hearing soon'], ['inspect', 'Q-07 Inspect'], ['alerts', 'Q-08 Alerts'], ['dash', 'D-18 Dashboard (shared)'], ['people', 'D-19 Inspectors in your area (shared)'], ['who:A.O.(TAO) Baramati', 'D-11 An inspector\'s items (shared)'], ['ann', 'D-16 Announcements (shared)'], ['refs', 'A DSAO screen (refused)']];
