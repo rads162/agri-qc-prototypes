@@ -593,7 +593,9 @@ function chrome(inner, opts = {}) {
   const top = `<div class="top">${back}<span class="grow"><b>${esc(opts.title || t('portal'))}</b></span>${lang}</div>`;
   const unread = B().messages.filter((g) => !S.read[g.id]).length;
   const nav = S.signed && !opts.noNav ? `<nav class="bbar" aria-label="Sections">${[['home', 'home'], ['matters', 'matters'], ['messages', 'messages'], ['business', 'business']].map(([s, k]) => `<button data-act="nav" data-s="${s}" class="${S.section === s ? 'on' : ''}" ${S.section === s ? 'aria-current="page"' : ''}>${t(k)}${s === 'messages' && unread ? `<i class="badge">${unread}</i>` : ''}</button>`).join('')}</nav>` : '';
-  return `${gov}${top}<div class="scr" id="scr">${inner}</div>${S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : ''}${nav}`;
+  // SXD-24: on the phone the Department strip shows on the sign-in screens only; once signed in, the screen's own top bar alone
+  const signedIn = S.signed && S.screen !== 'choose';
+  return `${signedIn ? '' : gov}${top}<div class="scr" id="scr">${inner}</div>${S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : ''}${nav}`;
 }
 function go(screen, extra = {}) { if (S.screen && S.screen !== screen) S.stack.push({ screen: S.screen, mcur: S.mcur, pcur: S.pcur }); S.screen = screen; Object.assign(S, extra); S.err = ''; render(); const s = $('scr'); if (s) s.scrollTop = 0; }
 function nav(section) { S.section = section; S.stack = []; S.screen = section; S.err = ''; render(); }
