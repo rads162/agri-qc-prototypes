@@ -251,7 +251,7 @@ const W = {
   noCodeHelp: ['Wait a minute and send a new code. If this is no longer your number, contact your district office: {o}. The portal never shows a code on screen.', 'एक मिनिट थांबा आणि नवीन कोड पाठवा. हा क्रमांक आता आपला नसल्यास आपल्या जिल्हा कार्यालयाशी संपर्क साधा: {o}. पोर्टल कधीही कोड स्क्रीनवर दाखवत नाही.'],
   resend: ['Send a new code', 'नवीन कोड पाठवा'], chooseBiz: ['Choose the business', 'व्यवसाय निवडा'],
   chooseHint: ['This mobile is registered for two businesses.', 'हा मोबाईल दोन व्यवसायांसाठी नोंदणीकृत आहे.'], cont: ['Continue', 'पुढे'],
-  home: ['Home', 'मुख्यपृष्ठ'], matters: ['My matters', 'माझी प्रकरणे'], messages: ['Messages', 'संदेश'], business: ['My business', 'माझा व्यवसाय'],
+  home: ['Home', 'मुख्यपृष्ठ'], matters: ['My matters', 'माझी प्रकरणे'], messages: ['Messages', 'संदेश'], business: ['My firm', 'माझी फर्म'],
   todo: ['To do', 'करायची कामे'], nothingTodo: ['Nothing to do now.', 'सध्या काहीही करायचे नाही.'],
   newSince: ['New since your last visit', 'मागील भेटीनंतर नवीन'], glance: ['At a glance', 'एका दृष्टीक्षेपात'],
   licences: ['Licences', 'परवाने'], samples: ['Samples', 'नमुने'], latestAnn: ['Latest announcement', 'नवीन घोषणा'],
@@ -608,7 +608,7 @@ function render() {
   document.querySelectorAll('#scenarios .sc').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.biz === S.biz)));
   bindInputs();
 }
-const WHERE = { sms: 'the SMS on the seller’s phone (not part of the portal)', signin: 'SS-01 Sign in', code: 'SS-02 Enter the code', choose: 'SS-03 Choose the business', home: 'SS-04 Home', matters: 'SS-05 My matters', matter: 'SS-06 Matter page', paper: 'SS-07 Paper', reply: 'SS-08 Reply (as S-111 of the inspector prototype)', received: 'SS-09 Reply received', add: 'SS-08a Add to my reply (SXD-15)', contest: 'SS-10 Contest notice', messages: 'SS-12 Messages', message: 'SS-13 Message or announcement', business: 'SS-14 My business', licences: 'SS-15 Licences', licence: 'SS-16 Licence', leaving: 'SS-17 Leaving for e-Parwana', ep: 'e-Parwana (MOCK page, not part of the portal)', papers: 'SS-18 All papers', subs: 'SS-19 My submissions', help: 'SS-20 Help and contact', account: 'SS-21 Account' };
+const WHERE = { sms: 'the SMS on the seller’s phone (not part of the portal)', signin: 'SS-01 Sign in', code: 'SS-02 Enter the code', choose: 'SS-03 Choose the business', home: 'SS-04 Home', matters: 'SS-05 My matters', matter: 'SS-06 Matter page', paper: 'SS-07 Paper', reply: 'SS-08 Reply (as S-111 of the inspector prototype)', received: 'SS-09 Reply received', add: 'SS-08a Add to my reply (SXD-15)', contest: 'SS-10 Contest notice', messages: 'SS-12 Messages', message: 'SS-13 Message or announcement', business: 'SS-14 My firm', licences: 'SS-15 Licences', licence: 'SS-16 Licence', leaving: 'SS-17 Leaving for e-Parwana', ep: 'e-Parwana (MOCK page, not part of the portal)', papers: 'SS-18 All papers', subs: 'SS-19 My submissions', help: 'SS-20 Help and contact', account: 'SS-21 Account' };
 
 /* SMS on the phone (outside the portal) */
 SCR.sms = function () {
