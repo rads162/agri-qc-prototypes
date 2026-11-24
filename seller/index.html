@@ -277,6 +277,8 @@ const W = {
   correctOffice: ['To correct these details, ask your district office.', 'या तपशिलांच्या दुरुस्तीसाठी आपल्या जिल्हा कार्यालयाशी संपर्क साधा.'],
   noLicence: ['The portal has no licence on record for this business.', 'या व्यवसायाचा कोणताही परवाना पोर्टलकडे नोंदलेला नाही.'],
   renew: ['Renew in e-Parwana', 'ई-परवाना मध्ये नूतनीकरण करा'], vValid: ['Valid', 'वैध'], vRenew: ['To be renewed', 'नूतनीकरण करायचे'], vExpired: ['Expired', 'मुदत संपली'],
+  renewLic: ['Renew licence {no}', 'परवाना {no} चे नूतनीकरण करा'], licExpired: ['Licence {no} has expired', 'परवाना {no} ची मुदत संपली आहे'],
+  expiredOn: ['Expired on {d}. Renew it in e-Parwana.', '{d} रोजी मुदत संपली. ई-परवाना मध्ये नूतनीकरण करा.'], renewInEp: ['The renewal is done in e-Parwana.', 'नूतनीकरण ई-परवाना मध्ये केले जाते.'],
   asOn: ['As on {d}', '{d} रोजीनुसार'], receipt: ['Receipt', 'पावती'], replyReceived: ['Reply received', 'उत्तर प्राप्त झाले'],
   backMatter: ['Back to the matter', 'प्रकरणाकडे परत'], papersEn: ['In this prototype the papers are shown in English. In the portal they are shown as issued.', 'या नमुन्यात कागदपत्रे इंग्रजीत दाखवली आहेत. पोर्टलमध्ये ती जारी केल्याप्रमाणे दिसतील.'],
   draft: ['Draft saved {t}', 'मसुदा जतन केला {t}'], notStarted: ['Not started', 'सुरू केलेले नाही'], left: ['{k} of {n} points answered', '{n} पैकी {k} मुद्द्यांना उत्तर दिले'],
@@ -346,7 +348,8 @@ function freshData() {
       places: [{ id: 'q1', name: 'Shop, Camp Road, Malegaon', district: 'Nashik' }, { id: 'q2', name: 'Godown, MIDC Avadhan, Dhule', district: 'Dhule' }],
       licences: [
         { input: 'Seeds', kind: 'Dealer in seeds (Form B)', no: 'SEED-0000-4404 (made up)', from: '2022-02-01', to: '2027-01-31', state: 'valid', issuer: 'Licensing authority, Nashik' },
-        { input: 'Fertilisers', kind: 'Retail dealer, district level (Form A2), sale point Malegaon, godown Dhule', no: 'FERT-0000-5505 (made up)', from: '2023-08-01', to: '2028-07-31', state: 'valid', issuer: 'Licensing authority, Nashik' }],
+        { input: 'Fertilisers', kind: 'Retail dealer, district level (Form A2), sale point Malegaon, godown Dhule', no: 'FERT-0000-5505 (made up)', from: '2023-08-01', to: '2028-07-31', state: 'valid', issuer: 'Licensing authority, Nashik' },
+        { input: 'Insecticides', kind: 'Sale, stock and distribution (Form III), shop Malegaon', no: 'INSC-0000-9909 (made up)', from: '2021-11-11', to: '2026-11-10', state: 'expired', issuer: 'Licensing authority, Nashik' }],
       sms: 'Agri Dept: Laboratory report for sample S-2026-0420 (Shree Krishi Seva Kendra, godown Dhule): failed. Open: {link}',
       link: 'k2',
       matters: [
@@ -370,7 +373,8 @@ function freshData() {
           tl: [['2026-10-21', 'Sample S-2026-0420 drawn at the godown · your portion confirmed by code', 'गोदामात नमुना S-2026-0420 घेतला · आपला भाग कोडने निश्चित'], ['2026-10-23', 'At the laboratory', 'प्रयोगशाळेत'], ['2026-11-19', 'Report released: failed', 'अहवाल प्रसिद्ध: अप्रमाणित'], ['2026-11-20', 'Stop sale order on lot L551 issued', 'लॉट L551 वर विक्री बंदी आदेश जारी']] }],
       messages: [
         { id: 'g3', type: 'msg', date: '2026-11-19', matter: 'k2', en: 'Laboratory report for sample S-2026-0420 is available.', mr: 'नमुना S-2026-0420 चा प्रयोगशाळा अहवाल उपलब्ध आहे.' },
-        { id: 'g4', type: 'msg', date: '2026-11-16', matter: 'k1', en: 'Notice NTC-NSK-2026-0310: outcome given.', mr: 'नोटीस NTC-NSK-2026-0310: निर्णय दिला.' }],
+        { id: 'g4', type: 'msg', date: '2026-11-16', matter: 'k1', en: 'Notice NTC-NSK-2026-0310: outcome given.', mr: 'नोटीस NTC-NSK-2026-0310: निर्णय दिला.' },
+        { id: 'g9', type: 'msg', date: '2026-11-11', lic: 2, en: 'Licence INSC-0000-9909 expired on 10 Nov 2026. Renew it in e-Parwana.', mr: 'परवाना INSC-0000-9909 ची मुदत 10 नोव्हें 2026 रोजी संपली. त्याचे ई-परवाना मध्ये नूतनीकरण करा.' }],
     },
     kisan: {
       name: 'Kisan Agro Inputs', town: 'Indapur', mobile: '••••• ••517', mobileFrom: ['Confirmed at the shop by code on 14 Oct 2026: Shri S. K. Kale, proprietor (e-Parwana gave no mobile, SXD-10)', '14 ऑक्टो 2026 रोजी दुकानात कोडने निश्चित: श्री एस. के. काळे, मालक (ई-परवाना मध्ये मोबाईल नव्हता, SXD-10)'],
@@ -652,9 +656,20 @@ SCR.choose = function () {
   <div class="sim">SXQ-10 is a Department question; the default is “allowed, choose after the code”.</div>`, { title: t('portal'), noNav: true });
 };
 
+/* Licences near expiry or expired (SXD-26). "Near expiry" is the configured period (30 days, proposed); the state comes
+   from e-Parwana's copy. The renewal itself is done in e-Parwana. */
+const licTodo = (b) => b.licences.map((l, i) => ({ l, i })).filter(({ l }) => l.state === 'renew' || l.state === 'expired');
+const licWord = (l) => (l.state === 'renew' ? 'vRenew' : l.state === 'expired' ? 'vExpired' : 'vValid');
+const licChip = (l) => `<span class="chip ${l.state === 'valid' ? 'ok' : 'late'}">${t(licWord(l))}</span>`;
+const licBanner = (l) => (l.state === 'expired' ? `<div class="date late" role="status">${t('expiredOn', { d: fd(l.to) })}</div>` : dateBanner(l.to));
+const licNo = (l) => l.no.replace(' (made up)', '');
+const licCard = (l, i) => `<button class="card" data-act="openLic" data-i="${i}"><b>${l.state === 'expired' ? t('licExpired', { no: esc(licNo(l)) }) : t('renewLic', { no: esc(licNo(l)) })}</b><span class="tag">${esc(l.input)}</span>${licBanner(l)}<span class="hint">${t('renewInEp')}</span></button>`;
+
 /* Home */
 SCR.home = function () {
-  const b = B(); const todo = b.matters.filter(actionOf).sort((x, y) => day(dueOf(x)) - day(dueOf(y)));
+  const b = B();
+  // SXD-26: a licence near expiry (state "renew", the configured period) or expired is a dated item in To do, beside replies and contest notices
+  const todo = [...b.matters.filter(actionOf).map((m) => ({ m, due: dueOf(m) })), ...licTodo(b).map(({ l, i }) => ({ l, i, due: l.to }))].sort((x, y) => day(x.due) - day(y.due));
   const fresh = [];
   b.matters.forEach((m) => m.papers.forEach((p) => { if (b.lastVisit && day(p.date) > day(b.lastVisit)) fresh.push({ m, p }); }));
   fresh.sort((x, y) => day(y.p.date) - day(x.p.date));
@@ -664,10 +679,10 @@ SCR.home = function () {
   const ann = b.messages.filter((g) => g.type === 'ann')[0];
   const head = `<h2 id="h" tabindex="-1">${esc(b.name)}</h2><p class="hint">${esc(b.places.length > 1 ? `${b.places[0].name} ${bi(`and ${b.places.length - 1} other place`, `आणि आणखी ${b.places.length - 1} ठिकाण`)}` : (b.places[0] ? b.places[0].name : b.town))}</p>`;
   const todoH = `<h3>${t('todo')}</h3>
-  ${todo.length ? todo.map((m) => `<button class="card" data-act="openMatter" data-m="${m.id}"><b>${actionOf(m) === 'reply' ? `${t('reply')} · ${esc(m.papers[0].no)}` : `${t('contest')} · ${esc(m.sampleNo)}`}</b>${tags(m)}${dateBanner(dueOf(m))}</button>`).join('') : `<p class="hint">${t('nothingTodo')}</p>`}
+  ${todo.length ? todo.map(({ m, l, i }) => (l ? licCard(l, i) : `<button class="card" data-act="openMatter" data-m="${m.id}"><b>${actionOf(m) === 'reply' ? `${t('reply')} · ${esc(m.papers[0].no)}` : `${t('contest')} · ${esc(m.sampleNo)}`}</b>${tags(m)}${dateBanner(dueOf(m))}</button>`)).join('') : `<p class="hint">${t('nothingTodo')}</p>`}
   ${fresh.length ? `<h3>${t('newSince')}</h3>${fresh.map(({ m, p }) => `<button class="card" data-act="openMatter" data-m="${m.id}"><b>${esc(p.form.split(' (')[0])}${p.result ? ` · ${p.result === 'pass' ? t('sPassed') : t('sFailed')}` : ''}</b><span class="hint">${esc(p.no)} · ${fd(p.date)}</span></button>`).join('')}` : ''}`;
   const glanceH = `<h3>${t('glance')}</h3>
-  ${b.licences.length ? `<p class="hint" style="margin-top:6px">${t('licences')}</p><div class="figs">${Object.entries(licBy).map(([inp, ls]) => `<button class="figb" data-act="nav" data-s="licences"><b>${ls.length}</b><span>${esc(inp)} · ${ls.map((l) => t(l.state === 'renew' ? 'vRenew' : l.state === 'expired' ? 'vExpired' : 'vValid')).join(', ')}</span></button>`).join('')}</div>` : ''}
+  ${b.licences.length ? `<p class="hint" style="margin-top:6px">${t('licences')}</p><div class="figs">${Object.entries(licBy).map(([inp, ls]) => `<button class="figb" data-act="nav" data-s="licences"><b>${ls.length}</b><span>${esc(inp)} · ${ls.map((l) => t(licWord(l))).join(', ')}</span></button>`).join('')}</div>` : ''}
   <p class="hint" style="margin-top:8px">${t('matters')}</p><div class="figs"><button class="figb" data-act="mattersOpen" data-o="open"><b>${open}</b><span>${t('openFirst')}</span></button><button class="figb" data-act="mattersOpen" data-o="closed"><b>${closed}</b><span>${t('closedL')}</span></button></div>
   ${samples.length ? `<p class="hint" style="margin-top:8px">${t('samples')}</p><div class="figs">${samples.map((m) => `<button class="figb" data-act="openMatter" data-m="${m.id}"><b>${esc(m.input)}</b><span>${m.state === 'lab' ? t('sLab') : m.state === 'passed' ? t('sPassed') : t('sFailed')}</span></button>`).join('')}</div>` : ''}
   ${ann ? `<h3>${t('latestAnn')}</h3><button class="card" data-act="openMsg" data-g="${ann.id}"><span class="tag">${t('annLabel')}</span><b>${esc(ann.from)}</b><span class="hint">${esc(bi(ann.en, ann.mr)).slice(0, 90)}…</span></button><button class="lnk" data-act="nav" data-s="messages">${t('allMsgs')} ›</button>` : ''}`;
@@ -700,7 +715,7 @@ SCR.matters = function () {
 /* The matter page */
 SCR.matter = function () {
   const b = B(); const m = M(S.mcur); const o = OFF[m.off]; const f = five(m); const a = actionOf(m);
-  const others = b.matters.filter((x) => x.id !== m.id && actionOf(x)).length;
+  const others = b.matters.filter((x) => x.id !== m.id && actionOf(x)).length + licTodo(b).length;
   const pts = (m.kind === 'insp' || m.kind === 'up') && m.points ? `<ol style="margin:4px 0 0;padding-left:18px">${m.points.map((p) => `<li value="${p.n}">${esc(p.t)}</li>`).join('')}</ol>` : '';
   const outcome = m.outcome ? `<h3>${bi('Outcome, point by point', 'निर्णय, मुद्दानिहाय')}</h3>${m.outcome.map(([k, ok, en, mr]) => { const p = m.points.find((x) => x.key === k); return `<div class="card"><div class="row"><b>${t('point')} ${p.n}. ${esc(p.t)}</b><span class="chip ${ok === 'yes' ? 'ok' : 'fail'}">${ok === 'yes' ? bi('Complied', 'पालन केले') : bi('Not complied', 'पालन नाही')}</span></div><p class="hint">${esc(bi(en, mr))}</p></div>`; }).join('')}` : '';
   const reply = m.reply && (m.kind === 'insp' || m.kind === 'up') ? `<h3>${bi('Your reply', 'आपले उत्तर')}</h3><div class="card"><b>${t('subAt', { t: esc(m.reply.at) })}${m.reply.late ? ` <span class="tag">${bi('late', 'उशिराचे')}</span>` : ''}</b>${m.points.map((p) => { const r = m.reply.points[p.key] || {}; return `<p class="hint">${t('point')} ${p.n}: ${esc(CH[r.choice] ? bi(CH[r.choice][0], CH[r.choice][1]) : '')}${r.by ? ' ' + esc(r.by) : ''}${r.text ? ` · “${esc(r.text)}”` : ''}${(r.files || []).length ? ` · ${r.files.map(esc).join(', ')}` : ''}</p>`; }).join('')}${(m.additions || []).map((x) => `<p class="hint"><b style="display:inline">${bi('Addition', 'भर')} · ${esc(x.at)}</b> · ${bi('points', 'मुद्दे')} ${x.points.join(', ')} · ${x.files.map(esc).join(', ')}${x.note ? ` · “${esc(x.note)}”` : ''}${x.late ? ` <span class="tag">${bi('late', 'उशिराचे')}</span>` : ''}</p>`).join('')}</div>` : '';
@@ -859,7 +874,7 @@ SCR.business = function () {
 };
 SCR.licences = function () {
   const b = B();
-  const chip = (l) => `<span class="chip ${l.state === 'renew' ? 'late' : 'ok'}">${t(l.state === 'renew' ? 'vRenew' : 'vValid')}</span>`;
+  const chip = licChip;
   const list = desk()
     ? table([bi('Input', 'निविष्ठा'), bi('Kind', 'प्रकार'), bi('Licence no.', 'परवाना क्र.'), bi('Valid to', 'पर्यंत वैध'), bi('State', 'स्थिती')], b.licences.map((l, i) => `<tr data-act="openLic" data-i="${i}"><td><button class="lnk" data-act="openLic" data-i="${i}">${esc(l.input)}</button></td><td>${esc(l.kind)}</td><td>${esc(l.no)}</td><td>${fd(l.to)}</td><td>${chip(l)}</td></tr>`))
     : b.licences.map((l, i) => `<button class="card" data-act="openLic" data-i="${i}"><div class="row"><b>${esc(l.input)}</b>${chip(l)}</div><span class="hint">${esc(l.kind)}<br>${esc(l.no)} · ${bi('valid to', 'पर्यंत वैध')} ${fd(l.to)}</span></button>`).join('');
@@ -869,10 +884,10 @@ SCR.licences = function () {
 SCR.licence = function () {
   const l = B().licences[S.lcur];
   const canRenew = l.state === 'renew' || l.state === 'expired';
-  return chrome(`<div class="row"><h2 id="h" tabindex="-1">${esc(l.input)}</h2><span class="chip ${canRenew ? 'late' : 'ok'}">${t(l.state === 'renew' ? 'vRenew' : 'vValid')}</span></div>
+  return chrome(`<div class="row"><h2 id="h" tabindex="-1">${esc(l.input)}</h2>${licChip(l)}</div>
   <dl class="kv"><dt>${bi('Kind', 'प्रकार')}</dt><dd>${esc(l.kind)}</dd><dt>No.</dt><dd>${esc(l.no)}</dd><dt>${bi('Issued by', 'जारी करणारे')}</dt><dd>${esc(l.issuer)}</dd><dt>${bi('Valid', 'वैधता')}</dt><dd>${fd(l.from)} – ${fd(l.to)}</dd><dt>${bi('Products covered', 'समाविष्ट उत्पादने')}</dt><dd>${bi('Shown when e-Parwana provides them', 'ई-परवाना कडून मिळाल्यावर दाखवली जातील')}</dd></dl>
   <p class="hint">${t('asOn', { d: fd('2026-11-20') })} · e-Parwana</p>
-  ${canRenew ? `${dateBanner(l.to)}<button class="btn main" data-act="goto" data-s="leaving">${t('renew')}</button>` : ''}
+  ${canRenew ? `${licBanner(l)}<button class="btn main" data-act="goto" data-s="leaving">${t('renew')}</button>` : ''}
   <p class="hint">${bi('Renewal status is shown only if e-Parwana can give it (SXQ-16).', 'नूतनीकरणाची स्थिती ई-परवाना देऊ शकल्यासच दाखवली जाईल (SXQ-16).')}</p>`, { title: t('kLic'), back: true });
 };
 SCR.leaving = function () {
