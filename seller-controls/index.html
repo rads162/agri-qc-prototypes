@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+<title>Seller portal prototype</title>
+<style>
+/* Low-fidelity clickable prototype of the seller's side (docs/ux/seller-portal, SXD-01 to SXD-16; screens SS-01 to
+   SS-21 of 09/10). Greys only, system font, no branding, as the inspector prototype. Every server answer, SMS and
+   hand-over is SIMULATED in this file; nothing is sent anywhere. All businesses, people and numbers are made up. */
+:root { --ink:#111; --soft:#555; --line:#999; --fill:#e6e6e6; --fill2:#f3f3f3; --bg:#fafafa; --paper:#fff; --inv:#fff; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink:#eee; --soft:#b5b5b5; --line:#777; --fill:#333; --fill2:#262626; --bg:#151515; --paper:#1d1d1d; --inv:#111; color-scheme:dark; } }
+:root[data-theme="dark"] { --ink:#eee; --soft:#b5b5b5; --line:#777; --fill:#333; --fill2:#262626; --bg:#151515; --paper:#1d1d1d; --inv:#111; color-scheme:dark; }
+* { box-sizing:border-box; }
+html, body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+button, input, select, textarea { font:inherit; color:inherit; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline:3px solid var(--ink); outline-offset:2px; }
+.banner { background:var(--ink); color:var(--inv); padding:8px 16px; font-size:13px; }
+.banner b { letter-spacing:.04em; }
+.wrap { max-width:1180px; margin:0 auto; padding:16px; display:grid; grid-template-columns:minmax(0,380px) minmax(0,1fr); gap:24px; align-items:start; }
+@media (max-width:820px) { .wrap { grid-template-columns:minmax(0,1fr); } }
+.wrap > * { min-width:0; }
+/* the phone */
+.phone { width:100%; max-width:380px; height:740px; border:2px solid var(--ink); border-radius:20px; background:var(--paper); overflow:hidden; display:flex; flex-direction:column; position:relative; }
+@media (max-width:420px) { .phone { height:auto; min-height:80vh; border-radius:12px; } }
+.gov { min-height:40px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:8px; padding:4px 10px; font-size:11px; color:var(--soft); flex:none; }
+.emb { width:26px; height:26px; border:1px dashed var(--line); display:grid; place-items:center; font-size:9px; flex:none; }
+.top { min-height:48px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:6px; padding:0 8px; background:var(--fill2); font-size:12px; flex:none; }
+.top .grow { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.scr { flex:1; overflow:auto; padding:14px 16px 16px; position:relative; min-width:0; }
+h2 { font-size:17px; margin:4px 0 10px; text-wrap:balance; }
+h3 { font-size:14px; margin:16px 0 6px; }
+label.f { display:block; font-weight:600; font-size:12px; margin:12px 0 4px; }
+.hint { font-size:12px; color:var(--soft); margin:3px 0; }
+input.t, textarea.t, select.t { width:100%; min-height:44px; border:1px solid var(--ink); border-radius:4px; padding:8px 10px; background:var(--paper); }
+.btn { width:100%; min-height:48px; border-radius:6px; font-weight:600; margin-top:12px; cursor:pointer; }
+.btn.main { background:var(--ink); color:var(--inv); border:2px solid var(--ink); }
+.btn.alt { background:var(--paper); border:1px solid var(--ink); }
+.lnk { background:none; border:0; padding:6px 0; text-decoration:underline; cursor:pointer; font-size:13px; text-align:left; min-height:32px; }
+.msg { border:2px solid var(--ink); border-radius:4px; padding:8px 10px; margin:0 0 10px; font-size:13px; }
+.msg.err::before { content:"⚠ "; } .msg.ok::before { content:"✓ "; } .msg.note { border-style:dashed; }
+.sim { border:2px dashed var(--ink); padding:6px 8px; margin:8px 0; font-size:12px; background:var(--fill2); }
+.sim::before { content:"SIMULATED · "; font-weight:700; }
+.mock { border:2px dashed var(--ink); padding:6px 8px; margin:8px 0; font-size:12px; background:var(--fill2); }
+.mock::before { content:"MOCK · "; font-weight:700; }
+.card { border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-top:10px; background:var(--paper); }
+button.card { display:block; width:100%; text-align:left; cursor:pointer; }
+.card b { display:block; }
+.tag { display:inline-block; border:1px solid var(--ink); border-radius:3px; padding:0 5px; font-size:10px; font-weight:700; margin:2px 4px 2px 0; vertical-align:middle; }
+.chip { display:inline-flex; align-items:center; gap:4px; border:1px solid var(--ink); border-radius:12px; padding:1px 8px; font-size:11px; font-weight:700; }
+.chip.late, .chip.fail { border-width:2px; }
+.chip.late::before, .chip.fail::before { content:"⚠"; }
+.chip.ok::before { content:"✓"; } .chip.wait::before { content:"◷"; } .chip.closed::before { content:"■"; } .chip.due::before { content:"●"; }
+.date { border:2px solid var(--ink); border-radius:6px; padding:8px 10px; margin:8px 0; font-weight:600; }
+.date.late { border-style:double; border-width:4px; }
+.five { border:1px solid var(--ink); border-radius:6px; padding:4px 12px 10px; margin-top:8px; }
+.five dt { font-size:11px; color:var(--soft); text-transform:uppercase; letter-spacing:.05em; margin-top:8px; }
+.five dd { margin:2px 0 0; }
+.tl { list-style:none; padding:0; margin:4px 0 0; border-left:2px solid var(--line); }
+.tl li { padding:4px 0 4px 12px; position:relative; font-size:13px; }
+.tl li::before { content:""; position:absolute; left:-6px; top:10px; width:10px; height:10px; border-radius:50%; background:var(--paper); border:2px solid var(--ink); }
+.tl li span { color:var(--soft); font-size:12px; }
+.paper { border:1px solid var(--ink); padding:12px; margin-top:8px; font-family:Georgia, "Times New Roman", serif; font-size:13px; background:var(--paper); }
+.paper h4 { text-align:center; margin:0 0 8px; font-size:14px; }
+.paper table { border-collapse:collapse; width:100%; font-size:12px; } .paper td, .paper th { border:1px solid var(--line); padding:3px 5px; text-align:left; vertical-align:top; }
+.chips { display:flex; gap:6px; flex-wrap:wrap; margin:6px 0; }
+.chips button { border:1px solid var(--ink); border-radius:14px; padding:4px 10px; font-size:12px; background:var(--paper); min-height:36px; cursor:pointer; }
+.chips button[aria-pressed="true"] { background:var(--ink); color:var(--inv); }
+.figs { display:flex; gap:6px; flex-wrap:wrap; }
+.figb { flex:1 1 96px; min-height:52px; border:1px solid var(--ink); border-radius:6px; padding:4px 8px; background:var(--paper); text-align:left; cursor:pointer; display:flex; flex-direction:column; justify-content:center; }
+.figb b { font-size:17px; line-height:1.1; } .figb span { font-size:11px; color:var(--soft); }
+.bbar { display:grid; grid-template-columns:repeat(4,1fr); border-top:2px solid var(--ink); flex:none; background:var(--paper); }
+.bbar button { border:0; background:var(--paper); font-size:11px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; position:relative; cursor:pointer; min-height:56px; padding:4px 0; }
+.bbar button::before { content:""; width:18px; height:18px; border:1px solid var(--line); border-radius:4px; }
+.bbar button.on { font-weight:700; text-decoration:underline; } .bbar button.on::before { background:var(--ink); border-color:var(--ink); }
+.badge { position:absolute; top:4px; right:22%; border:1px solid var(--ink); background:var(--paper); border-radius:9px; font-size:9px; padding:0 4px; font-weight:700; font-style:normal; }
+.seg { display:inline-flex; border:1px solid var(--ink); border-radius:4px; overflow:hidden; flex:none; }
+.seg button { border:0; border-right:1px solid var(--ink); background:var(--paper); padding:4px 8px; font-size:12px; cursor:pointer; min-height:34px; }
+.seg button:last-child { border-right:0; }
+.seg button[aria-pressed="true"] { background:var(--ink); color:var(--inv); }
+.topbtn { background:none; border:1px solid var(--line); border-radius:4px; padding:4px 8px; font-size:12px; cursor:pointer; min-height:34px; flex:none; }
+.otp { letter-spacing:.4em; font-size:20px; text-align:center; }
+.toast { position:absolute; left:10px; right:10px; bottom:66px; background:var(--ink); color:var(--inv); padding:10px 12px; border-radius:6px; font-size:13px; z-index:9; }
+.row { display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; align-items:baseline; }
+.kv { display:grid; grid-template-columns:minmax(0,40%) minmax(0,1fr); gap:4px 10px; font-size:13px; margin-top:6px; }
+.kv dt { color:var(--soft); } .kv dd { margin:0; }
+.ghost { color:var(--soft); }
+.getapp { display:flex; justify-content:space-between; align-items:center; gap:8px; border:1px dashed var(--line); border-radius:6px; padding:6px 10px; margin-top:12px; font-size:12px; }
+/* the panel beside the phone */
+.panel { background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:14px 16px; }
+.panel h2 { font-size:16px; } .panel h3 { border-top:1px solid var(--fill); padding-top:12px; }
+.panel p { margin:6px 0; }
+.panel .grid2 { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:6px 12px; }
+.panel button { border:1px solid var(--ink); background:var(--paper); border-radius:4px; padding:6px 10px; cursor:pointer; min-height:36px; text-align:left; }
+.panel button.sc { width:100%; }
+.panel button.sc[aria-pressed="true"] { background:var(--ink); color:var(--inv); }
+.panel button.sc[aria-pressed="true"] .where { color:var(--inv); }
+.panel label { display:flex; gap:8px; align-items:center; font-size:13px; min-height:30px; }
+.log { font:12px/1.4 ui-monospace, Consolas, monospace; background:var(--fill2); border:1px dashed var(--ink); padding:8px; max-height:220px; overflow:auto; white-space:pre-wrap; }
+.where { font-size:12px; color:var(--soft); }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior:auto !important; } }
+html.simple .banner, html.simple .panel, html.simple #where { display:none !important; }
+html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:center; }
+</style>
+<div class="banner"><b>PROTOTYPE</b> · Seller portal (the regulated business's side), seller UX engagement phases 9 and 10: the screens of `09` and `10`, decisions SXD-01 to SXD-16. Low fidelity, every server answer SIMULATED, all businesses made up.</div>
+
+<div class="wrap">
+  <div>
+    <div class="phone" id="phone" aria-live="polite"></div>
+    <p class="where" id="where"></p>
+  </div>
+
+  <aside class="panel" aria-label="Prototype controls">
+    <h2>Prototype controls</h2>
+    <p class="ghost">These controls are not part of the portal. They pick the business, how it arrives and what the Department does next, and show what the simulated server did.</p>
+
+    <h3>Try a business</h3>
+    <div class="grid2" id="scenarios"></div>
+    <p class="msg note" id="hint" style="margin-top:8px">Pick a business. Each starts from the SMS the Department sent it.</p>
+
+    <h3>How the seller arrives</h3>
+    <label><input type="radio" name="arrive" id="cLink" checked> Taps the link in the SMS (lands on that paper after the code, SXD-13)</label>
+    <label><input type="radio" name="arrive" id="cAddr"> Opens the portal's address (lands on Home)</label>
+    <label><input type="checkbox" id="cApp"> The app is installed on this phone (SXD-11; without it the link opens the web page with "Get the app", SXD-12)</label>
+    <label><input type="checkbox" id="cTwo"> This mobile is registered for two businesses (SXQ-10: choose after the code)</label>
+    <p><button id="restart">Start again from the SMS</button></p>
+
+    <h3>What the Department does next</h3>
+    <div class="grid2" id="events"></div>
+    <p class="where">Each button stands for an officer's act on the officer side (inspector or licensing authority). The seller sees it only once it is taken (AP-04).</p>
+
+    <h3>Data used</h3>
+    <p class="where">Today in the prototype: <b>21 November 2026</b>. Patil Traders, Baramati, and notice NTC-PUN-2026-0147 are the same made-up shop and notice as in the inspector prototype. Numbers, mobiles and licence numbers are invented and do not follow any real pattern.</p>
+    <p class="where">The inspector's side: the <a href="../inspector/" target="_blank" rel="noopener">inspector prototype</a> (separate file and link, SXD-16; notice NTC-PUN-2026-0147 is issued there in the J6 scenarios).</p>
+
+    <h3>Simulated server log</h3>
+    <div class="log" id="log" aria-live="polite"></div>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const TODAY = '2026-11-21';
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MON_MR = ['जाने', 'फेब्रु', 'मार्च', 'एप्रि', 'मे', 'जून', 'जुलै', 'ऑग', 'सप्टें', 'ऑक्टो', 'नोव्हें', 'डिसें'];
+const day = (iso) => Math.round(Date.parse(iso + 'T00:00:00Z') / 86400000);
+const addDays = (iso, n) => new Date((day(iso) + n) * 86400000).toISOString().slice(0, 10);
+const fd = (iso) => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${+d} ${(S.lang === 'mr' ? MON_MR : MON)[+m - 1]} ${y}`; };
+
+/* ---------------- Screen words: English and a Marathi draft for the Department to review (SXQ-26). Papers and the
+   inspector's observations stay as issued (UXD-117); in this prototype they are written in English. ---------------- */
+const W = {
+  portal: ['Seller portal', 'विक्रेता पोर्टल'], dept: ['Agriculture Department, Maharashtra', 'कृषी विभाग, महाराष्ट्र'],
+  signin: ['Sign in', 'साइन इन करा'], idLabel: ['Registered mobile number or licence number', 'नोंदणीकृत मोबाईल क्रमांक किंवा परवाना क्रमांक'],
+  idHint: ['The code goes to the mobile registered for your business.', 'कोड आपल्या व्यवसायासाठी नोंदणीकृत मोबाईलवर जाईल.'],
+  sendCode: ['Send code', 'कोड पाठवा'], codeSent: ['We sent a code to the mobile ending {m}.', '{m} ने संपणाऱ्या मोबाईलवर कोड पाठवला आहे.'],
+  ifReg: ['If this number is registered, a code has been sent to it.', 'हा क्रमांक नोंदणीकृत असल्यास त्यावर कोड पाठवला आहे.'],
+  code: ['Code', 'कोड'], doSignin: ['Sign in', 'साइन इन करा'], noCode: ['Code not arriving?', 'कोड मिळाला नाही?'],
+  wrongCode: ['That code is not right. {n} tries left.', 'कोड चुकीचा आहे. {n} प्रयत्न शिल्लक.'],
+  noCodeHelp: ['Wait a minute and send a new code. If this is no longer your number, contact your district office: {o}. The portal never shows a code on screen.', 'एक मिनिट थांबा आणि नवीन कोड पाठवा. हा क्रमांक आता आपला नसल्यास आपल्या जिल्हा कार्यालयाशी संपर्क साधा: {o}. पोर्टल कधीही कोड स्क्रीनवर दाखवत नाही.'],
+  resend: ['Send a new code', 'नवीन कोड पाठवा'], chooseBiz: ['Choose the business', 'व्यवसाय निवडा'],
+  chooseHint: ['This mobile is registered for two businesses.', 'हा मोबाईल दोन व्यवसायांसाठी नोंदणीकृत आहे.'], cont: ['Continue', 'पुढे'],
+  home: ['Home', 'मुख्यपृष्ठ'], matters: ['My matters', 'माझी प्रकरणे'], messages: ['Messages', 'संदेश'], business: ['My business', 'माझा व्यवसाय'],
+  todo: ['To do', 'करायची कामे'], nothingTodo: ['Nothing to do now.', 'सध्या काहीही करायचे नाही.'],
+  newSince: ['New since your last visit', 'मागील भेटीनंतर नवीन'], glance: ['At a glance', 'एका दृष्टीक्षेपात'],
+  licences: ['Licences', 'परवाने'], samples: ['Samples', 'नमुने'], latestAnn: ['Latest announcement', 'नवीन घोषणा'],
+  allMsgs: ['All messages', 'सर्व संदेश'], getApp: ['Get the app', 'ॲप मिळवा'], getAppLine: ['Use the seller portal as an app on this phone.', 'हे पोर्टल या फोनवर ॲप म्हणून वापरा.'],
+  otherItems: ['{n} other items need your attention', 'आणखी {n} बाबींकडे लक्ष द्यायचे आहे'], oneOther: ['1 other item needs your attention', 'आणखी 1 बाबीकडे लक्ष द्यायचे आहे'],
+  what: ['What it is', 'हे काय आहे'], why: ['Why', 'का'], must: ['What you must do', 'आपण काय करायचे'], byWhen: ['By when', 'कधीपर्यंत'], next: ['What happens next', 'पुढे काय होईल'],
+  papersIn: ['Papers in this matter', 'या प्रकरणातील कागदपत्रे'], happened: ['What happened', 'काय घडले'], contact: ['Who to contact', 'संपर्क'],
+  reply: ['Reply', 'उत्तर द्या'], submitReply: ['Submit reply', 'उत्तर सादर करा'], addReply: ['Add to my reply', 'माझ्या उत्तरात भर घाला'],
+  contest: ['Give contest notice', 'हरकतीची सूचना द्या'], daysLeft: ['by {d} · {n} days left', '{d} पर्यंत · {n} दिवस बाकी'], dayLeft: ['by {d} · last day', '{d} पर्यंत · शेवटचा दिवस'],
+  late: ['Late: the period ended on {d}. You can still reply; it will be marked late.', 'उशीर: मुदत {d} रोजी संपली. आपण अजूनही उत्तर देऊ शकता; ते उशिराचे म्हणून नोंदवले जाईल.'],
+  open: ['Open', 'उघडा'], download: ['Download', 'डाउनलोड करा'], back: ['Back', 'मागे'], all: ['All', 'सर्व'],
+  sDue: ['Reply due', 'उत्तर देणे बाकी'], sReplied: ['Replied · being checked', 'उत्तर दिले · तपासणी सुरू'], sOutcome: ['Outcome given', 'निर्णय दिला'],
+  sNotComplied: ['Not complied (no reply)', 'पालन नाही (उत्तर नाही)'], sClosed: ['Closed', 'बंद'], sLab: ['At the laboratory', 'प्रयोगशाळेत'],
+  sPassed: ['Passed', 'प्रमाणित'], sFailed: ['Failed', 'अप्रमाणित'], sLicAuth: ['With the licensing authority', 'परवाना प्राधिकाऱ्याकडे'], sOrder: ['Order issued', 'आदेश जारी'],
+  kInsp: ['Inspection', 'तपासणी'], kSample: ['Sample', 'नमुना'], kUp: ['About your products', 'आपल्या उत्पादनांबाबत'], kLic: ['Licence', 'परवाना'], kCourt: ['Court case', 'न्यायालयीन प्रकरण'],
+  openFirst: ['Open', 'चालू'], closedL: ['Closed', 'बंद'], place: ['Place', 'ठिकाण'], noMatters: ['No matters yet. When the Department issues a paper to your business, you will get an SMS and it will appear here.', 'अद्याप कोणतेही प्रकरण नाही. विभागाने आपल्या व्यवसायाला कागदपत्र दिल्यावर आपल्याला SMS येईल आणि ते येथे दिसेल.'],
+  msgLabel: ['Message from the Department, not a legal paper', 'विभागाकडून संदेश, कायदेशीर कागदपत्र नाही'], annLabel: ['Announcement', 'घोषणा'],
+  msgsFrom: ['Messages from the Department', 'विभागाकडून संदेश'], announcements: ['Announcements', 'घोषणा'], noMsgs: ['No messages yet.', 'अद्याप संदेश नाहीत.'],
+  openMatter: ['Open the matter', 'प्रकरण उघडा'], places: ['Places', 'ठिकाणे'], regMobile: ['Registered mobile', 'नोंदणीकृत मोबाईल'],
+  allPapers: ['All papers', 'सर्व कागदपत्रे'], mySubs: ['My submissions', 'मी सादर केलेले'], help: ['Help and contact', 'मदत व संपर्क'], account: ['Account', 'खाते'], signout: ['Sign out', 'बाहेर पडा'],
+  correctEp: ['These details come from e-Parwana. To correct them, apply in e-Parwana.', 'हे तपशील ई-परवाना मधून येतात. दुरुस्तीसाठी ई-परवाना मध्ये अर्ज करा.'],
+  correctOffice: ['To correct these details, ask your district office.', 'या तपशिलांच्या दुरुस्तीसाठी आपल्या जिल्हा कार्यालयाशी संपर्क साधा.'],
+  noLicence: ['The portal has no licence on record for this business.', 'या व्यवसायाचा कोणताही परवाना पोर्टलकडे नोंदलेला नाही.'],
+  renew: ['Renew in e-Parwana', 'ई-परवाना मध्ये नूतनीकरण करा'], vValid: ['Valid', 'वैध'], vRenew: ['To be renewed', 'नूतनीकरण करायचे'], vExpired: ['Expired', 'मुदत संपली'],
+  asOn: ['As on {d}', '{d} रोजीनुसार'], receipt: ['Receipt', 'पावती'], replyReceived: ['Reply received', 'उत्तर प्राप्त झाले'],
+  backMatter: ['Back to the matter', 'प्रकरणाकडे परत'], papersEn: ['In this prototype the papers are shown in English. In the portal they are shown as issued.', 'या नमुन्यात कागदपत्रे इंग्रजीत दाखवली आहेत. पोर्टलमध्ये ती जारी केल्याप्रमाणे दिसतील.'],
+  draft: ['Draft saved {t}', 'मसुदा जतन केला {t}'], notStarted: ['Not started', 'सुरू केलेले नाही'], left: ['{k} of {n} points answered', '{n} पैकी {k} मुद्द्यांना उत्तर दिले'],
+  found: ['Inspector’s observation (not part of the notice)', 'निरीक्षकाचे निरीक्षण (नोटिशीचा भाग नाही)'], photos: ['Photos', 'छायाचित्रे'],
+  answer: ['Your answer', 'आपले उत्तर'], expl: ['Explanation', 'स्पष्टीकरण'], optional: ['optional', 'ऐच्छिक'], dateL: ['Date', 'तारीख'],
+  addFiles: ['Add files or photos', 'फाईल किंवा छायाचित्र जोडा'], point: ['Point', 'मुद्दा'],
+  errNone: ['Answer every point, or choose “No reply on this point”: point {n} is not answered.', 'प्रत्येक मुद्द्याला उत्तर द्या, किंवा “या मुद्द्यावर उत्तर नाही” निवडा: मुद्दा {n} ला उत्तर दिलेले नाही.'],
+  errExpl: ['Write the explanation for point {n}.', 'मुद्दा {n} साठी स्पष्टीकरण लिहा.'], errDate: ['Give the date for point {n}.', 'मुद्दा {n} साठी तारीख द्या.'],
+  addWhich: ['Which points does this add to?', 'ही भर कोणत्या मुद्द्यांना आहे?'], note: ['Note', 'टीप'], errAdd: ['Choose at least one point and add a file or a note.', 'किमान एक मुद्दा निवडा आणि फाईल किंवा टीप जोडा.'],
+  addHint: ['Your reply stays as it was sent. This addition is sealed with its own time and receipt and shown to the inspector with your reply.', 'आपले उत्तर पाठवल्याप्रमाणेच राहील. ही भर स्वतंत्र वेळ व पावतीसह सील केली जाते आणि उत्तरासोबत निरीक्षकाला दाखवली जाते.'],
+  contestStmt: ['I intend to adduce evidence in controversion of the report.', 'मी या अहवालाच्या विरोधात पुरावा सादर करू इच्छितो.'],
+  leaving: ['Leaving for e-Parwana', 'ई-परवाना कडे जात आहे'], contEp: ['Continue to e-Parwana', 'ई-परवाना कडे पुढे जा'],
+  leavingText: ['Licence renewal is done in e-Parwana, the Department’s licensing system. This portal only takes you there; it does not renew your licence.', 'परवाना नूतनीकरण ई-परवाना या विभागाच्या परवाना प्रणालीत होते. हे पोर्टल फक्त आपल्याला तेथे नेते; ते आपला परवाना नूतनीकरण करत नाही.'],
+  esigned: ['eSigned by {o} on {d}', '{o} यांनी {d} रोजी ई-स्वाक्षरी केली'], verify: ['Verification number', 'पडताळणी क्रमांक'], checkPaper: ['Check this paper', 'हे कागदपत्र तपासा'],
+  langNote: ['', 'मराठी शब्द: विभागाच्या पुनरावलोकनासाठी मसुदा'], noPhone: ['Officers’ phone numbers are not shown. Write to or visit the office.', 'अधिकाऱ्यांचे फोन क्रमांक दाखवले जात नाहीत. कार्यालयाशी लेखी किंवा प्रत्यक्ष संपर्क साधा.'],
+  changeMobile: ['To change the registered mobile: licensed businesses through e-Parwana; others through the district office. The old number is told by SMS.', 'नोंदणीकृत मोबाईल बदलण्यासाठी: परवानाधारक व्यवसाय ई-परवाना मार्फत; इतर जिल्हा कार्यालयामार्फत. जुन्या क्रमांकावर SMS ने कळवले जाते.'],
+  states: ['What the states mean', 'स्थितींचा अर्थ'], mobileFrom: ['Where it came from', 'कोठून आला'], language: ['Language', 'भाषा'],
+  noSubs: ['Nothing submitted yet.', 'अद्याप काहीही सादर केलेले नाही.'], subAt: ['Submitted {t}', '{t} रोजी सादर'],
+};
+const t = (k, v = {}) => { const p = W[k]; if (!p) return k; let s = (S.lang === 'mr' && p[1]) ? p[1] : p[0]; Object.entries(v).forEach(([a, b]) => { s = s.split(`{${a}}`).join(b); }); return s; };
+const bi = (en, mr) => (S.lang === 'mr' && mr ? mr : en);
+
+/* ---------------- The made-up businesses. Each matter holds only what the disclosure list allows (`08` 5.2). ---------------- */
+const CH = { right: ['Put right', 'दुरुस्ती केली'], dispute: ['Not a contravention', 'उल्लंघन नाही'], will: ['Will put right by', 'या तारखेपर्यंत दुरुस्ती करू'], none: ['No reply on this point', 'या मुद्द्यावर उत्तर नाही'] };
+const OFF = {
+  baramati: { name: 'Shri R. S. Jadhav', des: 'Inspector, Baramati', office: 'Taluka Agriculture Office, Baramati (Pune district)' },
+  malegaon: { name: 'Smt. K. P. More', des: 'Inspector, Malegaon', office: 'Taluka Agriculture Office, Malegaon (Nashik district)' },
+  dhule: { name: 'Shri V. N. Pawar', des: 'Inspector, Dhule', office: 'Taluka Agriculture Office, Dhule (Dhule district)' },
+  indapur: { name: 'Shri A. M. Shinde', des: 'Inspector, Indapur', office: 'Taluka Agriculture Office, Indapur (Pune district)' },
+  dqc: { name: 'Director, Quality Control', des: 'Commissionerate of Agriculture, Pune', office: 'Director, Quality Control, Pune' },
+  dsao: { name: 'District Superintending Agriculture Officer', des: 'Pune', office: 'Office of the DSAO, Pune' },
+  jalgaon: { name: 'Shri P. D. Wagh', des: 'Inspector, Jalgaon', office: 'Taluka Agriculture Office, Jalgaon (Jalgaon district)' },
+};
+function freshData() {
+  return {
+    patil: {
+      name: 'Patil Traders', town: 'Baramati', mobile: '••••• ••821', mobileFrom: ['From e-Parwana (the licence holder’s mobile)', 'ई-परवाना मधून (परवानाधारकाचा मोबाईल)'],
+      constitution: 'Proprietorship', address: 'Shop 4, Market Yard, Baramati, Pune 413102 (made up)', licensed: true, lastVisit: '2026-10-31',
+      places: [{ id: 'p1', name: 'Shop, Market Yard, Baramati', district: 'Pune' }],
+      licences: [
+        { input: 'Seeds', kind: 'Dealer in seeds (Form B)', no: 'SEED-0000-1101 (made up)', from: '2023-04-01', to: '2028-03-31', state: 'valid', issuer: 'Licensing authority, Pune' },
+        { input: 'Fertilisers', kind: 'Retail dealer, district level (Form A2)', no: 'FERT-0000-2202 (made up)', from: '2022-06-10', to: '2027-06-09', state: 'valid', issuer: 'Licensing authority, Pune' },
+        { input: 'Insecticides', kind: 'Sale, stock and distribution (Form III)', no: 'INSC-0000-3303 (made up)', from: '2024-01-15', to: '2029-01-14', state: 'valid', issuer: 'Licensing authority, Pune' }],
+      sms: 'Agri Dept: Notice NTC-PUN-2026-0147 to Patil Traders. Reply by 24 Nov 2026. Open: {link}',
+      link: 'm1',
+      matters: [
+        { id: 'm1', kind: 'insp', date: '2026-11-08', place: 'p1', input: 'Fertilisers', off: 'baramati', state: 'due', due: '2026-11-24', act: 'Fertiliser (Control) Order 1985',
+          points: [
+            { key: 'F6', n: 6, t: 'All sources of products kept for sale included in the certificate', obs: 'The source certificate does not list Company Z; 10:26:26 (lot L551) on the shelf', photos: 0 },
+            { key: 'F15', n: 15, t: 'Fertilizer bags wetted by rain and the quality deteriorated', obs: '8 bags of DAP wet and caked, kept with the sale stock', photos: 2 }],
+          papers: [{ id: 'pp1', form: 'Notice to the firm', no: 'NTC-PUN-2026-0147', date: '2026-11-08', off: 'baramati', esign: true, ver: '7Q4M-20', kind: 'notice' }],
+          tl: [['2026-11-08', 'Inspection at the shop', 'दुकानात तपासणी'], ['2026-11-08', 'Notice NTC-PUN-2026-0147 issued · receipt confirmed by code at 16:34', 'नोटीस NTC-PUN-2026-0147 जारी · 16:34 वाजता कोडने प्राप्ती निश्चित']] },
+        { id: 'm2', kind: 'sample', date: '2026-10-02', place: 'p1', input: 'Seeds', off: 'baramati', state: 'passed', product: 'Soybean JS 335, lot SB-0911 (made up)', sampleNo: 'S-2026-0061',
+          papers: [
+            { id: 'pp2', form: 'Form VI · Notice of intention to take a sample (Seeds Rules r.34)', no: 'F6-2026-0061', date: '2026-10-02', off: 'baramati', esign: false, ver: '2K8D-11', kind: 'formvi' },
+            { id: 'pp3', form: 'Form VIII · Memorandum for drawing the seed sample (Seeds Rules r.39)', no: 'F8-2026-0061', date: '2026-10-02', off: 'baramati', esign: false, ver: '2K8D-12', kind: 'formviii' },
+            { id: 'pp4', form: 'Laboratory report (released by the laboratory)', no: 'LAB-SD-2026-1180', date: '2026-10-30', off: null, esign: false, ver: 'sha256 9f2c…a71e', kind: 'report', result: 'pass' }],
+          tl: [['2026-10-02', 'Notice of intention to take a sample (Form VI) given', 'नमुना घेण्याच्या इराद्याची सूचना (फॉर्म VI) दिली'], ['2026-10-02', 'Sample S-2026-0061 drawn · your portion confirmed by code', 'नमुना S-2026-0061 घेतला · आपला भाग कोडने निश्चित'], ['2026-10-04', 'At the laboratory', 'प्रयोगशाळेत'], ['2026-10-30', 'Report released: passed', 'अहवाल प्रसिद्ध: प्रमाणित']] }],
+      messages: [
+        { id: 'g1', type: 'msg', date: '2026-11-21', matter: 'm1', en: 'Reply to notice NTC-PUN-2026-0147 due on 24 Nov 2026.', mr: 'नोटीस NTC-PUN-2026-0147 चे उत्तर 24 नोव्हें 2026 पर्यंत द्यायचे आहे.' },
+        { id: 'g2', type: 'msg', date: '2026-10-30', matter: 'm2', en: 'Laboratory report for sample S-2026-0061 is available.', mr: 'नमुना S-2026-0061 चा प्रयोगशाळा अहवाल उपलब्ध आहे.' },
+        { id: 'a1', type: 'ann', date: '2026-11-15', from: 'DSAO, Pune (district announcement)', en: 'Example announcement: Rabi season inspections in Pune district begin on 1 December. Keep the stock register and the source certificates at the shop.', mr: 'उदाहरण घोषणा: पुणे जिल्ह्यात रब्बी हंगामातील तपासण्या 1 डिसेंबरपासून सुरू होतील. साठा नोंदवही व स्रोत प्रमाणपत्रे दुकानात ठेवा.' }],
+    },
+    shree: {
+      name: 'Shree Krishi Seva Kendra', town: 'Malegaon', mobile: '••••• ••304', mobileFrom: ['From e-Parwana (the licence holder’s mobile)', 'ई-परवाना मधून (परवानाधारकाचा मोबाईल)'],
+      constitution: 'Partnership', address: 'Camp Road, Malegaon, Nashik 423203 (made up)', licensed: true, lastVisit: '2026-11-12',
+      places: [{ id: 'q1', name: 'Shop, Camp Road, Malegaon', district: 'Nashik' }, { id: 'q2', name: 'Godown, MIDC Avadhan, Dhule', district: 'Dhule' }],
+      licences: [
+        { input: 'Seeds', kind: 'Dealer in seeds (Form B)', no: 'SEED-0000-4404 (made up)', from: '2022-02-01', to: '2027-01-31', state: 'valid', issuer: 'Licensing authority, Nashik' },
+        { input: 'Fertilisers', kind: 'Retail dealer, district level (Form A2), sale point Malegaon, godown Dhule', no: 'FERT-0000-5505 (made up)', from: '2023-08-01', to: '2028-07-31', state: 'valid', issuer: 'Licensing authority, Nashik' }],
+      sms: 'Agri Dept: Laboratory report for sample S-2026-0420 (Shree Krishi Seva Kendra, godown Dhule): failed. Open: {link}',
+      link: 'k2',
+      matters: [
+        { id: 'k1', kind: 'insp', date: '2026-11-03', place: 'q1', input: 'Seeds', off: 'malegaon', state: 'outcome', due: '2026-11-11', seizureOpen: true, act: 'Seeds Act 1966; Seeds (Control) Order 1983',
+          points: [
+            { key: 'S6', n: 6, t: 'Purchase bills held for all seed kept for sale', obs: 'No purchase bill for cotton hybrid lot CH-207 (40 packets)', photos: 1 },
+            { key: 'S8', n: 8, t: 'Source of the seed recorded in the stock register', obs: 'Source column blank for two lots', photos: 1 }],
+          reply: { at: '2026-11-09 17:20', late: false, points: { S6: { choice: 'will', by: '15 Nov', text: 'Bill requested from the distributor.', files: [] }, S8: { choice: 'right', text: 'Register completed; copy attached.', files: ['register-page.jpg'] } } },
+          outcome: [['S6', 'no', 'Not complied: no bill produced by 15 Nov · seizure of lot CH-207 recorded', 'पालन नाही: 15 नोव्हें पर्यंत बिल सादर नाही · लॉट CH-207 जप्ती नोंदवली'], ['S8', 'yes', 'Complied', 'पालन केले']],
+          papers: [
+            { id: 'kp1', form: 'Notice to the firm', no: 'NTC-NSK-2026-0310', date: '2026-11-03', off: 'malegaon', esign: true, ver: '4H7P-02', kind: 'notice' },
+            { id: 'kp2', form: 'Form III · Order not to dispose of stock (Seeds Rules r.27)', no: 'SO-NSK-2026-0044', date: '2026-11-03', off: 'malegaon', esign: true, ver: '4H7P-03', kind: 'formiii' },
+            { id: 'kp3', form: 'Outcome of the reply, point by point', no: 'OUT-NSK-2026-0310', date: '2026-11-16', off: 'malegaon', esign: false, ver: '4H7P-09', kind: 'outcome' },
+            { id: 'kp4', form: 'Seizure memo (seed stock; the Act prescribes no form for stock)', no: 'SZ-NSK-2026-0012', date: '2026-11-17', off: 'malegaon', esign: false, ver: '4H7P-11', kind: 'seizure' }],
+          tl: [['2026-11-03', 'Notice NTC-NSK-2026-0310 and stop sale order SO-NSK-2026-0044 issued · receipt confirmed by code', 'नोटीस NTC-NSK-2026-0310 व विक्री बंदी आदेश SO-NSK-2026-0044 जारी · कोडने प्राप्ती निश्चित'], ['2026-11-09', 'You replied', 'आपण उत्तर दिले'], ['2026-11-10', 'Being checked', 'तपासणी सुरू'], ['2026-11-16', 'Outcome given: point 8 complied, point 6 not complied', 'निर्णय: मुद्दा 8 पालन, मुद्दा 6 पालन नाही'], ['2026-11-17', 'Seizure of lot CH-207 recorded · receipt confirmed by code', 'लॉट CH-207 ची जप्ती नोंदवली · कोडने प्राप्ती निश्चित']] },
+        { id: 'k2', kind: 'sample', date: '2026-10-21', place: 'q2', input: 'Fertilisers', off: 'dhule', state: 'failed', product: '10:26:26, lot L551 (made up)', sampleNo: 'S-2026-0420', remedy: 'fert',
+          papers: [
+            { id: 'kp5', form: 'Form J · Sample record (fertilisers; draft form, DQ-97)', no: 'FJ-2026-0420', date: '2026-10-21', off: 'dhule', esign: true, ver: '6T2R-01', kind: 'formj' },
+            { id: 'kp6', form: 'Laboratory report (released by the laboratory)', no: 'LAB-FT-2026-0733', date: '2026-11-19', off: null, esign: false, ver: 'sha256 1b9e…44c0', kind: 'report', result: 'fail' },
+            { id: 'kp7', form: 'Order not to dispose of stock (after the failed report; fertiliser form not supplied, DQ-25)', no: 'SO-DHL-2026-0019', date: '2026-11-20', off: 'dhule', esign: false, ver: '6T2R-04', kind: 'stopfail' }],
+          tl: [['2026-10-21', 'Sample S-2026-0420 drawn at the godown · your portion confirmed by code', 'गोदामात नमुना S-2026-0420 घेतला · आपला भाग कोडने निश्चित'], ['2026-10-23', 'At the laboratory', 'प्रयोगशाळेत'], ['2026-11-19', 'Report released: failed', 'अहवाल प्रसिद्ध: अप्रमाणित'], ['2026-11-20', 'Stop sale order on lot L551 issued', 'लॉट L551 वर विक्री बंदी आदेश जारी']] }],
+      messages: [
+        { id: 'g3', type: 'msg', date: '2026-11-19', matter: 'k2', en: 'Laboratory report for sample S-2026-0420 is available.', mr: 'नमुना S-2026-0420 चा प्रयोगशाळा अहवाल उपलब्ध आहे.' },
+        { id: 'g4', type: 'msg', date: '2026-11-16', matter: 'k1', en: 'Notice NTC-NSK-2026-0310: outcome given.', mr: 'नोटीस NTC-NSK-2026-0310: निर्णय दिला.' }],
+    },
+    kisan: {
+      name: 'Kisan Agro Inputs', town: 'Indapur', mobile: '••••• ••517', mobileFrom: ['Confirmed at the shop by code on 14 Oct 2026: Shri S. K. Kale, proprietor (e-Parwana gave no mobile, SXD-10)', '14 ऑक्टो 2026 रोजी दुकानात कोडने निश्चित: श्री एस. के. काळे, मालक (ई-परवाना मध्ये मोबाईल नव्हता, SXD-10)'],
+      constitution: 'Proprietorship', address: 'Bus Stand Road, Indapur, Pune 413106 (made up)', licensed: true, lastVisit: '2026-11-02',
+      places: [{ id: 'r1', name: 'Shop, Bus Stand Road, Indapur', district: 'Pune' }],
+      licences: [{ input: 'Insecticides', kind: 'Sale, stock and distribution (Form III)', no: 'INSC-0000-6606 (made up)', from: '2025-03-01', to: '2030-02-28', state: 'valid', issuer: 'Licensing authority, Pune' }],
+      sms: 'Agri Dept: Laboratory report for sample S-2026-0388 (Kisan Agro Inputs): failed. Open: {link}',
+      link: 'n1',
+      matters: [
+        { id: 'n1', kind: 'sample', date: '2026-10-14', place: 'r1', input: 'Insecticides', off: 'indapur', state: 'failed', product: 'Kranti 25 EC (made up), batch K-2291', sampleNo: 'S-2026-0388', remedy: 'contest', reportRecd: '2026-11-15',
+          papers: [
+            { id: 'np1', form: 'Form V(C) · Intimation to the person from whom the sample is taken (Insecticides Rules r.33)', no: 'VC-2026-0388', date: '2026-10-14', off: 'indapur', esign: false, ver: '3M9K-01', kind: 'formvc' },
+            { id: 'np2', form: 'Receipt for the sample (Insecticides Act s.22(3))', no: 'RS-2026-0388', date: '2026-10-14', off: 'indapur', esign: false, ver: '3M9K-02', kind: 'receipt' },
+            { id: 'np3', form: 'Laboratory report (released by the laboratory)', no: 'LAB-IN-2026-0512', date: '2026-11-15', off: null, esign: false, ver: 'sha256 77d1…0c3b', kind: 'report', result: 'fail' },
+            { id: 'np4', form: 'Form V(A) · Order not to dispose of stock (Insecticides Rules r.30)', no: 'SO-PUN-2026-0201', date: '2026-11-16', off: 'indapur', esign: false, ver: '3M9K-05', kind: 'formva' }],
+          tl: [['2026-10-14', 'Sample S-2026-0388 drawn · intimation in Form V(C) given · one sealed portion received, confirmed by code', 'नमुना S-2026-0388 घेतला · फॉर्म V(C) मध्ये सूचना दिली · एक सीलबंद भाग मिळाला, कोडने निश्चित'], ['2026-10-16', 'At the laboratory', 'प्रयोगशाळेत'], ['2026-11-15', 'Report released: failed', 'अहवाल प्रसिद्ध: अप्रमाणित'], ['2026-11-16', 'Stop sale order (Form V(A)) on batch K-2291 issued', 'बॅच K-2291 वर विक्री बंदी आदेश (फॉर्म V(A)) जारी']] }],
+      messages: [{ id: 'g5', type: 'msg', date: '2026-11-15', matter: 'n1', en: 'Laboratory report for sample S-2026-0388 is available.', mr: 'नमुना S-2026-0388 चा प्रयोगशाळा अहवाल उपलब्ध आहे.' }],
+    },
+    sunrise: {
+      name: 'Sunrise Crop Care Pvt. Ltd.', town: 'Ahmedabad (Gujarat)', mobile: '••••• ••090', mobileFrom: ['Recorded by the Director, Quality Control when issuing the notice (no Maharashtra licence, SXD-05); changed only by the office', 'नोटीस देताना गुणवत्ता नियंत्रण संचालकांनी नोंदवला (महाराष्ट्र परवाना नाही, SXD-05); बदल फक्त कार्यालयाद्वारे'],
+      constitution: 'Private limited company', address: 'Plot 12, GIDC Vatva, Ahmedabad, Gujarat (made up)', licensed: false, upstreamOnly: true, lastVisit: null,
+      places: [], licences: [],
+      sms: 'Agri Dept Maharashtra: Notice UPN-2026-0007 to Sunrise Crop Care Pvt. Ltd. as manufacturer of Kranti 25 EC, batch K-2291. Open: {link}',
+      link: 'u1', receiptBySms: true,
+      matters: [
+        { id: 'u1', kind: 'up', date: '2026-11-18', place: null, input: 'Insecticides', off: 'dqc', state: 'due', due: '2026-12-02', act: 'Insecticides Act 1968',
+          product: 'Kranti 25 EC, batch K-2291', shop: 'Kisan Agro Inputs, Indapur (Pune district)', sampled: '2026-10-14',
+          points: [{ key: 'U1', n: 1, t: 'Explain the manufacture and quality control of batch K-2291, which failed analysis (report LAB-IN-2026-0512)', obs: 'Active ingredient found below the declared content (report attached)', photos: 0 }],
+          papers: [
+            { id: 'up1', form: 'Notice to the manufacturer (upstream party; proposed, the Department to confirm its form)', no: 'UPN-2026-0007', date: '2026-11-18', off: 'dqc', esign: true, ver: '8C1V-07', kind: 'upnotice' },
+            { id: 'up2', form: 'Laboratory report of the failed sample', no: 'LAB-IN-2026-0512', date: '2026-11-15', off: null, esign: false, ver: 'sha256 77d1…0c3b', kind: 'report', result: 'fail' }],
+          tl: [['2026-11-18', 'Notice UPN-2026-0007 issued by SMS link', 'नोटीस UPN-2026-0007 SMS लिंकद्वारे जारी']] }],
+      messages: [],
+    },
+    north: {
+      name: 'Northfield Agro Pvt. Ltd.', town: 'Indore (Madhya Pradesh)', mobile: '••••• ••662', mobileFrom: ['From e-Parwana (the applicant’s mobile)', 'ई-परवाना मधून (अर्जदाराचा मोबाईल)'],
+      constitution: 'Private limited company', address: 'Registered office: Sanwer Road, Indore, Madhya Pradesh (made up). Shown as printed; never used to route anything', licensed: true, lastVisit: '2026-09-02',
+      places: [{ id: 'w1', name: 'Godown, MIDC Jalgaon', district: 'Jalgaon' }],
+      licences: [{ input: 'Fertilisers', kind: 'Wholesale dealer, State level (Form A2), godown Jalgaon', no: 'FERT-0000-7707 (made up)', from: '2021-12-16', to: '2026-12-15', state: 'renew', issuer: 'Notified Authority and Director of Agriculture (I & QC), Pune' }],
+      sms: 'Agri Dept: Licence FERT-0000-7707 of Northfield Agro Pvt. Ltd. is valid until 15 Dec 2026. Renew it in e-Parwana. Open: {link}',
+      link: 'lic0',
+      matters: [
+        { id: 'w0', kind: 'insp', date: '2026-09-02', place: 'w1', input: 'Fertilisers', off: 'jalgaon', state: 'closed', closedNote: ['Inspected: no contravention found.', 'तपासणी: कोणतेही उल्लंघन आढळले नाही.'],
+          papers: [{ id: 'wp1', form: 'Inspection report', no: 'INS-JLG-2026-0091', date: '2026-09-02', off: 'jalgaon', esign: false, ver: '1A3B-09', kind: 'insreport' }],
+          tl: [['2026-09-02', 'Inspection at the godown · no contravention', 'गोदामात तपासणी · उल्लंघन नाही']] }],
+      messages: [{ id: 'g6', type: 'msg', date: '2026-11-15', lic: 0, en: 'Licence FERT-0000-7707 is valid until 15 Dec 2026. Renew it in e-Parwana.', mr: 'परवाना FERT-0000-7707 15 डिसें 2026 पर्यंत वैध आहे. त्याचे ई-परवाना मध्ये नूतनीकरण करा.' }],
+    },
+    omsai: {
+      name: 'Om Sai Krushi Kendra', town: 'Baramati', mobile: '••••• ••748', mobileFrom: ['From e-Parwana (the licence holder’s mobile)', 'ई-परवाना मधून (परवानाधारकाचा मोबाईल)'],
+      constitution: 'Proprietorship', address: 'Bhigwan Road, Baramati, Pune (made up)', licensed: true, lastVisit: '2026-11-05',
+      places: [{ id: 'o1', name: 'Shop, Bhigwan Road, Baramati', district: 'Pune' }],
+      licences: [{ input: 'Seeds', kind: 'Dealer in seeds (Form B)', no: 'SEED-0000-8808 (made up)', from: '2024-05-01', to: '2029-04-30', state: 'valid', issuer: 'Licensing authority, Pune' }],
+      sms: 'Agri Dept: Licence SEED-0000-8808 of Om Sai Krushi Kendra has been referred to the licensing authority for a decision. Open: {link}',
+      link: 'l1',
+      matters: [
+        { id: 'l0', kind: 'insp', date: '2026-10-20', place: 'o1', input: 'Seeds', off: 'baramati', state: 'outcome', due: '2026-10-28', act: 'Seeds Act 1966; Seeds (Control) Order 1983',
+          points: [{ key: 'S11', n: 11, t: 'Sale bill carries full particulars (buyer, crop and variety, producer, weight, lot no., amount and rate)', obs: 'Bills without lot number and producer for the whole of October', photos: 2 }],
+          reply: { at: '2026-10-27 11:02', late: false, points: { S11: { choice: 'dispute', text: 'Bills are written by hand; details are in the register.', files: [] } } },
+          outcome: [['S11', 'no', 'Not complied · referred to the licensing authority', 'पालन नाही · परवाना प्राधिकाऱ्याकडे पाठवले']],
+          papers: [{ id: 'op1', form: 'Notice to the firm', no: 'NTC-PUN-2026-0122', date: '2026-10-20', off: 'baramati', esign: true, ver: '5R2N-01', kind: 'notice' }, { id: 'op2', form: 'Outcome of the reply, point by point', no: 'OUT-PUN-2026-0122', date: '2026-11-04', off: 'baramati', esign: false, ver: '5R2N-06', kind: 'outcome' }],
+          tl: [['2026-10-20', 'Notice NTC-PUN-2026-0122 issued · receipt confirmed by code', 'नोटीस NTC-PUN-2026-0122 जारी · कोडने प्राप्ती निश्चित'], ['2026-10-27', 'You replied', 'आपण उत्तर दिले'], ['2026-11-04', 'Outcome given: point 11 not complied', 'निर्णय: मुद्दा 11 पालन नाही']] },
+        { id: 'l1', kind: 'lic', date: '2026-11-12', place: 'o1', input: 'Seeds', off: 'dsao', state: 'licauth', licNo: 'SEED-0000-8808 (made up)', fromMatter: 'l0',
+          papers: [],
+          tl: [['2026-11-12', 'Referral accepted by the licensing authority (DSAO, Pune)', 'परवाना प्राधिकाऱ्याने (जिअकृअ, पुणे) प्रकरण स्वीकारले']] }],
+      messages: [{ id: 'g7', type: 'msg', date: '2026-11-12', matter: 'l1', en: 'Licence SEED-0000-8808: the inspector’s verification of notice NTC-PUN-2026-0122 (point 11) has been referred to the District Superintending Agriculture Officer, Pune, for a decision on the licence.', mr: 'परवाना SEED-0000-8808: नोटीस NTC-PUN-2026-0122 (मुद्दा 11) बाबत निरीक्षकाची पडताळणी परवान्यावरील निर्णयासाठी जिल्हा अधीक्षक कृषी अधिकारी, पुणे यांच्याकडे पाठवली आहे.' }],
+    },
+    ganesh: {
+      name: 'Shree Ganesh Krushi (no licence on record)', town: 'Daund', mobile: '••••• ••233', mobileFrom: ['Confirmed at the shop by code on 19 Nov 2026 (the person present, SXD-03)', '19 नोव्हें 2026 रोजी दुकानात कोडने निश्चित (उपस्थित व्यक्ती, SXD-03)'],
+      constitution: 'Not known', address: 'Near ST stand, Daund, Pune (as recorded at the inspection; made up)', licensed: false, lastVisit: null,
+      places: [{ id: 'z1', name: 'Shop near ST stand, Daund (recorded at the inspection)', district: 'Pune' }], licences: [],
+      sms: 'Agri Dept: Notice NTC-PUN-2026-0160 to the shop near ST stand, Daund. Reply by 21 Nov 2026. Open: {link}',
+      link: 'z0',
+      matters: [
+        { id: 'z0', kind: 'insp', date: '2026-11-19', place: 'z1', input: 'Seeds', off: 'baramati', state: 'due', due: '2026-11-21', act: 'Seeds Act 1966; Seeds (Control) Order 1983',
+          points: [{ key: 'S1', n: 1, t: 'Licence to sell seed obtained', obs: 'No licence shown; seed of soybean and gram on sale', photos: 2 }],
+          papers: [
+            { id: 'zp1', form: 'Notice to the firm', no: 'NTC-PUN-2026-0160', date: '2026-11-19', off: 'baramati', esign: true, ver: '9W4E-01', kind: 'notice' },
+            { id: 'zp2', form: 'Form III · Order not to dispose of stock: all products (Seeds Rules r.27)', no: 'SO-PUN-2026-0207', date: '2026-11-19', off: 'baramati', esign: true, ver: '9W4E-02', kind: 'formiii' }],
+          tl: [['2026-11-19', 'Notice NTC-PUN-2026-0160 and stop sale order of all products issued · receipt confirmed by the code to the mobile of the person present', 'नोटीस NTC-PUN-2026-0160 व सर्व उत्पादनांचा विक्री बंदी आदेश जारी · उपस्थित व्यक्तीच्या मोबाईलवरील कोडने प्राप्ती निश्चित']] }],
+      messages: [{ id: 'g8', type: 'msg', date: '2026-11-20', matter: 'z0', en: 'Reply to notice NTC-PUN-2026-0160 due on 21 Nov 2026.', mr: 'नोटीस NTC-PUN-2026-0160 चे उत्तर 21 नोव्हें 2026 पर्यंत द्यायचे आहे.' }],
+    },
+  };
+}
+const SCEN = [
+  ['patil', 'Patil Traders, Baramati', 'Village shop, three inputs: a notice to reply to point by point (SJ-1); a seed sample that passed'],
+  ['shree', 'Shree Krishi Seva Kendra, Malegaon', 'Two places in two districts; a notice with a stop sale, its outcome and a seizure; a failed fertiliser sample (appeal waiting on the Department)'],
+  ['kisan', 'Kisan Agro Inputs, Indapur', 'Insecticide seller: a failed report, the stop sale, and the contest notice within 28 days (SJ-4); mobile confirmed at the shop (SXD-10)'],
+  ['sunrise', 'Sunrise Crop Care, Ahmedabad', 'Out-of-State manufacturer with no Maharashtra licence: a notice about its product by SMS link; the code confirms receipt (SXD-05, SJ-5)'],
+  ['north', 'Northfield Agro, Indore', 'Out-of-State company with a godown in Jalgaon: licence near expiry and the hand-over to e-Parwana (SJ-7, MOCK)'],
+  ['omsai', 'Om Sai Krushi Kendra, Baramati', 'Licence referred to the licensing authority: the message and the licence matter (SXD-09, SJ-6)'],
+  ['ganesh', 'Shop without a licence, Daund', 'No licence on record: in by the mobile confirmed at the shop (SXD-03); the 2-day reply period has its last day today'],
+];
+
+let D = freshData();
+let S = {};
+function reset(biz) {
+  const b = biz || S.biz || 'patil';
+  const byAddr = $('cAddr') && $('cAddr').checked;
+  S = { biz: b, lang: 'mr', screen: byAddr ? 'signin' : 'sms', arrived: byAddr ? 'address' : null, signed: false, tries: 3, err: '', idv: '', codev: '', helpOpen: false, stack: [], mcur: null, pcur: null, filt: { kind: 'all', place: 'all', open: 'open' }, drafts: {}, add: null, toast: '', read: {}, chosen: false, mockEp: null, contestText: '' };
+}
+const B = () => D[S.biz];
+const M = (id) => B().matters.find((m) => m.id === id);
+const P = (id) => { for (const m of B().matters) { const p = m.papers.find((x) => x.id === id); if (p) return { p, m }; } return null; };
+const placeOf = (m) => (B().places.find((p) => p.id === m.place) || null);
+const logEl = () => $('log');
+function log(s) { const el = logEl(); el.textContent = `${el.textContent ? el.textContent + '\n' : ''}› ${s}`; el.scrollTop = el.scrollHeight; }
+function hint(s) { $('hint').textContent = s; }
+function toast(s) { S.toast = s; render(); setTimeout(() => { if (S.toast === s) { S.toast = ''; render(); } }, 2600); }
+
+/* ---------------- The state of a matter, as the seller reads it (`08` section 6) ---------------- */
+function chipOf(m) {
+  if (m.kind === 'insp' || m.kind === 'up') {
+    if (m.state === 'due') { const late = day(TODAY) > day(m.due); return late ? `<span class="chip late">${t('sNotComplied')}</span>` : `<span class="chip due">${t('sDue')}</span>`; }
+    if (m.state === 'replied') return `<span class="chip wait">${t('sReplied')}</span>`;
+    if (m.state === 'outcome') return `<span class="chip ok">${t('sOutcome')}</span>`;
+    return `<span class="chip closed">${t('sClosed')}</span>`;
+  }
+  if (m.kind === 'sample') return m.state === 'lab' ? `<span class="chip wait">${t('sLab')}</span>` : m.state === 'passed' ? `<span class="chip ok">${t('sPassed')}</span>` : `<span class="chip fail">${t('sFailed')}</span>`;
+  if (m.kind === 'lic') return m.state === 'order' ? `<span class="chip fail">${t('sOrder')}</span>` : `<span class="chip wait">${t('sLicAuth')}</span>`;
+  return '';
+}
+const kindWord = (k) => ({ insp: t('kInsp'), sample: t('kSample'), up: t('kUp'), lic: t('kLic'), court: t('kCourt') }[k]);
+const isOpen = (m) => !['closed', 'passed'].includes(m.state) && !(m.kind === 'insp' && m.state === 'outcome' && !m.seizureOpen);
+function actionOf(m) {
+  if ((m.kind === 'insp' || m.kind === 'up') && m.state === 'due') return 'reply';
+  if (m.kind === 'sample' && m.state === 'failed' && m.remedy === 'contest' && !m.contested && day(TODAY) <= day(addDays(m.reportRecd, 28))) return 'contest';
+  return null;
+}
+function dueOf(m) { if (actionOf(m) === 'reply') return m.due; if (actionOf(m) === 'contest') return addDays(m.reportRecd, 28); return null; }
+function dateBanner(due) {
+  const n = day(due) - day(TODAY);
+  if (n < 0) return `<div class="date late" role="status">${t('late', { d: fd(due) })}</div>`;
+  return `<div class="date" role="status">${n === 0 ? t('dayLeft', { d: fd(due) }) : t('daysLeft', { d: fd(due), n })}</div>`;
+}
+function matterTitle(m) {
+  const pl = placeOf(m);
+  if (m.kind === 'insp') return `${t('kInsp')} · ${fd(m.date)}`;
+  if (m.kind === 'sample') return `${t('kSample')} ${m.sampleNo} · ${fd(m.date)}`;
+  if (m.kind === 'up') return `${t('kUp')} · ${m.product}`;
+  if (m.kind === 'lic') return `${t('kLic')} ${m.licNo}`;
+  return pl ? pl.name : '';
+}
+function tags(m) { const pl = placeOf(m); return `${pl && B().places.length > 1 ? `<span class="tag">${esc(pl.name)}</span>` : ''}<span class="tag">${esc(m.input)}</span>`; }
+
+/* ---------------- The five answers (principle 1 of `09`) ---------------- */
+function five(m) {
+  const o = OFF[m.off]; const a = actionOf(m);
+  if (m.kind === 'insp' || m.kind === 'up') {
+    const what = m.kind === 'up'
+      ? bi(`Notice to ${B().name} as manufacturer of ${m.product}, issued by the ${o.name}, ${o.des}.`, `${m.product} चे उत्पादक म्हणून ${B().name} यांना ${o.name}, ${o.des} यांनी दिलेली नोटीस.`)
+      : bi(`Notice under the ${m.act}, issued by ${o.name}, ${o.des}.`, `${m.act} अंतर्गत नोटीस, ${o.name}, ${o.des} यांनी जारी केली.`);
+    const why = m.kind === 'up'
+      ? bi(`A sample of ${m.product} taken at ${m.shop} on ${fd(m.sampled)} failed analysis.`, `${m.shop} येथे ${fd(m.sampled)} रोजी घेतलेला ${m.product} चा नमुना अप्रमाणित ठरला.`)
+      : bi(`At the inspection on ${fd(m.date)}, ${m.points.length} point${m.points.length > 1 ? 's were' : ' was'} found.`, `${fd(m.date)} रोजीच्या तपासणीत ${m.points.length} ${m.points.length > 1 ? 'मुद्दे' : 'मुद्दा'} आढळले.`);
+    let must; let next;
+    if (m.state === 'due') { must = bi('Reply to each point.', 'प्रत्येक मुद्द्याला उत्तर द्या.'); next = bi('The officer checks your reply and records an outcome for each point. You will be told here and by SMS.', 'अधिकारी आपले उत्तर तपासतील आणि प्रत्येक मुद्द्यावर निर्णय नोंदवतील. आपल्याला येथे आणि SMS ने कळवले जाईल.'); }
+    else if (m.state === 'replied') { must = bi('Nothing now. You can add a forgotten document until the outcome is recorded.', 'सध्या काही नाही. निर्णय नोंदवेपर्यंत राहिलेले कागदपत्र जोडू शकता.'); next = bi('The officer checks your reply and records an outcome for each point.', 'अधिकारी आपले उत्तर तपासून प्रत्येक मुद्द्यावर निर्णय नोंदवतील.'); }
+    else if (m.state === 'outcome') { must = bi('Nothing. Read the outcome for each point below.', 'काही नाही. खाली प्रत्येक मुद्द्याचा निर्णय वाचा.'); next = (m.outcome || []).some((x) => x[1] === 'no') ? bi('The acts named for the points not complied follow as papers in this matter.', 'पालन न झालेल्या मुद्द्यांवरील कार्यवाही या प्रकरणात कागदपत्रे म्हणून येईल.') : bi('Nothing more.', 'पुढे काही नाही.'); }
+    else { must = bi('Nothing.', 'काही नाही.'); next = bi('Nothing more.', 'पुढे काही नाही.'); }
+    return { what, why, must, by: a ? dueOf(m) : null, next };
+  }
+  if (m.kind === 'sample') {
+    const what = bi(`Sample ${m.sampleNo} of ${m.product}, drawn by ${o.name}, ${o.des}.`, `${m.product} चा नमुना ${m.sampleNo}, ${o.name}, ${o.des} यांनी घेतला.`);
+    if (m.state === 'lab') return { what, why: bi('Taken to check its quality.', 'गुणवत्ता तपासण्यासाठी घेतला.'), must: bi('Nothing now.', 'सध्या काही नाही.'), by: null, next: bi('When the laboratory releases the report, it appears here by itself and you get an SMS.', 'प्रयोगशाळेने अहवाल प्रसिद्ध केल्यावर तो येथे आपोआप दिसेल आणि आपल्याला SMS येईल.') };
+    if (m.state === 'passed') return { what, why: bi('Taken to check its quality.', 'गुणवत्ता तपासण्यासाठी घेतला.'), must: bi('Nothing.', 'काही नाही.'), by: null, next: bi('Nothing more: the sample passed.', 'पुढे काही नाही: नमुना प्रमाणित ठरला.') };
+    const why = bi('The laboratory report found the sample not of standard quality. A stop sale order was issued on the lot.', 'प्रयोगशाळा अहवालानुसार नमुना दर्जेदार नाही. त्या लॉटवर विक्री बंदी आदेश जारी केला.');
+    if (m.remedy === 'contest') {
+      if (m.contested) return { what, why, must: bi(`Contest notice given on ${fd(m.contested)}.`, `${fd(m.contested)} रोजी हरकतीची सूचना दिली.`), by: null, next: bi('What follows is for the court (Insecticides Act s.24(4)).', 'पुढील कार्यवाही न्यायालयाची (कीटकनाशक अधिनियम कलम 24(4)).') };
+      return { what, why, must: bi('If you intend to dispute the report, give a written contest notice (Insecticides Act 1968 s.24(3)-(4)).', 'अहवालाला हरकत घ्यायची असल्यास लेखी हरकतीची सूचना द्या (कीटकनाशक अधिनियम 1968 कलम 24(3)-(4)).'), by: dueOf(m), next: bi('The court may send the retained portion to the Central Insecticides Laboratory.', 'न्यायालय राखीव भाग केंद्रीय कीटकनाशक प्रयोगशाळेकडे पाठवू शकते.') };
+    }
+    return { what, why, must: bi('An appeal to the Joint Director of Agriculture for referee analysis is possible (BRD §24 to §27). How and by when is not yet confirmed by the Department.', 'रेफरी विश्लेषणासाठी कृषी सहसंचालकांकडे अपील शक्य आहे (BRD §24 ते §27). कसे व कधीपर्यंत हे विभागाने अद्याप निश्चित केलेले नाही.'), by: null, next: bi('The appeal’s steps will appear here as the Joint Director’s office records them.', 'सहसंचालक कार्यालय नोंदवेल तसे अपिलाचे टप्पे येथे दिसतील.') };
+  }
+  if (m.kind === 'lic') {
+    const what = bi(`Your licence ${m.licNo} has been referred to the ${o.name}, ${o.des}, for a decision.`, `आपला परवाना ${m.licNo} निर्णयासाठी ${o.name}, ${o.des} यांच्याकडे पाठवला आहे.`);
+    const why = bi('The inspector found the reply to notice NTC-PUN-2026-0122 not compliant on point 11.', 'नोटीस NTC-PUN-2026-0122 च्या उत्तरात मुद्दा 11 वर पालन नसल्याचे निरीक्षकाला आढळले.');
+    if (m.state === 'order') return { what: bi(`The order of the ${o.name}, ${o.des}, on your licence ${m.licNo}.`, `${o.name}, ${o.des} यांचा आपल्या परवाना ${m.licNo} वरील आदेश.`), why, must: bi('Read the order. How to appeal is waiting on the Department.', 'आदेश वाचा. अपील कसे करायचे हे विभागाकडून निश्चित व्हायचे आहे.'), by: null, next: bi('If an appeal is allowed online, it will be offered here.', 'ऑनलाइन अपील शक्य झाल्यास ते येथे दिले जाईल.') };
+    return { what, why, must: bi('Nothing to submit. Your reply to the inspector’s notice is already with the licensing authority.', 'काहीही सादर करायचे नाही. निरीक्षकाच्या नोटिशीला दिलेले आपले उत्तर परवाना प्राधिकाऱ्याकडे आहे.'), by: null, next: bi('The licensing authority decides; its order will appear here and by SMS.', 'परवाना प्राधिकारी निर्णय घेतील; त्यांचा आदेश येथे व SMS ने कळवला जाईल.') };
+  }
+  return { what: '', why: '', must: '', by: null, next: '' };
+}
+
+/* ---------------- Rendering ---------------- */
+const SCR = {};
+function chrome(inner, opts = {}) {
+  const gov = `<div class="gov"><div class="emb">emb.</div><div>Department header<br><span class="ghost">(placeholder: name and artwork to come)</span></div></div>`;
+  const lang = `<div class="seg" role="group" aria-label="${t('language')}"><button data-act="lang" data-l="mr" aria-pressed="${S.lang === 'mr'}">मराठी</button><button data-act="lang" data-l="en" aria-pressed="${S.lang === 'en'}">English</button></div>`;
+  const back = opts.back ? `<button class="topbtn" data-act="back" aria-label="${t('back')}">‹ ${t('back')}</button>` : '';
+  const top = `<div class="top">${back}<span class="grow"><b>${esc(opts.title || t('portal'))}</b></span>${lang}</div>`;
+  const unread = B().messages.filter((g) => !S.read[g.id]).length;
+  const nav = S.signed && !opts.noNav ? `<nav class="bbar" aria-label="Sections">${[['home', 'home'], ['matters', 'matters'], ['messages', 'messages'], ['business', 'business']].map(([s, k]) => `<button data-act="nav" data-s="${s}" class="${S.section === s ? 'on' : ''}" ${S.section === s ? 'aria-current="page"' : ''}>${t(k)}${s === 'messages' && unread ? `<i class="badge">${unread}</i>` : ''}</button>`).join('')}</nav>` : '';
+  return `${gov}${top}<div class="scr" id="scr">${inner}</div>${S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : ''}${nav}`;
+}
+function go(screen, extra = {}) { if (S.screen && S.screen !== screen) S.stack.push({ screen: S.screen, mcur: S.mcur, pcur: S.pcur }); S.screen = screen; Object.assign(S, extra); S.err = ''; render(); const s = $('scr'); if (s) s.scrollTop = 0; }
+function nav(section) { S.section = section; S.stack = []; S.screen = section; S.err = ''; render(); }
+function render() {
+  const f = SCR[S.screen]; $('phone').innerHTML = f ? f() : '';
+  $('where').textContent = WHERE[S.screen] ? `Screen: ${WHERE[S.screen]}` : '';
+  document.querySelectorAll('#scenarios .sc').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.biz === S.biz)));
+  bindInputs();
+}
+const WHERE = { sms: 'the SMS on the seller’s phone (not part of the portal)', signin: 'SS-01 Sign in', code: 'SS-02 Enter the code', choose: 'SS-03 Choose the business', home: 'SS-04 Home', matters: 'SS-05 My matters', matter: 'SS-06 Matter page', paper: 'SS-07 Paper', reply: 'SS-08 Reply (as S-111 of the inspector prototype)', received: 'SS-09 Reply received', add: 'SS-08a Add to my reply (SXD-15)', contest: 'SS-10 Contest notice', messages: 'SS-12 Messages', message: 'SS-13 Message or announcement', business: 'SS-14 My business', licences: 'SS-15 Licences', licence: 'SS-16 Licence', leaving: 'SS-17 Leaving for e-Parwana', ep: 'e-Parwana (MOCK page, not part of the portal)', papers: 'SS-18 All papers', subs: 'SS-19 My submissions', help: 'SS-20 Help and contact', account: 'SS-21 Account' };
+
+/* SMS on the phone (outside the portal) */
+SCR.sms = function () {
+  const link = 'https://seller.example/agri/n/7Hq2';
+  return `<div class="gov"><div class="emb">SMS</div><div>Messages · from AGRIMH<br><span class="ghost">(the phone’s own SMS app)</span></div></div>
+  <div class="scr"><div class="sim">This is the SMS the Department’s gateway sends (a DLT-approved template, BR-S-16). Tap the link.</div>
+  <div class="card"><b>AGRIMH</b><p style="margin:6px 0">${esc(B().sms).replace('{link}', `<button class="lnk" data-act="smsLink">${esc(link)}</button>`)}</p><span class="hint">21 Nov 2026, 09:12</span></div>
+  ${$('cApp').checked ? '<p class="hint">The app is installed: the link opens the paper in the app (SXD-12).</p>' : '<p class="hint">The app is not installed: the link opens the web page in the browser (SXD-12).</p>'}</div>`;
+};
+SCR.signin = function () {
+  return chrome(`<h2 id="h" tabindex="-1">${t('signin')}</h2><p class="hint">${t('portal')} · ${t('dept')}</p>
+  ${S.err ? `<div class="msg err" role="alert">${esc(S.err)}</div>` : ''}
+  <label class="f" for="idv">${t('idLabel')}</label><input class="t" id="idv" inputmode="numeric" autocomplete="tel" value="${esc(S.idv)}">
+  <p class="hint">${t('idHint')}</p>
+  <button class="btn main" data-act="sendCode">${t('sendCode')}</button>
+  <div class="sim">Type any 10-digit mobile or a licence number such as SEED-0000-1101. An unknown number gets the same answer as a known one (BR-S-02).</div>
+  ${!$('cApp').checked ? `<div class="getapp"><span>${t('getAppLine')}</span><button class="topbtn" data-act="getApp">${t('getApp')}</button></div>` : ''}`, { title: t('portal') });
+};
+SCR.code = function () {
+  const office = OFF[(B().matters[0] || {}).off || 'baramati'].office;
+  return chrome(`<h2 id="h" tabindex="-1">${t('code')}</h2>
+  <p>${t('codeSent', { m: B().mobile.slice(-3) })}</p>
+  ${S.err ? `<div class="msg err" role="alert">${esc(S.err)}</div>` : ''}
+  <label class="f" for="codev">${t('code')}</label><input class="t otp" id="codev" inputmode="numeric" maxlength="6" autocomplete="one-time-code" value="${esc(S.codev)}">
+  ${B().receiptBySms ? `<p class="hint">${bi('Typing the code also confirms that you received the notice; the time is recorded (SXD-05).', 'कोड टाकल्याने आपल्याला नोटीस मिळाल्याचेही निश्चित होते; वेळ नोंदवली जाते (SXD-05).')}</p>` : ''}
+  <button class="btn main" data-act="checkCode">${t('doSignin')}</button>
+  <button class="lnk" data-act="noCode">${t('noCode')}</button>
+  ${S.helpOpen ? `<div class="msg note">${esc(t('noCodeHelp', { o: office }))}</div><button class="btn alt" data-act="resend">${t('resend')}</button>` : ''}
+  <div class="sim">The code is 246810. Try a wrong one first. In the portal the code reaches only the registered mobile; it is never shown on screen.</div>`, { title: t('portal'), back: true });
+};
+SCR.choose = function () {
+  return chrome(`<h2 id="h" tabindex="-1">${t('chooseBiz')}</h2><p class="hint">${t('chooseHint')}</p>
+  <button class="card" data-act="pickBiz" data-b="${S.biz}"><b>${esc(B().name)}</b><span class="hint">${esc(B().town)}</span></button>
+  <button class="card" data-act="pickOther"><b>${esc(S.biz === 'patil' ? 'Om Sai Krushi Kendra' : 'Patil Traders')}</b><span class="hint">Baramati</span></button>
+  <div class="sim">SXQ-10 is a Department question; the default is “allowed, choose after the code”.</div>`, { title: t('portal'), noNav: true });
+};
+
+/* Home */
+SCR.home = function () {
+  const b = B(); const todo = b.matters.filter(actionOf).sort((x, y) => day(dueOf(x)) - day(dueOf(y)));
+  const fresh = [];
+  b.matters.forEach((m) => m.papers.forEach((p) => { if (b.lastVisit && day(p.date) > day(b.lastVisit)) fresh.push({ m, p }); }));
+  fresh.sort((x, y) => day(y.p.date) - day(x.p.date));
+  const licBy = {}; b.licences.forEach((l) => { (licBy[l.input] = licBy[l.input] || []).push(l); });
+  const open = b.matters.filter(isOpen).length; const closed = b.matters.length - open;
+  const samples = b.matters.filter((m) => m.kind === 'sample');
+  const ann = b.messages.filter((g) => g.type === 'ann')[0];
+  return chrome(`<h2 id="h" tabindex="-1">${esc(b.name)}</h2><p class="hint">${esc(b.places.length > 1 ? `${b.places[0].name} ${bi(`and ${b.places.length - 1} other place`, `आणि आणखी ${b.places.length - 1} ठिकाण`)}` : (b.places[0] ? b.places[0].name : b.town))}</p>
+  <h3>${t('todo')}</h3>
+  ${todo.length ? todo.map((m) => `<button class="card" data-act="openMatter" data-m="${m.id}"><b>${actionOf(m) === 'reply' ? `${t('reply')} · ${esc(m.papers[0].no)}` : `${t('contest')} · ${esc(m.sampleNo)}`}</b>${tags(m)}${dateBanner(dueOf(m))}</button>`).join('') : `<p class="hint">${t('nothingTodo')}</p>`}
+  ${fresh.length ? `<h3>${t('newSince')}</h3>${fresh.map(({ m, p }) => `<button class="card" data-act="openMatter" data-m="${m.id}"><b>${esc(p.form.split(' (')[0])}${p.result ? ` · ${p.result === 'pass' ? t('sPassed') : t('sFailed')}` : ''}</b><span class="hint">${esc(p.no)} · ${fd(p.date)}</span></button>`).join('')}` : ''}
+  <h3>${t('glance')}</h3>
+  ${b.licences.length ? `<p class="hint" style="margin-top:6px">${t('licences')}</p><div class="figs">${Object.entries(licBy).map(([inp, ls]) => `<button class="figb" data-act="nav" data-s="licences"><b>${ls.length}</b><span>${esc(inp)} · ${ls.map((l) => t(l.state === 'renew' ? 'vRenew' : l.state === 'expired' ? 'vExpired' : 'vValid')).join(', ')}</span></button>`).join('')}</div>` : ''}
+  <p class="hint" style="margin-top:8px">${t('matters')}</p><div class="figs"><button class="figb" data-act="mattersOpen" data-o="open"><b>${open}</b><span>${t('openFirst')}</span></button><button class="figb" data-act="mattersOpen" data-o="closed"><b>${closed}</b><span>${t('closedL')}</span></button></div>
+  ${samples.length ? `<p class="hint" style="margin-top:8px">${t('samples')}</p><div class="figs">${samples.map((m) => `<button class="figb" data-act="openMatter" data-m="${m.id}"><b>${esc(m.input)}</b><span>${m.state === 'lab' ? t('sLab') : m.state === 'passed' ? t('sPassed') : t('sFailed')}</span></button>`).join('')}</div>` : ''}
+  ${ann ? `<h3>${t('latestAnn')}</h3><button class="card" data-act="openMsg" data-g="${ann.id}"><span class="tag">${t('annLabel')}</span><b>${esc(ann.from)}</b><span class="hint">${esc(bi(ann.en, ann.mr)).slice(0, 90)}…</span></button><button class="lnk" data-act="nav" data-s="messages">${t('allMsgs')} ›</button>` : ''}
+  ${!$('cApp').checked ? `<div class="getapp"><span>${t('getAppLine')}</span><button class="topbtn" data-act="getApp">${t('getApp')}</button></div>` : ''}`, { title: t('home') });
+};
+
+/* My matters */
+SCR.matters = function () {
+  const b = B(); const F = S.filt;
+  const kinds = [...new Set(b.matters.map((m) => m.kind))];
+  let list = b.matters.slice();
+  if (F.kind !== 'all') list = list.filter((m) => m.kind === F.kind);
+  if (F.place !== 'all') list = list.filter((m) => m.place === F.place);
+  const open = list.filter(isOpen).sort((x, y) => day(y.date) - day(x.date)); const closed = list.filter((m) => !isOpen(m)).sort((x, y) => day(y.date) - day(x.date));
+  const row = (m) => `<button class="card" data-act="openMatter" data-m="${m.id}"><div class="row"><b>${esc(matterTitle(m))}</b>${chipOf(m)}</div>${tags(m)}${actionOf(m) ? dateBanner(dueOf(m)) : ''}</button>`;
+  return chrome(`<h2 id="h" tabindex="-1">${t('matters')}</h2>
+  ${kinds.length > 1 ? `<div class="chips" role="group" aria-label="Kind"><button data-act="filt" data-f="kind" data-v="all" aria-pressed="${F.kind === 'all'}">${t('all')}</button>${kinds.map((k) => `<button data-act="filt" data-f="kind" data-v="${k}" aria-pressed="${F.kind === k}">${esc(kindWord(k))}</button>`).join('')}</div>` : ''}
+  ${b.places.length > 1 ? `<div class="chips" role="group" aria-label="${t('place')}"><button data-act="filt" data-f="place" data-v="all" aria-pressed="${F.place === 'all'}">${t('all')} ${t('places').toLowerCase()}</button>${b.places.map((p) => `<button data-act="filt" data-f="place" data-v="${p.id}" aria-pressed="${F.place === p.id}">${esc(p.name.split(',')[0])}, ${esc(p.district)}</button>`).join('')}</div>` : ''}
+  ${!list.length ? `<p class="hint">${t('noMatters')}</p>` : ''}
+  ${open.length ? `<h3>${t('openFirst')}</h3>${open.map(row).join('')}` : ''}
+  ${closed.length ? `<h3>${t('closedL')}</h3>${closed.map(row).join('')}` : ''}`, { title: t('matters') });
+};
+
+/* The matter page */
+SCR.matter = function () {
+  const b = B(); const m = M(S.mcur); const o = OFF[m.off]; const f = five(m); const a = actionOf(m);
+  const others = b.matters.filter((x) => x.id !== m.id && actionOf(x)).length;
+  const pts = (m.kind === 'insp' || m.kind === 'up') && m.points ? `<ol style="margin:4px 0 0;padding-left:18px">${m.points.map((p) => `<li value="${p.n}">${esc(p.t)}</li>`).join('')}</ol>` : '';
+  const outcome = m.outcome ? `<h3>${bi('Outcome, point by point', 'निर्णय, मुद्दानिहाय')}</h3>${m.outcome.map(([k, ok, en, mr]) => { const p = m.points.find((x) => x.key === k); return `<div class="card"><div class="row"><b>${t('point')} ${p.n}. ${esc(p.t)}</b><span class="chip ${ok === 'yes' ? 'ok' : 'fail'}">${ok === 'yes' ? bi('Complied', 'पालन केले') : bi('Not complied', 'पालन नाही')}</span></div><p class="hint">${esc(bi(en, mr))}</p></div>`; }).join('')}` : '';
+  const reply = m.reply && (m.kind === 'insp' || m.kind === 'up') ? `<h3>${bi('Your reply', 'आपले उत्तर')}</h3><div class="card"><b>${t('subAt', { t: esc(m.reply.at) })}${m.reply.late ? ` <span class="tag">${bi('late', 'उशिराचे')}</span>` : ''}</b>${m.points.map((p) => { const r = m.reply.points[p.key] || {}; return `<p class="hint">${t('point')} ${p.n}: ${esc(CH[r.choice] ? bi(CH[r.choice][0], CH[r.choice][1]) : '')}${r.by ? ' ' + esc(r.by) : ''}${r.text ? ` · “${esc(r.text)}”` : ''}${(r.files || []).length ? ` · ${r.files.map(esc).join(', ')}` : ''}</p>`; }).join('')}${(m.additions || []).map((x) => `<p class="hint"><b style="display:inline">${bi('Addition', 'भर')} · ${esc(x.at)}</b> · ${bi('points', 'मुद्दे')} ${x.points.join(', ')} · ${x.files.map(esc).join(', ')}${x.note ? ` · “${esc(x.note)}”` : ''}${x.late ? ` <span class="tag">${bi('late', 'उशिराचे')}</span>` : ''}</p>`).join('')}</div>` : '';
+  const sampleInfo = m.kind === 'sample' ? `<dl class="kv"><dt>${bi('Product and lot', 'उत्पादन व लॉट')}</dt><dd>${esc(m.product)}</dd><dt>${t('place')}</dt><dd>${esc((placeOf(m) || {}).name || '')}</dd><dt>${bi('Drawn on', 'घेतल्याची तारीख')}</dt><dd>${fd(m.date)}</dd></dl>${m.state === 'passed' && m.input === 'Insecticides' ? `<p class="hint">${bi('Fair price of the sample tendered (Insecticides Act s.22(3)).', 'नमुन्याची योग्य किंमत अदा (कीटकनाशक अधिनियम कलम 22(3)).')}</p>` : ''}` : '';
+  const upInfo = m.kind === 'up' ? `<dl class="kv"><dt>${bi('Shop where sampled', 'नमुना घेतलेले दुकान')}</dt><dd>${esc(m.shop)}</dd><dt>${bi('Sampled on', 'नमुना तारीख')}</dt><dd>${fd(m.sampled)}</dd><dt>${bi('Product and batch', 'उत्पादन व बॅच')}</dt><dd>${esc(m.product)}</dd></dl><p class="hint">${bi('You see your own notice and the failed report only; never the shop’s notice, reply or records (AP-03).', 'आपल्याला फक्त आपली नोटीस व अप्रमाणित अहवाल दिसतो; दुकानाची नोटीस, उत्तर किंवा नोंदी कधीही नाही (AP-03).')}</p>` : '';
+  const fertPanel = m.kind === 'sample' && m.state === 'failed' && m.remedy === 'fert' ? `<div class="card"><b>${bi('Appeal for referee analysis', 'रेफरी विश्लेषणासाठी अपील')}</b><p class="hint">${bi('Appeal to the Joint Director of Agriculture (BRD §24 to §27). The period is not yet confirmed by the Department, so no date is shown. Online filing is not yet allowed: until then, the appeal is made to the Joint Director’s office as the Department states.', 'कृषी सहसंचालकांकडे अपील (BRD §24 ते §27). मुदत विभागाने अद्याप निश्चित केलेली नाही, म्हणून तारीख दाखवलेली नाही. ऑनलाइन अपील अद्याप उपलब्ध नाही: तोपर्यंत विभाग सांगेल त्याप्रमाणे सहसंचालक कार्यालयात अपील करा.')}</p><span class="chip wait">${bi('Waiting on the Department', 'विभागाकडून प्रतीक्षा')}</span></div>` : '';
+  const btn = a === 'reply' ? `<button class="btn main" data-act="startReply">${t('reply')}</button>` : a === 'contest' ? `<button class="btn main" data-act="startContest">${t('contest')}</button>` : '';
+  const addBtn = (m.kind === 'insp' || m.kind === 'up') && m.state === 'replied' ? `<button class="btn alt" data-act="startAdd">${t('addReply')}</button>` : '';
+  return chrome(`${others && S.fromLink === m.id ? `<button class="lnk" data-act="nav" data-s="home">${others === 1 ? t('oneOther') : t('otherItems', { n: others })} ›</button>` : ''}
+  <div class="row"><h2 id="h" tabindex="-1" style="margin-bottom:2px">${esc(matterTitle(m))}</h2>${chipOf(m)}</div>${tags(m)}
+  <dl class="five"><dt>${t('what')}</dt><dd>${esc(f.what)}</dd>
+  <dt>${t('why')}</dt><dd>${esc(f.why)}${pts}</dd>
+  <dt>${t('must')}</dt><dd>${esc(f.must)}</dd>
+  ${f.by ? `<dt>${t('byWhen')}</dt><dd>${dateBanner(f.by)}</dd>` : ''}
+  <dt>${t('next')}</dt><dd>${esc(f.next)}</dd></dl>
+  ${btn}${addBtn}${fertPanel}${sampleInfo}${upInfo}${reply}${outcome}
+  ${m.papers.length ? `<h3>${t('papersIn')}</h3>${m.papers.map((p) => `<button class="card" data-act="openPaper" data-p="${p.id}"><b>${esc(p.form)}</b><span class="hint">${esc(p.no)} · ${fd(p.date)}${p.esign ? ' · eSign' : ''}</span></button>`).join('')}` : ''}
+  <h3>${t('happened')}</h3><ul class="tl">${m.tl.map(([d, en, mr]) => `<li><span>${fd(d)}</span><br>${esc(bi(en, mr))}</li>`).join('')}</ul>
+  <h3>${t('contact')}</h3><p style="margin:2px 0">${esc(o.office)}<br><span class="hint">${esc(o.name)}, ${esc(o.des)}</span></p><p class="hint">${t('noPhone')}</p>`, { title: kindWord(m.kind), back: true });
+};
+
+/* The paper as issued */
+function paperBody(p, m) {
+  const b = B(); const o = p.off ? OFF[p.off] : null; const pl = placeOf(m);
+  const firm = `<p>To: ${esc(b.name)}, ${esc(pl ? pl.name : b.address)}</p>`;
+  const sign = o ? `<p style="text-align:right;margin-top:10px">${esc(o.name)}<br>${esc(o.des)}</p>` : '';
+  switch (p.kind) {
+    case 'notice': case 'upnotice': return `<h4>${esc(p.form.split(' (')[0].toUpperCase())}</h4><p>No. ${esc(p.no)} · Date ${esc(p.date)}</p>${firm}<p>Under the ${esc(m.act)}, the following were found at the inspection${m.kind === 'up' ? ' of the sample' : ''}. Reply to each point in the seller portal by <b>${esc(m.due)}</b>.</p><table><tr><th>Point</th><th>Found</th></tr>${m.points.map((x) => `<tr><td>${x.n}</td><td>${esc(x.t)}</td></tr>`).join('')}</table>${sign}`;
+    case 'formiii': return `<h4>FORM III · ORDER NOT TO DISPOSE OF STOCK</h4><p>[Seeds Rules, rule 27]</p>${firm}<p>Whereas there is reason to believe that the stock of seeds detailed below contravenes the provisions of section 6, you are directed not to dispose of it for a period of <b>30 days</b> from this date (period shown is made up).</p><p><b>Defects to remove:</b> ${esc(m.points.map((x) => x.t).join('; '))}</p><table><tr><th>Crop and variety</th><th>Lot</th><th>Stock</th></tr><tr><td>${m.id === 'z0' ? 'All products at the shop' : 'Cotton hybrid (made up)'}</td><td>${m.id === 'z0' ? 'All' : 'CH-207'}</td><td>${m.id === 'z0' ? 'As listed at the inspection' : '40 packets'}</td></tr></table>${sign}`;
+    case 'formva': return `<h4>FORM V(A) · ORDER NOT TO DISPOSE OF ANY STOCK</h4><p>[Insecticides Rules, rule 30]</p>${firm}<p>In contravention of section … of the Act and/or rule … of the Rules (as recorded), you are directed to stop the distribution, sale or exhibiting for sale of the stock below for a period of <b>… days</b> from ${esc(p.date)} (made up).</p><table><tr><th>Name</th><th>Manufactured by</th><th>Batch</th><th>Stock</th></tr><tr><td>Kranti 25 EC</td><td>Sunrise Crop Care Pvt. Ltd.</td><td>K-2291</td><td>36 litres</td></tr></table>${sign}`;
+    case 'formvc': return `<h4>FORM V(C) · INTIMATION TO PERSON / LICENSEE FROM WHOM SAMPLE IS TAKEN</h4><p>[Insecticides Rules, rule 33]</p>${firm}<p>I have this day taken from your premises a sample of the insecticide below for test or analysis.</p><table><tr><td>Trade name</td><td>Kranti 25 EC</td></tr><tr><td>Batch</td><td>K-2291</td></tr><tr><td>Stock before sampling / quantity taken / stock after</td><td>37 / 1 / 36 litres</td></tr><tr><td>Stock register folio</td><td>48</td></tr><tr><td>Witnesses</td><td>Two, name and address recorded (made up)</td></tr></table><p>Received one sealed portion: confirmed by code to the registered mobile (UXD-56).</p>${sign}`;
+    case 'receipt': return `<h4>RECEIPT FOR THE SAMPLE</h4><p>[Insecticides Act 1968, section 22(3)]</p>${firm}<p>Received a sample of Kranti 25 EC, batch K-2291. The fair price of the sample will be tendered if it is not found misbranded.</p>${sign}`;
+    case 'formvi': return `<h4>FORM VI · NOTICE OF INTENTION TO TAKE A SAMPLE</h4><p>[Seeds Rules, rule 34]</p>${firm}<p>I hereby give you the notice of my intention of taking a sample of seed from your stocks for analysis.</p>${sign}`;
+    case 'formviii': return `<h4>FORM VIII · MEMORANDUM FOR DRAWING THE SEED SAMPLE</h4><p>[Seeds Rules, rule 39]</p>${firm}<table><tr><td>Sample</td><td>${esc(m.product)}</td></tr><tr><td>Cost of sample demanded</td><td>No</td></tr><tr><td>Persons present</td><td>Two, name and address recorded (made up)</td></tr><tr><td>Signature of the party</td><td>Confirmed by code to the registered mobile</td></tr></table>${sign}`;
+    case 'formj': return `<h4>FORM J · SAMPLE RECORD (FERTILISERS)</h4><p>(draft form, DQ-97)</p>${firm}<table><tr><td>Fertiliser</td><td>${esc(m.product)}</td></tr><tr><td>Drawn on</td><td>${esc(m.date)}</td></tr></table>${sign}`;
+    case 'report': return `<h4>LABORATORY REPORT</h4><p>Report ${esc(p.no)} · released ${esc(p.date)}</p><table><tr><td>Sample</td><td>${esc(m.sampleNo || 'S-2026-0388')}</td></tr><tr><td>Product</td><td>${esc(m.product)}</td></tr><tr><td>Result</td><td><b>${p.result === 'pass' ? 'Of standard quality' : 'Not of standard quality'}</b></td></tr><tr><td>Parameters</td><td>As released by the laboratory (made-up values not shown)</td></tr></table><p class="hint">A released report is never changed; its SHA-256 lets you check a copy (eLab contract).</p>`;
+    case 'stopfail': return `<h4>ORDER NOT TO DISPOSE OF STOCK</h4><p>(after the failed laboratory report ${esc(m.papers[1].no)}; the fertiliser form was not supplied, DQ-25)</p>${firm}<table><tr><th>Fertiliser</th><th>Lot</th><th>Stock</th></tr><tr><td>10:26:26</td><td>L551</td><td>120 bags (made up)</td></tr></table>${sign}`;
+    case 'outcome': return `<h4>OUTCOME OF THE REPLY, POINT BY POINT</h4><p>Notice ${esc(m.papers[0].no)}</p>${firm}<table><tr><th>Point</th><th>Outcome</th></tr>${(m.outcome || []).map(([k, ok, en]) => `<tr><td>${m.points.find((x) => x.key === k).n}</td><td>${esc(en)}</td></tr>`).join('')}</table>${sign}`;
+    case 'seizure': return `<h4>SEIZURE MEMO</h4><p>(seed stock: the Seeds Rules prescribe no form for a seizure of stock)</p>${firm}<table><tr><th>Lot</th><th>Quantity seized</th></tr><tr><td>CH-207</td><td>40 packets</td></tr></table><p>Receipt confirmed by code to the registered mobile (UXD-57).</p>${sign}`;
+    case 'insreport': return `<h4>INSPECTION REPORT</h4>${firm}<p>Inspection of the godown on ${esc(p.date)}: no contravention found.</p>${sign}`;
+    case 'order': return `<h4>ORDER ON LICENCE ${esc(m.licNo)}</h4>${firm}<p>On the referral of the inspector’s verification of notice NTC-PUN-2026-0122 (point 11), the licensing authority orders: <b>licence suspended</b> (example; the period and wording come from the order as issued).</p>${sign}`;
+    default: return '';
+  }
+}
+const PLAIN = { notice: ['This notice lists what was found at the inspection and asks you to reply to each point.', 'या नोटिशीत तपासणीत आढळलेले मुद्दे आहेत आणि प्रत्येक मुद्द्याला उत्तर मागितले आहे.'], upnotice: ['This notice asks you, as the manufacturer, to answer about the failed batch.', 'ही नोटीस उत्पादक म्हणून अप्रमाणित बॅचबाबत उत्तर मागते.'], formiii: ['This order stops the sale of the stock listed below for the period shown.', 'हा आदेश खालील साठ्याची विक्री दिलेल्या कालावधीसाठी थांबवतो.'], formva: ['This order stops the sale of the stock listed below for the period shown.', 'हा आदेश खालील साठ्याची विक्री दिलेल्या कालावधीसाठी थांबवतो.'], stopfail: ['This order stops the sale of the failed lot.', 'हा आदेश अप्रमाणित लॉटची विक्री थांबवतो.'], report: ['The laboratory’s result for your sample.', 'आपल्या नमुन्याचा प्रयोगशाळेचा निकाल.'], formvc: ['The written intimation the inspector gave when taking the sample.', 'नमुना घेताना निरीक्षकाने दिलेली लेखी सूचना.'], receipt: ['The receipt for the sample taken.', 'घेतलेल्या नमुन्याची पावती.'], formvi: ['The inspector’s notice, before taking the sample, that a sample would be taken.', 'नमुना घेण्यापूर्वी निरीक्षकाने दिलेली सूचना.'], formviii: ['The record of the sample drawn, left with you.', 'घेतलेल्या नमुन्याची नोंद, आपल्याकडे ठेवलेली.'], formj: ['The record of the fertiliser sample.', 'खत नमुन्याची नोंद.'], outcome: ['The officer’s outcome on each point of your reply.', 'आपल्या उत्तरातील प्रत्येक मुद्द्यावर अधिकाऱ्याचा निर्णय.'], seizure: ['The record of the stock seized.', 'जप्त केलेल्या साठ्याची नोंद.'], insreport: ['The report of the inspection.', 'तपासणीचा अहवाल.'], order: ['The licensing authority’s order on your licence.', 'आपल्या परवान्यावरील परवाना प्राधिकाऱ्याचा आदेश.'] };
+SCR.paper = function () {
+  const r = P(S.pcur); const { p, m } = r; const o = p.off ? OFF[p.off] : null;
+  return chrome(`<h2 id="h" tabindex="-1">${esc(p.form)}</h2>
+  <p class="hint">${esc(bi(PLAIN[p.kind][0], PLAIN[p.kind][1]))}</p>
+  ${S.lang === 'mr' ? `<p class="hint">${t('papersEn')}</p>` : ''}
+  <div class="paper">${paperBody(p, m)}</div>
+  <div class="card"><dl class="kv"><dt>No.</dt><dd>${esc(p.no)}</dd><dt>${bi('Date', 'तारीख')}</dt><dd>${fd(p.date)}</dd>${o ? `<dt>${bi('Issued by', 'जारी करणारे')}</dt><dd>${esc(o.name)}, ${esc(o.des)}</dd>` : `<dt>${bi('Released by', 'प्रसिद्ध करणारे')}</dt><dd>${bi('The laboratory', 'प्रयोगशाळा')}</dd>`}<dt>${t('verify')}</dt><dd>${esc(p.ver)}</dd></dl>
+  ${p.esign ? `<p class="hint">✓ ${esc(t('esigned', { o: o.name, d: fd(p.date) }))}</p>` : ''}
+  <button class="lnk" data-act="checkPaper">${t('checkPaper')}</button></div>
+  <button class="btn alt" data-act="download">${t('download')}</button>`, { title: bi('Paper', 'कागदपत्र'), back: true });
+};
+
+/* The reply (S-111 reused, UXD-113 to UXD-117) */
+let clock = 10;
+const stamp = () => { clock += 1; return `21 Nov 2026 ${String(9 + Math.floor(clock / 60)).padStart(2, '0')}:${String(clock % 60).padStart(2, '0')}`; };
+function dr() { const m = M(S.mcur); return S.drafts[m.id] || (S.drafts[m.id] = { a: {}, saved: '', err: '' }); }
+SCR.reply = function () {
+  const m = M(S.mcur); const d = dr(); const answered = m.points.filter((p) => (d.a[p.key] || {}).choice).length; const mr = S.lang === 'mr';
+  const card = (p) => { const a = d.a[p.key] || {};
+    return `<div class="card"><b>${t('point')} ${p.n}. ${esc(p.t)}</b>
+    <p class="hint"><b style="display:inline">${t('found')}:</b> ${esc(p.obs)}</p>${p.photos ? `<p class="hint">${t('photos')}: ${Array.from({ length: p.photos }, (_, i) => `<span class="tag">photo-${p.n}-${i + 1}.jpg</span>`).join('')}</p>` : ''}
+    <label class="f">${t('answer')} *</label>
+    <div class="chips" role="group" aria-label="${t('answer')}">${Object.entries(CH).map(([k, [en, mm]]) => `<button data-act="ch" data-k="${p.key}" data-c="${k}" aria-pressed="${a.choice === k}">${esc(mr ? mm : en)}</button>`).join('')}</div>
+    ${a.choice === 'will' ? `<label class="f" for="d_${p.key}">${t('dateL')} *</label><input class="t" type="date" id="d_${p.key}" data-d="${p.key}" value="${esc(a.by || '')}">` : ''}
+    <label class="f" for="e_${p.key}">${t('expl')}${a.choice === 'none' ? ` (${t('optional')})` : ' *'}</label>
+    <textarea class="t" id="e_${p.key}" data-e="${p.key}" rows="2">${esc(a.text || '')}</textarea>
+    ${(a.files || []).map((x) => `<span class="tag">${esc(x)}</span>`).join('')}
+    <button class="btn alt" data-act="file" data-k="${p.key}" data-n="${p.n}">${t('addFiles')}</button></div>`; };
+  return chrome(`<h2 id="h" tabindex="-1">${bi('Reply to notice', 'नोटिशीला उत्तर')} ${esc(m.papers[0].no)}</h2>
+  ${dateBanner(m.due)}
+  <p class="hint">${d.saved ? t('draft', { t: esc(d.saved) }) : t('notStarted')} · ${t('left', { k: answered, n: m.points.length })}</p>
+  ${d.err ? `<div class="msg err" role="alert">${esc(d.err)}</div>` : ''}
+  ${m.points.map(card).join('')}
+  <button class="btn main" data-act="submitReply">${t('submitReply')}</button>
+  <p class="hint">${bi('No code is asked: your signed-in session shows who sent it (SXD-06).', 'कोड विचारला जात नाही: आपले साइन-इन सत्र कोणी पाठवले ते दर्शवते (SXD-06).')}</p>`, { title: t('reply'), back: true, noNav: true });
+};
+SCR.received = function () {
+  const m = M(S.mcur); const r = S.lastReceipt;
+  return chrome(`<div class="msg ok" role="status">${esc(r.title)}</div>
+  <h2 id="h" tabindex="-1">${t('receipt')} ${esc(r.no)}</h2>
+  <p>${esc(r.text)}</p>${r.late ? `<p class="hint">${bi('Received after the period ended; it is marked late.', 'मुदत संपल्यानंतर प्राप्त; उशिराचे म्हणून नोंदवले.')}</p>` : ''}
+  <dl class="kv"><dt>${bi('Received', 'प्राप्त')}</dt><dd>${esc(r.at)}</dd><dt>${bi('Seal', 'सील')}</dt><dd>sha256 ${esc(r.seal)}</dd></dl>
+  <p><b>${t('next')}:</b> ${esc(r.next)}</p>
+  <div class="sim">Sealed by hash at the server’s time and never changed (D-063). The officer is alerted on the officer side.</div>
+  <button class="btn alt" data-act="download">${bi('Download receipt', 'पावती डाउनलोड करा')}</button>
+  <button class="btn main" data-act="toMatter">${t('backMatter')}</button>`, { title: t('replyReceived') });
+};
+SCR.add = function () {
+  const m = M(S.mcur); const A = S.add;
+  return chrome(`<h2 id="h" tabindex="-1">${t('addReply')}</h2><p class="hint">${t('addHint')}</p>
+  ${A.err ? `<div class="msg err" role="alert">${esc(A.err)}</div>` : ''}
+  <label class="f">${t('addWhich')}</label>
+  <div class="chips">${m.points.map((p) => `<button data-act="addPt" data-n="${p.n}" aria-pressed="${A.points.includes(p.n)}">${t('point')} ${p.n}</button>`).join('')}</div>
+  ${A.files.map((x) => `<span class="tag">${esc(x)}</span>`).join('')}
+  <button class="btn alt" data-act="addFile">${t('addFiles')}</button>
+  <label class="f" for="addNote">${t('note')} (${t('optional')})</label><textarea class="t" id="addNote" rows="2">${esc(A.note)}</textarea>
+  <button class="btn main" data-act="submitAdd">${t('addReply')}</button>`, { title: t('addReply'), back: true, noNav: true });
+};
+SCR.contest = function () {
+  const m = M(S.mcur); const due = dueOf(m);
+  return chrome(`<h2 id="h" tabindex="-1">${t('contest')}</h2>
+  <p class="hint">${bi('Insecticides Act 1968 s.24(3)-(4), as held in configuration (statutory):', 'कीटकनाशक अधिनियम 1968 कलम 24(3)-(4), संरचनेत ठेवल्याप्रमाणे (वैधानिक):')}</p>
+  <div class="card"><p style="margin:0">The dealer may give written notice within 28 days of receiving the report that he intends to adduce evidence in controversion of the report; the court may then send the retained portion to the Central Insecticides Laboratory (s.24(3)-(4)).</p></div>
+  ${dateBanner(due)}
+  <p>${bi('Report', 'अहवाल')} ${esc(m.papers.find((p) => p.kind === 'report').no)} · ${bi('received on', 'मिळाल्याची तारीख')} ${fd(m.reportRecd)}</p>
+  <div class="card"><b>${bi('Your notice', 'आपली सूचना')}</b><p style="margin:4px 0">${t('contestStmt')}</p></div>
+  <label class="f" for="contestText">${bi('Anything you want to add', 'आपल्याला जोडायचे असल्यास')} (${t('optional')})</label><textarea class="t" id="contestText" rows="3">${esc(S.contestText)}</textarea>
+  <button class="btn alt" data-act="toast" data-m="${esc(bi('A file would be attached (simulated).', 'फाईल जोडली जाईल (नमुना).'))}">${t('addFiles')}</button>
+  <button class="btn main" data-act="submitContest">${t('contest')}</button>
+  <p class="hint">${bi('No code is asked (SXD-06). Whether an online notice counts as the written one the Act asks for is a Department question (DQ-202).', 'कोड विचारला जात नाही (SXD-06). ऑनलाइन सूचना कायद्यातील लेखी सूचनेप्रमाणे ग्राह्य आहे का हा विभागाचा प्रश्न आहे (DQ-202).')}</p>`, { title: t('contest'), back: true, noNav: true });
+};
+
+/* Messages */
+SCR.messages = function () {
+  const b = B(); const msgs = b.messages.filter((g) => g.type === 'msg').sort((x, y) => day(y.date) - day(x.date)); const anns = b.messages.filter((g) => g.type === 'ann');
+  const row = (g) => `<button class="card" data-act="openMsg" data-g="${g.id}"><span class="tag">${g.type === 'ann' ? t('annLabel') : t('msgLabel')}</span>${S.read[g.id] ? '' : `<span class="tag">${bi('new', 'नवीन')}</span>`}<b style="font-weight:${S.read[g.id] ? 400 : 700}">${esc(bi(g.en, g.mr))}</b><span class="hint">${fd(g.date)}${g.from ? ` · ${esc(g.from)}` : ''}</span></button>`;
+  return chrome(`<h2 id="h" tabindex="-1">${t('messages')}</h2>
+  <h3>${t('msgsFrom')}</h3>${msgs.length ? msgs.map(row).join('') : `<p class="hint">${t('noMsgs')}</p>`}
+  ${anns.length ? `<h3>${t('announcements')}</h3>${anns.map(row).join('')}` : ''}
+  <p class="hint">${bi('Nothing here is a legal paper. Papers that bind your business are in My matters.', 'येथील काहीही कायदेशीर कागदपत्र नाही. आपल्या व्यवसायाला बंधनकारक कागदपत्रे माझी प्रकरणे मध्ये आहेत.')}</p>`, { title: t('messages') });
+};
+SCR.message = function () {
+  const g = B().messages.find((x) => x.id === S.gcur);
+  return chrome(`<span class="tag">${g.type === 'ann' ? t('annLabel') : t('msgLabel')}</span>
+  <h2 id="h" tabindex="-1">${fd(g.date)}${g.from ? ` · ${esc(g.from)}` : ''}</h2><p>${esc(bi(g.en, g.mr))}</p>
+  ${g.matter ? `<button class="btn main" data-act="openMatter" data-m="${g.matter}">${t('openMatter')}</button>` : ''}
+  ${g.lic != null ? `<button class="btn main" data-act="openLic" data-i="${g.lic}">${t('kLic')}</button>` : ''}
+  ${g.type === 'ann' ? `<p class="hint">${bi('An announcement informs only. Announcements are an example here: no Act, Rule or Guideline describes them (Waiting on the Department).', 'घोषणा फक्त माहितीसाठी असते. येथे ती उदाहरण आहे: कोणत्याही अधिनियम, नियम किंवा मार्गदर्शक सूचनांत घोषणांचा उल्लेख नाही (विभागाकडून प्रतीक्षा).')}</p>` : `<p class="hint">${bi('A message has no legal effect of its own: it never starts, stops or changes a period (SXD-07).', 'संदेशाला स्वतःचा कायदेशीर परिणाम नसतो: तो कोणतीही मुदत सुरू, बंद किंवा बदलत नाही (SXD-07).')}</p>`}`, { title: t('messages'), back: true });
+};
+
+/* My business and its pages */
+SCR.business = function () {
+  const b = B();
+  return chrome(`<h2 id="h" tabindex="-1">${esc(b.name)}</h2>
+  <dl class="kv"><dt>${bi('Constitution', 'घटना')}</dt><dd>${esc(b.constitution)}</dd><dt>${bi('Address', 'पत्ता')}</dt><dd>${esc(b.address)}</dd><dt>${t('regMobile')}</dt><dd>${esc(b.mobile)}</dd></dl>
+  <p class="hint">${b.licensed ? t('correctEp') : t('correctOffice')}</p>
+  ${b.places.length ? `<h3>${t('places')}</h3>${b.places.map((p) => `<div class="card"><b>${esc(p.name)}</b><span class="hint">${esc(p.district)} ${bi('district', 'जिल्हा')}</span></div>`).join('')}` : `<p class="hint">${bi('No place in Maharashtra on record: you appear only as a party to a notice about your products.', 'महाराष्ट्रात कोणतेही ठिकाण नोंदलेले नाही: आपण फक्त आपल्या उत्पादनांबाबतच्या नोटिशीतील पक्षकार आहात.')}</p>`}
+  <h3>${bi('More', 'अधिक')}</h3>
+  ${[['licences', 'licences'], ['papers', 'allPapers'], ['subs', 'mySubs'], ['help', 'help'], ['account', 'account']].map(([s, k]) => `<button class="card" data-act="goto" data-s="${s}"><b>${t(k)} ›</b></button>`).join('')}`, { title: t('business') });
+};
+SCR.licences = function () {
+  const b = B();
+  return chrome(`<h2 id="h" tabindex="-1">${t('licences')}</h2>
+  ${b.licences.length ? `<p class="hint">${t('asOn', { d: fd('2026-11-20') })} · e-Parwana</p>${b.licences.map((l, i) => `<button class="card" data-act="openLic" data-i="${i}"><div class="row"><b>${esc(l.input)}</b><span class="chip ${l.state === 'renew' ? 'late' : 'ok'}">${t(l.state === 'renew' ? 'vRenew' : 'vValid')}</span></div><span class="hint">${esc(l.kind)}<br>${esc(l.no)} · ${bi('valid to', 'पर्यंत वैध')} ${fd(l.to)}</span></button>`).join('')}` : `<p>${t('noLicence')}</p>`}`, { title: t('licences'), back: true });
+};
+SCR.licence = function () {
+  const l = B().licences[S.lcur];
+  const canRenew = l.state === 'renew' || l.state === 'expired';
+  return chrome(`<div class="row"><h2 id="h" tabindex="-1">${esc(l.input)}</h2><span class="chip ${canRenew ? 'late' : 'ok'}">${t(l.state === 'renew' ? 'vRenew' : 'vValid')}</span></div>
+  <dl class="kv"><dt>${bi('Kind', 'प्रकार')}</dt><dd>${esc(l.kind)}</dd><dt>No.</dt><dd>${esc(l.no)}</dd><dt>${bi('Issued by', 'जारी करणारे')}</dt><dd>${esc(l.issuer)}</dd><dt>${bi('Valid', 'वैधता')}</dt><dd>${fd(l.from)} – ${fd(l.to)}</dd><dt>${bi('Products covered', 'समाविष्ट उत्पादने')}</dt><dd>${bi('Shown when e-Parwana provides them', 'ई-परवाना कडून मिळाल्यावर दाखवली जातील')}</dd></dl>
+  <p class="hint">${t('asOn', { d: fd('2026-11-20') })} · e-Parwana</p>
+  ${canRenew ? `${dateBanner(l.to)}<button class="btn main" data-act="goto" data-s="leaving">${t('renew')}</button>` : ''}
+  <p class="hint">${bi('Renewal status is shown only if e-Parwana can give it (SXQ-16).', 'नूतनीकरणाची स्थिती ई-परवाना देऊ शकल्यासच दाखवली जाईल (SXQ-16).')}</p>`, { title: t('kLic'), back: true });
+};
+SCR.leaving = function () {
+  return chrome(`<h2 id="h" tabindex="-1">${t('leaving')}</h2><p>${t('leavingText')}</p>
+  <div class="mock">There is no e-Parwana contract yet: the next page is a mock with clearly mock states. Nothing is sent to e-Parwana (SR-05, SR-15).</div>
+  <button class="btn main" data-act="toEp">${t('contEp')}</button>`, { title: t('leaving'), back: true, noNav: true });
+};
+SCR.ep = function () {
+  return `<div class="gov"><div class="emb">ePW</div><div>e-Parwana<br><span class="ghost">(MOCK page: not e-Parwana, not part of the seller portal)</span></div></div>
+  <div class="scr"><div class="mock">A stand-in for e-Parwana’s own renewal pages. Choose what e-Parwana would answer.</div>
+  <h2>Licence renewal (MOCK)</h2>
+  ${S.mockEp === 'started' ? '<div class="msg ok">MOCK: renewal application started in e-Parwana. Nothing was actually submitted.</div>' : S.mockEp === 'down' ? '<div class="msg err">MOCK: e-Parwana is not available. Try again later.</div>' : ''}
+  <button class="btn alt" data-act="epState" data-v="started">MOCK: start a renewal</button>
+  <button class="btn alt" data-act="epState" data-v="down">MOCK: e-Parwana not available</button>
+  <button class="btn main" data-act="epBack">Return to the seller portal</button></div>`;
+};
+SCR.papers = function () {
+  const all = []; B().matters.forEach((m) => m.papers.forEach((p) => all.push({ p, m }))); all.sort((x, y) => day(y.p.date) - day(x.p.date));
+  return chrome(`<h2 id="h" tabindex="-1">${t('allPapers')}</h2>${all.length ? all.map(({ p }) => `<button class="card" data-act="openPaper" data-p="${p.id}"><b>${esc(p.form)}</b><span class="hint">${esc(p.no)} · ${fd(p.date)} · ${t('verify')} ${esc(p.ver)}</span></button>`).join('') : `<p class="hint">${t('noMatters')}</p>`}`, { title: t('allPapers'), back: true });
+};
+SCR.subs = function () {
+  const subs = []; B().matters.forEach((m) => { if (m.reply) subs.push([m.reply.at, `${bi('Reply to', 'उत्तर')} ${m.papers[0].no}`, m.reply.no || '—']); (m.additions || []).forEach((x) => subs.push([x.at, `${bi('Addition to the reply to', 'उत्तरातील भर')} ${m.papers[0].no}`, x.no])); if (m.contested) subs.push([m.contestAt, `${bi('Contest notice on', 'हरकतीची सूचना')} ${m.sampleNo}`, m.contestNo]); });
+  return chrome(`<h2 id="h" tabindex="-1">${t('mySubs')}</h2>${subs.length ? subs.map(([at, w, no]) => `<div class="card"><b>${esc(w)}</b><span class="hint">${t('subAt', { t: esc(at) })} · ${t('receipt')} ${esc(no)}</span><br><button class="lnk" data-act="download">${bi('Download receipt', 'पावती डाउनलोड करा')}</button></div>`).join('') : `<p class="hint">${t('noSubs')}</p>`}`, { title: t('mySubs'), back: true });
+};
+SCR.help = function () {
+  const offs = [...new Set(B().matters.map((m) => m.off))].map((k) => OFF[k]);
+  return chrome(`<h2 id="h" tabindex="-1">${t('help')}</h2>
+  <h3>${bi('Your offices', 'आपली कार्यालये')}</h3>${offs.map((o) => `<div class="card"><b>${esc(o.office)}</b><span class="hint">${esc(o.name)}, ${esc(o.des)}</span></div>`).join('')}
+  <p class="hint">${t('noPhone')}</p>
+  <h3>${t('regMobile')}</h3><p class="hint">${t('changeMobile')}</p>
+  <h3>${t('states')}</h3><dl class="kv"><dt>${t('sDue')}</dt><dd>${bi('The paper asks you to reply by its date.', 'कागदपत्रात दिलेल्या तारखेपर्यंत उत्तर द्यायचे आहे.')}</dd><dt>${t('sReplied')}</dt><dd>${bi('Your reply is with the officer.', 'आपले उत्तर अधिकाऱ्याकडे आहे.')}</dd><dt>${t('sOutcome')}</dt><dd>${bi('The officer recorded an outcome for each point.', 'अधिकाऱ्याने प्रत्येक मुद्द्यावर निर्णय नोंदवला.')}</dd><dt>${t('sNotComplied')}</dt><dd>${bi('No reply came in the period. You can still reply; it is marked late.', 'मुदतीत उत्तर आले नाही. आपण अजूनही उत्तर देऊ शकता; ते उशिराचे म्हणून नोंदवले जाते.')}</dd><dt>${t('sLicAuth')}</dt><dd>${bi('The licensing authority will decide on your licence.', 'परवाना प्राधिकारी आपल्या परवान्यावर निर्णय घेतील.')}</dd></dl>`, { title: t('help'), back: true });
+};
+SCR.account = function () {
+  const b = B();
+  return chrome(`<h2 id="h" tabindex="-1">${t('account')}</h2>
+  <dl class="kv"><dt>${t('regMobile')}</dt><dd>${esc(b.mobile)}</dd><dt>${t('mobileFrom')}</dt><dd>${esc(bi(b.mobileFrom[0], b.mobileFrom[1]))}</dd></dl>
+  <p class="hint">${t('changeMobile')}</p>
+  <p class="hint">${bi('One login for the whole business: every licence and place (SXD-01). There are no staff accounts.', 'संपूर्ण व्यवसायासाठी एकच लॉगिन: प्रत्येक परवाना व ठिकाण (SXD-01). कर्मचारी खाती नाहीत.')}</p>
+  <button class="btn alt" data-act="signout">${t('signout')}</button>`, { title: t('account'), back: true });
+};
+
+/* ---------------- Actions ---------------- */
+const ACT = {
+  lang: (b) => { S.lang = b.dataset.l; log(`screen words in ${S.lang === 'en' ? 'English' : 'Marathi'} (papers stay as issued, UXD-117)`); render(); },
+  back: () => { const p = S.stack.pop(); if (!p) { if (S.screen === 'code') { S.screen = 'signin'; render(); } else nav('home'); return; } Object.assign(S, p); S.err = ''; render(); },
+  nav: (b) => { if (['home', 'matters', 'messages', 'business'].includes(b.dataset.s)) nav(b.dataset.s); else { S.section = 'business'; go(b.dataset.s); } },
+  goto: (b) => go(b.dataset.s),
+  smsLink: () => { log(`SMS link opened ${$('cApp').checked ? 'in the app' : 'in the web page (no app installed)'}; asks to sign in first`); S.arrived = 'link'; go('signin'); S.stack = []; },
+  getApp: () => toast(bi('Opens the Play Store or App Store (simulated). Nothing blocks the reply (SXD-12).', 'प्ले स्टोअर किंवा ॲप स्टोअर उघडते (नमुना). उत्तर देण्यात काहीही अडथळा नाही (SXD-12).')),
+  sendCode: () => { const v = ($('idv') || {}).value || ''; S.idv = v; if (v.replace(/\D/g, '').length < 10 && !/[A-Z]{4}-\d{4}-\d{4}/i.test(v)) { S.err = bi('Type a 10-digit mobile number or a licence number.', '10 अंकी मोबाईल क्रमांक किंवा परवाना क्रमांक टाका.'); return render(); } S.tries = 3; S.codev = ''; S.helpOpen = false; log(`code requested for “${v}”: the same answer whether or not it is registered (BR-S-02); code sent by SMS to the registered mobile ••${B().mobile.slice(-3)} (DLT template)`); go('code'); },
+  checkCode: () => { const v = ($('codev') || {}).value || ''; S.codev = v; if (v !== '246810') { S.tries -= 1; S.err = S.tries > 0 ? t('wrongCode', { n: S.tries }) : bi('Too many wrong codes. Try again after 10:45.', 'खूप चुकीचे कोड. 10:45 नंतर पुन्हा प्रयत्न करा.'); log(`wrong code (${S.tries} tries left; limits BR-S-03)`); return render(); }
+    S.signed = true; log(`signed in to ${B().name} (session 8 h, 30 min idle)`);
+    if (B().receiptBySms) log('receipt of notice UPN-2026-0007 confirmed by the code typed from the SMS link, time recorded (SXD-05)');
+    if ($('cTwo').checked && !S.chosen) { S.screen = 'choose'; S.stack = []; return render(); }
+    afterSignin(); },
+  noCode: () => { S.helpOpen = !S.helpOpen; render(); },
+  resend: () => { log('a new code sent to the registered mobile'); toast(bi('A new code has been sent.', 'नवीन कोड पाठवला आहे.')); },
+  pickBiz: () => { S.chosen = true; afterSignin(); },
+  pickOther: () => { toast(bi('In the prototype only the first business is set up.', 'या नमुन्यात फक्त पहिला व्यवसाय तयार आहे.')); },
+  openMatter: (b) => { S.section = 'matters'; go('matter', { mcur: b.dataset.m }); },
+  mattersOpen: () => nav('matters'),
+  filt: (b) => { S.filt[b.dataset.f] = b.dataset.v; render(); },
+  openPaper: (b) => go('paper', { pcur: b.dataset.p }),
+  checkPaper: () => toast(bi('Opens the public check of the verification number (simulated).', 'पडताळणी क्रमांकाची सार्वजनिक तपासणी उघडते (नमुना).')),
+  download: () => toast(bi('Downloads the PDF (simulated).', 'PDF डाउनलोड होते (नमुना).')),
+  toast: (b) => toast(b.dataset.m),
+  startReply: () => go('reply'),
+  ch: (b) => { const d = dr(); const a = d.a[b.dataset.k] || (d.a[b.dataset.k] = {}); a.choice = b.dataset.c; d.saved = stamp(); d.err = ''; render(); },
+  file: (b) => { const d = dr(); const a = d.a[b.dataset.k] || (d.a[b.dataset.k] = {}); a.files = [...(a.files || []), `point-${b.dataset.n}-${(a.files || []).length + 1}.jpg`]; d.saved = stamp(); render(); },
+  submitReply: () => {
+    const m = M(S.mcur); const d = dr();
+    for (const p of m.points) { const a = d.a[p.key] || {};
+      if (!a.choice) { d.err = t('errNone', { n: p.n }); return render(); }
+      if (a.choice === 'will' && !a.by) { d.err = t('errDate', { n: p.n }); return render(); }
+      if (a.choice !== 'none' && !(a.text || '').trim()) { d.err = t('errExpl', { n: p.n }); return render(); } }
+    const at = stamp(); const late = day(TODAY) > day(m.due); const no = `RCP-2026-${String(4000 + clock)}`;
+    m.reply = { at, late, no, points: Object.fromEntries(m.points.map((p) => { const a = d.a[p.key]; return [p.key, { choice: a.choice, by: a.by ? fd(a.by) : '', text: (a.text || '').trim(), files: a.files || [] }]; })) };
+    m.state = 'replied'; m.tl.push([TODAY, late ? 'You replied (after the period: marked late)' : 'You replied', late ? 'आपण उत्तर दिले (मुदतीनंतर: उशिराचे)' : 'आपण उत्तर दिले']);
+    delete S.drafts[m.id];
+    S.lastReceipt = { title: t('replyReceived'), no, at, late, seal: '3e1f…9b20', text: bi(`Your reply to notice ${m.papers[0].no} was received on ${at}.`, `नोटीस ${m.papers[0].no} ला आपले उत्तर ${at} रोजी प्राप्त झाले.`), next: bi('The officer checks your reply and records an outcome for each point. You will be told here and by SMS.', 'अधिकारी आपले उत्तर तपासतील आणि प्रत्येक मुद्द्यावर निर्णय नोंदवतील. आपल्याला येथे व SMS ने कळवले जाईल.') };
+    log(`reply to ${m.papers[0].no} submitted point by point (${m.points.length} points; no code, SXD-06)${late ? '; after the period, marked late' : ''}; sealed; receipt ${no}; the officer is alerted`);
+    S.stack = S.stack.filter((x) => x.screen !== 'reply'); S.screen = 'received'; render();
+  },
+  toMatter: () => { S.stack = []; S.section = 'matters'; S.screen = 'matter'; render(); },
+  startAdd: () => { S.add = { points: [], files: [], note: '', err: '' }; go('add'); },
+  addPt: (b) => { const n = +b.dataset.n; const A = S.add; A.points = A.points.includes(n) ? A.points.filter((x) => x !== n) : [...A.points, n]; render(); },
+  addFile: () => { S.add.files.push(`addition-${S.add.files.length + 1}.pdf`); render(); },
+  submitAdd: () => { const A = S.add; A.note = ($('addNote') || {}).value || ''; if (!A.points.length || (!A.files.length && !A.note.trim())) { A.err = t('errAdd'); return render(); }
+    const m = M(S.mcur); const at = stamp(); const no = `RCP-2026-${String(4000 + clock)}`; const late = day(TODAY) > day(m.due);
+    (m.additions = m.additions || []).push({ at, no, points: A.points.slice().sort(), files: A.files.slice(), note: A.note.trim(), late });
+    m.tl.push([TODAY, `Addition to your reply (points ${A.points.join(', ')})`, `उत्तरात भर (मुद्दे ${A.points.join(', ')})`]);
+    S.lastReceipt = { title: bi('Addition received', 'भर प्राप्त झाली'), no, at, late, seal: '8a77…01dc', text: bi(`Addition to your reply to notice ${m.papers[0].no}, received on ${at}. Your reply itself is unchanged.`, `नोटीस ${m.papers[0].no} च्या उत्तरातील भर ${at} रोजी प्राप्त. आपले मूळ उत्तर बदललेले नाही.`), next: bi('The officer sees it with your reply.', 'अधिकाऱ्याला ती आपल्या उत्तरासोबत दिसेल.') };
+    log(`addition to the reply to ${m.papers[0].no} sealed separately (points ${A.points.join(', ')}), linked to the reply; receipt ${no} (SXD-15)`);
+    S.stack = S.stack.filter((x) => x.screen !== 'add'); S.screen = 'received'; render(); },
+  startContest: () => { S.contestText = ''; go('contest'); },
+  submitContest: () => { const m = M(S.mcur); S.contestText = ($('contestText') || {}).value || ''; const at = stamp(); const no = `RCP-2026-${String(4000 + clock)}`;
+    m.contested = TODAY; m.contestAt = at; m.contestNo = no; m.tl.push([TODAY, 'You gave a contest notice', 'आपण हरकतीची सूचना दिली']);
+    S.lastReceipt = { title: bi('Contest notice received', 'हरकतीची सूचना प्राप्त झाली'), no, at, late: false, seal: 'c4d2…7e55', text: bi(`Your contest notice on report ${m.papers.find((p) => p.kind === 'report').no} was received on ${at}.`, `अहवाल ${m.papers.find((p) => p.kind === 'report').no} वरील आपली हरकतीची सूचना ${at} रोजी प्राप्त झाली.`), next: bi('What follows is for the court (Insecticides Act s.24(4)).', 'पुढील कार्यवाही न्यायालयाची (कीटकनाशक अधिनियम कलम 24(4)).') };
+    log(`contest notice on ${m.sampleNo} given within the 28 days (s.24(3)-(4), statutory); no code; sealed; receipt ${no}`);
+    S.stack = S.stack.filter((x) => x.screen !== 'contest'); S.screen = 'received'; render(); },
+  openMsg: (b) => { S.read[b.dataset.g] = true; go('message', { gcur: b.dataset.g }); },
+  openLic: (b) => { S.section = 'business'; go('licence', { lcur: +b.dataset.i }); },
+  toEp: () => { log('hand-over to e-Parwana (MOCK): nothing is sent'); go('ep'); },
+  epState: (b) => { S.mockEp = b.dataset.v; log(`e-Parwana MOCK state: ${b.dataset.v}`); render(); },
+  epBack: () => { S.mockEp = null; S.stack = S.stack.filter((x) => x.screen !== 'leaving'); S.screen = 'licence'; render(); },
+  signout: () => { log('signed out; the session is ended'); S.signed = false; S.stack = []; S.screen = 'signin'; render(); },
+};
+function afterSignin() {
+  S.stack = [];
+  const link = B().link; const arriveByLink = $('cLink').checked && S.arrived === 'link';
+  if (arriveByLink && link === 'lic0') { S.section = 'business'; S.screen = 'licence'; S.lcur = 0; log('landed on the licence the SMS was about (SXD-13)'); return render(); }
+  if (arriveByLink && link) { S.section = 'matters'; S.screen = 'matter'; S.mcur = link; S.fromLink = link; log('landed on the paper the SMS was about, Home one tap away (SXD-13)'); return render(); }
+  S.section = 'home'; S.screen = 'home'; log('landed on Home (signed in from the portal’s address)'); render();
+}
+
+/* ---------------- Events on the officer side (prototype controls) ---------------- */
+const EVENTS = [
+  ['Time passes: the reply period ends', () => { const b = B(); const m = b.matters.find((x) => (x.kind === 'insp' || x.kind === 'up') && x.state === 'due'); if (!m) return log('no notice is awaiting a reply'); m.due = addDays(TODAY, -1); m.tl.push([TODAY, 'Period ended with no reply: not complied', 'मुदतीत उत्तर नाही: पालन नाही']); log(`${m.papers[0].no}: period ended with no reply; the notice reads Not complied from the next day; a late reply is still taken (UXD-30)`); render(); }],
+  ['The officer records the outcome of the reply', () => { const m = B().matters.find((x) => x.state === 'replied'); if (!m) return log('no reply is being checked: submit a reply first'); m.state = 'outcome'; m.outcome = m.points.map((p, i) => [p.key, i === 0 ? 'yes' : 'no', i === 0 ? 'Complied' : 'Not complied: the act the action matrix names follows as a paper', i === 0 ? 'पालन केले' : 'पालन नाही: कृती नियमावलीतील कार्यवाही कागदपत्राने कळवली जाईल']); m.papers.push({ id: `${m.id}-out`, form: 'Outcome of the reply, point by point', no: `OUT-${m.papers[0].no.slice(4)}`, date: TODAY, off: m.off, esign: false, ver: 'X1Y2-99', kind: 'outcome' }); m.tl.push([TODAY, 'Outcome given', 'निर्णय दिला']); B().messages.push({ id: `g-${m.id}-o`, type: 'msg', date: TODAY, matter: m.id, en: `Notice ${m.papers[0].no}: outcome given.`, mr: `नोटीस ${m.papers[0].no}: निर्णय दिला.` }); log(`officer recorded the outcome of the reply to ${m.papers[0].no}; the seller gets a Message and SMS; "Add to my reply" closes (SXD-15)`); render(); }],
+  ['The licensing authority issues its order (Om Sai)', () => { if (S.biz !== 'omsai') return log('pick Om Sai Krushi Kendra first'); const m = M('l1'); if (m.state === 'order') return log('the order is already issued'); m.state = 'order'; m.papers.push({ id: 'op9', form: 'Order on the licence', no: 'LIC-ORD-PUN-2026-0031', date: TODAY, off: 'dsao', esign: false, ver: 'L9K8-01', kind: 'order' }); m.tl.push([TODAY, 'Order on the licence issued', 'परवान्यावर आदेश जारी']); B().messages.push({ id: 'g-l1-o', type: 'msg', date: TODAY, matter: 'l1', en: 'Order on licence SEED-0000-8808 issued.', mr: 'परवाना SEED-0000-8808 वर आदेश जारी.' }); log('licensing authority issued its order (no show cause, hearing or interim suspension for now, RMD-14 to RMD-16); paper in the seller portal and SMS'); render(); }],
+  ['The laboratory releases a report', () => { log('Release: in this prototype the reports are already released in the Patil, Shree and Kisan scenarios; a release places the report in the seller portal by itself with a Message (UXD-109)'); }],
+];
+
+/* ---------------- Wiring ---------------- */
+function bindInputs() {
+  document.querySelectorAll('[data-e]').forEach((el) => el.addEventListener('input', () => { const d = dr(); const a = d.a[el.dataset.e] || (d.a[el.dataset.e] = {}); a.text = el.value; d.saved = d.saved || stamp(); }));
+  document.querySelectorAll('[data-d]').forEach((el) => el.addEventListener('change', () => { const d = dr(); const a = d.a[el.dataset.d] || (d.a[el.dataset.d] = {}); a.by = el.value; d.saved = stamp(); render(); }));
+  const ct = $('contestText'); if (ct) ct.addEventListener('input', () => { S.contestText = ct.value; });
+  const an = $('addNote'); if (an) an.addEventListener('input', () => { S.add.note = an.value; });
+  const iv = $('idv'); if (iv) iv.addEventListener('input', () => { S.idv = iv.value; });
+  const cv = $('codev'); if (cv) cv.addEventListener('input', () => { S.codev = cv.value; });
+}
+$('phone').addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (!b || !ACT[b.dataset.act]) return; e.preventDefault(); ACT[b.dataset.act](b); });
+$('scenarios').innerHTML = SCEN.map(([k, name, what]) => `<button class="sc" data-biz="${k}" aria-pressed="false"><b>${esc(name)}</b><br><span class="where">${esc(what)}</span></button>`).join('');
+$('scenarios').addEventListener('click', (e) => { const b = e.target.closest('[data-biz]'); if (!b) return; D = freshData(); reset(b.dataset.biz); $('log').textContent = ''; log(`scenario: ${SCEN.find((x) => x[0] === b.dataset.biz)[1]}; the Department’s SMS has arrived`); hint(SCEN.find((x) => x[0] === b.dataset.biz)[2]); render(); });
+$('events').innerHTML = EVENTS.map(([n], i) => `<button class="sc" data-ev="${i}">${esc(n)}</button>`).join('');
+$('events').addEventListener('click', (e) => { const b = e.target.closest('[data-ev]'); if (b) EVENTS[+b.dataset.ev][1](); });
+$('restart').addEventListener('click', () => { D = freshData(); reset(S.biz); log('started again from the SMS'); render(); });
+['cLink', 'cAddr'].forEach((id) => $(id).addEventListener('change', () => { if ($('cAddr').checked && S.screen === 'sms') { S.arrived = 'address'; S.screen = 'signin'; log('opened the portal’s address directly'); } render(); }));
+['cApp', 'cTwo'].forEach((id) => $(id).addEventListener('change', () => render()));
+reset('patil'); log('scenario: Patil Traders, Baramati; the Department’s SMS has arrived'); hint(SCEN[0][2]); render();
+
+// The owner of the shared page sees the prototype controls; everyone else only the phone screen.
+(async () => {
+  try {
+    const user = window.claude && window.claude.use ? await window.claude.use('user') : null;
+    if (user && await user.isOwner()) document.documentElement.classList.remove('simple');
+  } catch (e) { /* stays in the simple view */ }
+})();
+</script>
+
+</body>
+</html>
