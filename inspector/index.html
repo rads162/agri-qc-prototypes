@@ -143,6 +143,21 @@ html:not(.simple) .panel { overflow:visible; }
 @media (max-width:500px) {
   html:not(.simple) .wrap > :first-child { max-width:none; height:calc(100vh - var(--above, 0px)); height:calc(100dvh - var(--above, 0px)); }
 }
+/* UXD-210 (the owner, 2026-11-24; the first piece of phase 9, desktop): in a desktop browser (wider than 820 px) the
+   sign-in screens (S-01 to S-09) are a web page, not a phone: the Department's header across the top and the sign-in in
+   a box in the middle, with the same fields, messages and rules. On a phone nothing changes. After signing in, an
+   officer opens the desktop portal; an inspector still sees the phone screens until phase 9 designs them for desktop. */
+@media (min-width:821px) {
+  html.j1 body .wrap > :first-child { max-width:none; }
+  html.j1 body .phone { max-width:none; max-height:none; border-radius:8px; background:var(--bg); }
+  html.j1.simple body .wrap { grid-template-columns:minmax(0,1fr); max-width:none; padding:0; }
+  html.j1.simple body .phone { border:0; border-radius:0; }
+  html.j1 .phone .gov { flex:none; background:#fff; padding:8px max(24px, calc(50% - 560px)); min-height:56px; font-size:12px; }
+  html.j1 .phone .brand { flex:none; background:#fff; border-bottom:1px solid var(--line); padding:10px max(24px, calc(50% - 560px)) 12px; }
+  html.j1 .phone .brand b { font-size:18px; }
+  html.j1 .phone .scr { flex:0 1 auto; min-height:0; width:calc(100% - 32px); max-width:440px; margin:32px auto 16px; background:#fff; border:1px solid var(--line); border-radius:8px; padding:24px 28px; }
+  html.j1 .phone .foot { flex:none; border-top:0; padding:0 0 24px; }
+}
 html.simple .banner, html.simple .panel, html.simple #where { display:none !important; }
 html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:center; }
 </style>
@@ -6691,6 +6706,11 @@ $('scenarios').addEventListener('click', (e) => { const b = e.target.closest('[d
 
 reset(); render();
 hint('Pick a scenario, or sign in with a made-up officer below.');
+/* UXD-210: the page knows when a sign-in screen is shown, so a desktop browser can lay it out as a web page */
+const J1_SCREENS = ['device', 'signin', 'otp', 'setpw', 'forgot', 'forgotCode', 'lost', 'post'];
+const pfRender210 = render;
+render = function (...a) { const r = pfRender210(...a); document.documentElement.classList.toggle('j1', !!S && J1_SCREENS.includes(S.screen)); return r; };
+render();
 /* UXD-208: the height of what sits above the screen (the banner), so the screen fills the rest of the window */
 (() => { const fit = () => { const h = [...document.querySelectorAll('.banner, .page > .bar')].reduce((a, el) => a + el.offsetHeight, 0);
   document.documentElement.style.setProperty('--above', `${h}px`); }; fit(); addEventListener('resize', fit); })();
