@@ -133,6 +133,49 @@ textarea.t { min-height:70px; }
 .log { font:12px/1.4 ui-monospace, Consolas, monospace; background:var(--fill2); border:1px dashed var(--ink); padding:8px; max-height:200px; overflow:auto; white-space:pre-wrap; }
 table.k { border-collapse:collapse; width:100%; font-size:12px; }
 table.k td, table.k th { border:1px solid var(--fill); padding:4px 6px; text-align:left; vertical-align:top; }
+/* UXD-202 (the owner, 2026-11-24): the prototype fits the screen it is opened on, so the page itself never scrolls.
+   On a desktop browser the desktop screen or the phone takes the window's height; on a phone it fills the screen, without the outline.
+   Inside, the top and the bottom bar stay in place; only a screen longer than the phone scrolls, within itself, as in
+   the app. With the prototype controls shown, they scroll in their own column. */
+html, body { height:100%; }
+body { display:flex; flex-direction:column; height:100vh; height:100dvh; overflow:hidden; }
+.banner { flex:none; }
+.page { flex:1 1 auto; min-height:0; width:100%; max-width:1600px; display:flex; flex-direction:column; padding-bottom:16px; }
+.bar { flex:none; }
+.stage { flex:1 1 auto; min-height:0; grid-template-rows:minmax(0,1fr); align-items:stretch; }
+.stage > :first-child { display:flex; flex-direction:column; min-height:0; }
+#frame { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; }
+#frame > .desk, #frame > .phone { flex:1 1 auto; height:auto; min-height:0; }
+#frame > .phone { max-height:880px; }
+.stage > :first-child > .where { flex:none; }
+.panel { min-height:0; overflow:auto; }
+@media (min-width:821px) {
+  .stage { grid-template-columns:minmax(0,1fr) minmax(240px,280px); }
+  .stage.phone-mode { grid-template-columns:minmax(0,380px) minmax(0,1fr); }
+  html.simple .stage, html.simple .stage.phone-mode { grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:820px) {
+  body { display:block; height:auto; overflow:visible; }
+  .page { display:block; }
+  .stage { grid-template-rows:none; }
+  .stage > :first-child { height:calc(100vh - 24px); height:calc(100dvh - 24px); }
+  .panel { overflow:visible; }
+  html.simple body { display:flex; height:100vh; height:100dvh; overflow:hidden; }
+  html.simple .page { display:flex; }
+  html.simple .stage { grid-template-rows:minmax(0,1fr); }
+  html.simple .stage > :first-child { height:auto; }
+}
+@media (max-width:500px) {
+  .page { padding:0; }
+  .bar { padding:6px 8px; margin:0; gap:6px 8px; }
+  .bar .lbl { display:none; }
+  .stage { gap:0; }
+  .stage.phone-mode > :first-child { max-width:none; }
+  #frame > .phone { max-width:none; border:0; border-radius:0; max-height:none; }
+  .stage > :first-child { height:100vh; height:100dvh; }
+  html.simple .stage > :first-child { height:auto; }
+  .panel { margin:16px 8px; }
+}
 html.simple .banner, html.simple .panel, html.simple #where { display:none !important; }
 </style>
 </head>
@@ -274,7 +317,7 @@ function fresh() {
 // seller mix per taluka: counts of sellers by the inputs their licence covers (S seeds, F fertiliser, I insecticides)
 const MIX = { Haveli:{S:60,F:80,I:30,SF:70,FI:40,SFI:50}, Baramati:{S:50,F:60,I:20,SF:55,FI:28,SFI:35}, Indapur:{S:45,F:60,I:18,SF:45,FI:25,SFI:30}, Junnar:{S:40,F:50,I:15,SF:40,FI:20,SFI:25}, Maval:{S:25,F:35,I:10,SF:25,FI:15,SFI:15} };
 
-const S = { role:ROLE_OF_CODE[SIGNED_CODE] || 'DSAO', Q:{}, view:'desk', route:'home', p:null, back:[], empty:false, slow:false, fail:false, sms:false, loading:false, toast:'', modal:null, sheet:false, log:[], dec:{}, chip:'all', D:fresh() };
+const S = { role:ROLE_OF_CODE[SIGNED_CODE] || 'DSAO', Q:{}, view:(window.matchMedia && matchMedia('(max-width:820px)').matches ? 'phone' : 'desk'), route:'home', p:null, back:[], empty:false, slow:false, fail:false, sms:false, loading:false, toast:'', modal:null, sheet:false, log:[], dec:{}, chip:'all', D:fresh() };
 
 function log(t) { S.log.unshift(`${new Date().toLocaleTimeString()}  ${t}`); document.getElementById('log').textContent = S.log.join('\n'); }
 function toast(t) { S.toast = t; clearTimeout(toast.h); toast.h = setTimeout(() => { S.toast = ''; render(); }, 3200); }
