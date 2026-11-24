@@ -213,11 +213,19 @@ html:not(.simple) .panel { overflow:visible; }
   html.j1 .j1side .lnk { display:block; margin:4px 0; padding:0; text-align:left; }
   html.j1 .j1side .sim { margin-top:20px; font-size:12px; }
 }
+/* UXD-213 (the owner, 2026-11-24): on the link with the prototype controls, Layout buttons switch between the desktop web
+   portal and the phone app, as on the officer and seller prototypes; the link without the controls follows the screen. */
+.lbar { display:flex; flex-wrap:wrap; gap:6px 12px; align-items:center; max-width:1180px; margin:0 auto; padding:10px 16px 0; }
+.lbar .lbl { font-size:12px; color:var(--soft); }
+.lbar .seg button:disabled { color:var(--line); cursor:not-allowed; }
+html.simple .lbar { display:none !important; }
 html.simple .banner, html.simple .panel, html.simple #where { display:none !important; }
 html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:center; }
 </style>
 <script>document.documentElement.classList.add("simple");</script>
 <div class="banner"><b>PROTOTYPE</b> · Inspector's web portal, journeys J1 (getting in), J2 (finding your way), J3 (My work, Dashboard and reports), J4 (finding a firm and inspecting it), J5 (drawing and sending a sample), J6 (notice and the firm's reply), J7 (enforcement acts), J8 (laboratory result and what follows) and J9 (targets, time limits and profile) · Low fidelity · <b>Every server answer here is SIMULATED</b>: nothing is sent, no SMS goes out, all names and codes are made up.</div>
+
+<div class="lbar"><span class="lbl">Layout</span><div class="seg" role="group" aria-label="Layout" id="layout"><button type="button" data-view="desk" aria-pressed="true">Desktop (web portal)</button><button type="button" data-view="phone" aria-pressed="false">Phone (app)</button></div><span class="lbl" id="layoutNote">The same screens, rules and words in both; only the layout differs (UXD-211, UXD-213)</span></div>
 
 <div class="wrap">
   <div>
@@ -6767,7 +6775,7 @@ const pfRender210 = render;
 render = function (...a) { const r = pfRender210(...a); document.documentElement.classList.toggle('j1', !!S && J1_SCREENS.includes(S.screen)); return r; };
 render();
 /* UXD-208: the height of what sits above the screen (the banner), so the screen fills the rest of the window */
-(() => { const fit = () => { const h = [...document.querySelectorAll('.banner, .page > .bar')].reduce((a, el) => a + el.offsetHeight, 0);
+(() => { const fit = () => { const h = [...document.querySelectorAll('.banner, .lbar, .page > .bar')].reduce((a, el) => a + el.offsetHeight, 0);
   document.documentElement.style.setProperty('--above', `${h}px`); }; fit(); addEventListener('resize', fit); })();
 /* ---------------- UXD-211 (the owner, 2026-11-24; phase 9, desktop): the inspector's screens as the web portal on a desktop
    browser. The page is drawn as on the phone, then laid out by the kind of screen: main places (with the bottom bar on
@@ -6860,6 +6868,29 @@ function j1Layout() {
 const j1Render = render;
 render = function (...a) { const r = j1Render(...a); j1Layout(); return r; };
 render();
+/* ---------------- UXD-213 (the owner, 2026-11-24): the Layout buttons on the link with the controls. The desktop layout of
+   UXD-210 to UXD-212 follows DK_WIDE; here DK_WIDE.matches follows the chosen layout instead of the window alone. The
+   desktop needs a window wider than 820 px (its styles are for that width), so below it only the phone is offered.
+   Without the controls nothing changes: the layout follows the screen. ---------------- */
+(() => {
+  if (document.documentElement.classList.contains('simple')) return;
+  const WIDE = matchMedia('(min-width:821px)');
+  let view = WIDE.matches ? 'desk' : 'phone';
+  Object.defineProperty(DK_WIDE, 'matches', { configurable: true, get: () => view === 'desk' && WIDE.matches });
+  const buttons = () => {
+    document.querySelectorAll('#layout [data-view]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === (DK_WIDE.matches ? 'desk' : 'phone'))));
+    const d = document.querySelector('#layout [data-view="desk"]'); d.disabled = !WIDE.matches;
+    d.title = WIDE.matches ? '' : 'Needs a window wider than 820 px';
+  };
+  const pfRender213 = render;
+  render = function (...a) { const r = pfRender213(...a); if (!DK_WIDE.matches) document.documentElement.classList.remove('j1'); buttons(); return r; };
+  $('layout').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-view]'); if (!b || b.disabled || b.dataset.view === view) return;
+    view = b.dataset.view; log(`layout: ${view === 'desk' ? 'desktop web portal' : 'phone app'} (the same screens and rules)`); render();
+  });
+  WIDE.addEventListener('change', () => { if (!WIDE.matches) view = 'phone'; render(); });
+  render();
+})();
 
 // The owner of the shared page sees the prototype controls; everyone else only the phone screen.
 (async () => {
