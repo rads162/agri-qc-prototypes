@@ -5990,17 +5990,18 @@ PLACES.szrec = () => {
   return h.replace(/<button class="btn alt" data-act="j7magistrate">Report to the Magistrate<\/button>(<p class="hint">[^<]*<\/p>)?/, line);
 };
 
-/* (3) The Seed Analyst's certificate, Form VII */
+/* (3) The Seed Analyst's certificate, Form VII. UXD-201 (the owner, 2026-11-24, form 7 of docs/Statutory_Forms_Review.md
+   section 6): open below the result and its table, as printed, not folded; received from the laboratory, never edited */
 Object.assign(J8RES.seed, { recv: J8RES.seed.recv || '24 Oct 2026', memo: J8RES.seed.memo || 'MEMO/S/2026/0071 dated 22 Oct 2026', seals: J8RES.seed.seals || 'Seals on the packet and the outer covering intact' });
 const f8Lres = PLACES.lres;
 PLACES.lres = () => {
-  const h = f8Lres(); const r = J8RES[S.k8]; const open = !!F8().f7;
+  const h = f8Lres(); const r = J8RES[S.k8];
   let add;
   if (r.input === 'Seeds') {
-    add = `<button class="lnk" data-act="f8tog" data-k="f7">${open ? 'Hide the certificate ▴' : "See the Seed Analyst's certificate (Form VII) ▾"}</button>${open ? `<div class="card" style="text-align:left"><b>Form VII (see rule 35) · Certificate of test and/or analysis by the Seed Analyst</b><br>
+    add = `<div class="card" style="text-align:left"><b>Form VII (see rule 35) · Certificate of test and/or analysis by the Seed Analyst</b><br>
       Certified that the sample bearing number ${esc(r.no)} purporting to be a sample of ${esc(r.prod)}, lot ${esc(r.lot)}, received on ${esc(r.recv)} with Memorandum No. ${esc(r.memo)}, has been tested; the results are as stated below.<br>
       ${r.rows.map(([a, b, c]) => `${esc(a)}: ${esc(c)} (standard ${esc(b)})`).join('<br>')}<br>2. The condition of the seals on the packet and the outer covering on receipt: ${esc(r.seals)}.<br>3. Remarks: ${esc(r.remark)}<br>
-      Place: Pune · Date: ${esc(r.date)} · Seed Analyst, ${esc(r.lab)}<p class="hint">Received from the laboratory (eLab, ADR-001); the portal shows it, it does not make it.</p></div>` : ''}`;
+      Place: Pune · Date: ${esc(r.date)} · Seed Analyst, ${esc(r.lab)}<p class="hint">Received from the laboratory (eLab, ADR-001); the portal shows it, it does not make it. The Seed Analyst delivers one copy to you and one to the firm (Seeds Act s.16(1)): nothing for you to do.</p></div>`;
   } else if (r.input === 'Insecticides') add = '<p class="hint">The Insecticide Analyst\'s report is Form IV of the Insecticides Rules 1971 (r.24); its form schedule was not supplied, so the report is shown as the laboratory sends it.</p>';
   else add = '<p class="hint">The Fertiliser (Control) Order 1985 was not supplied (DQ-17): the report is shown as the laboratory sends it.</p>';
   return h.replace(/(Open the report<\/button><\/p>)/, `$1${add}`);
@@ -6100,8 +6101,8 @@ SCEN.push(['Go to · Release a stop sale (stock check)', () => { reset(); hint('
   SCEN.find(([x]) => x === 'Go to · Stop order issued (Form III)')[1](); S.soOpen = false; S.place = 'sorec'; go('inside'); }]);
 SCEN.push(['Go to · Report a seizure to the Magistrate', () => { reset(); hint('Insecticide stock seized (Form V(B)). Report to the Magistrate: the court, where the stock is kept, the report itself (Insecticides Act s.22(2)(b); no prescribed form), how it is sent; then the custody order with a photo (UXD-189).');
   SCEN.find(([x]) => x === 'Go to · Seize insecticide stock (Form V(B))')[1](); const j = S.j; j.seizure = { no: 'SZ-PUN-2026-0012', what: `${j.prods[0].name} · lot ${j.prods[0].lot} · 20 litres`, pp: [], grounds: 'Stop order not obeyed', inp: 'Insecticides', kind: 'Stock', form: 'Form V(B)', folio: '112' }; S.place = 'szrec'; go('inside'); }]);
-SCEN.push(["Go to · Seed Analyst's certificate (Form VII)", () => { reset(); hint("A failed seed result: under the table, See the Seed Analyst's certificate (Form VII) shows the certificate as the Rules print it, filled from the laboratory (UXD-189)."); j8Setup('seed'); }]);
-SCEN.push(['Go to · Cotton seed complaint (Forms G and H)', () => { reset(); hint('A cotton complaint from MahaVISTAAR in Form G: the period of r.12(2), then take a sample, inspect the field and fill in Form H (signed by the complainant and the company\'s representative, or not present), and send it to the District Level Investigation Committee (r.12). Maharashtra Cotton Seeds Rules 2010 (UXD-189).'); goLogin(); ACT.f8cg(); }]);
+SCEN.push(["Go to · Seed Analyst's certificate (Form VII)", () => { reset(); hint("A failed seed result: under the table, the Seed Analyst's certificate (Form VII) is open as the Rules print it, filled from the laboratory (UXD-189, UXD-201)."); j8Setup('seed'); }]);
+SCEN.push(['Go to · Cotton seed complaint (Forms G and H)', () => { reset(); hint('A cotton complaint from MahaVISTAAR in Form G: the period of r.12(2), then take a sample, inspect the field and fill in Form H, the paper filling in above the signatures (UXD-203) (signed by the complainant and the company\'s representative, or not present), and send it to the District Level Investigation Committee (r.12). Maharashtra Cotton Seeds Rules 2010 (UXD-189).'); goLogin(); ACT.f8cg(); }]);
 /* ---------------- UXD-190: every form printed in the supplied Acts, Rules and Orders (the owner, 2026-11-23: "First
    include/build in the prototype all formats of forms, intimation notices etc present in various legal documents").
    UXD-191 (the owner, 2026-11-23): not as a library of its own ("It was not supposed to be added here"). The More entry,
@@ -6555,6 +6556,136 @@ if (typeof tlTargets === 'function') PLACES.targets = (...a) => tlTargets(...a).
   const rows = [...lis.matchAll(/<li>([^<]*)<\/li>/g)].map((x) => x[1]);
   return tlHtml(rows.map((s) => { const d = /(\d{1,2} [A-Z][a-z]{2} \d{4})/.exec(s); return [d ? d[1] : '', d ? s.replace(` ${d[1]}`, '').replace(d[1], '') : s]; }));
 });
+/* ---------------- UXD-201 (the owner, 2026-11-24, form 7): the Seed Analyst's certificate (Form VII) is open on the sample
+   record too, once the laboratory releases the result. A sample drawn in this prototype never gets a result, so the record
+   says where it will show; the seed result (S-83, scenario "Go to · Seed Analyst's certificate") shows the paper. ---------------- */
+const f7Rec = PLACES.srecord;
+PLACES.srecord = (...a) => {
+  const h = f7Rec(...a); const p = J().prods[S.smpOpen]; const r = (p && p.rec) || {};
+  if (!p || p.input !== 'Seeds' || !r.sent) return h;
+  const card = `<div class="card" style="text-align:left"><b>Seed Analyst's certificate (Form VII)</b>Opens here as the printed paper when the laboratory releases the result, with the results, the condition of the seals and the remarks.<br><span class="hint">SIMULATED: no result comes for a sample drawn here; the scenario "Go to · Seed Analyst's certificate (Form VII)" shows the paper.</span></div>`;
+  return h.replace('<button class="btn alt" data-act="j4go" data-place="record">Back to the inspection</button>', () => `${card}<button class="btn alt" data-act="j4go" data-place="record">Back to the inspection</button>`);
+};
+/* ---------------- UXD-203 (the owner, 2026-11-24, form 8 of docs/Statutory_Forms_Review.md section 6): Form H shows as the
+   paper at the field, filling in as it is typed (Draft), just above the signatures, so the complainant and the seed
+   company's representative read the report they sign. Form G stays as it is (already the paper); after saving and
+   sending, Form H stays open on the complaint. ---------------- */
+const chLive = (c) => chPaper(c).replace('<b>Form H (see rule 12(4))', '<span class="tag" style="margin-left:0">Draft</span> <b>Form H (see rule 12(4))');
+const chCoth = PLACES.coth;
+PLACES.coth = (...a) => {
+  const h = chCoth(...a); const c = S.f8cg;
+  const paper = `<h3>The report (Form H)</h3><p class="hint">Fills in as you type. The complainant and the seed company's representative read it here before they sign.</p><div id="chLive">${chLive(c)}</div><h3>Signatures</h3>`;
+  return h.replace('<h3>Signatures</h3>', () => paper);
+};
+const chRender = render;
+render = function () {
+  chRender();
+  const box = $('chLive'); if (!box) return;
+  document.querySelectorAll('#phone [data-ch]').forEach((el) => el.addEventListener('input', () => { box.innerHTML = chLive(S.f8cg); }));
+};
+/* ---------------- UXD-204 (the owner, 2026-11-24, form 9 of docs/Statutory_Forms_Review.md section 6): the revocation paper
+   (release of a stop sale; no form prescribed, layout proposed) shows on the release screen, marked Draft, filling in as
+   each line is checked and the ground chosen, just above Release the stop sale; once released it stays open on the stop
+   order record (as before). ---------------- */
+const relDraft = (o, inp, f) => {
+  const blank = '<span class="ghost">______</span>';
+  const why = f.relWhy ? `${esc(f.relWhy)} (${esc(relSec(f.relWhy, inp))})` : blank;
+  const st = (x) => (!x || !x.v ? 'not yet checked' : x.v === 'present' ? 'present as noted' : 'does not match what was noted: the order cannot be released; record a seizure');
+  return `<div class="card" style="text-align:left"><span class="tag" style="margin-left:0">Draft</span> <b>Revocation of the order not to dispose of stock (release of the stop sale)</b><br>
+  To: ${esc(anyFirm(S.j.firm).name)}, ${esc(anyFirm(S.j.firm).village || '')}<br>
+  The order ${esc(o.no)} not to dispose of the stock below is revoked from 20 Nov 2026.<br>Ground: ${why}.<br>
+  Stock checked on release, as noted at the stop sale:<br>${o.lines.map((l, k) => `${esc(l.name)} · lot ${esc(l.lot)} · ${esc(l.qty)} · ${st(f.rel[k])}`).join('<br>')}<br>${esc(f8me())}
+  <p class="hint">No form is prescribed for the revocation; this layout is proposed (the Department to confirm when built).</p></div>`;
+};
+const relSorel = PLACES.sorel;
+PLACES.sorel = (...a) => {
+  const h = relSorel(...a); const btn = '<button class="btn main" data-act="f8relDo">Release the stop sale</button>';
+  const paper = `<h3>What goes to the shop</h3><p class="hint">Fills in as you check the stock and choose the ground. Pressing Release the stop sale issues it.</p>${relDraft(S.j.order, f8inp(), F8())}${btn}`;
+  return h.replace(btn, () => paper);
+};
+/* ---------------- UXD-205 (the owner, 2026-11-24, form 10 of docs/Statutory_Forms_Review.md section 6): the report to the
+   Magistrate (no form prescribed, layout proposed) is marked Draft and fills in as the court and the place are typed;
+   once sent it is open on the seizure record, with the custody order below it once recorded (date, custody with whom,
+   the photo of the order). ---------------- */
+const magDraft = (z, f) => magPaper(z, f).replace('<b>Report of seizure to the Magistrate</b>', '<span class="tag" style="margin-left:0">Draft</span> <b>Report of seizure to the Magistrate</b>');
+const magRep = PLACES.magrep;
+PLACES.magrep = (...a) => {
+  const h = magRep(...a); const z = S.j.seizure; if (z.mag) return h;
+  const f = F8(); const sent = magPaper(z, f);
+  return h.replace(sent, () => `<p class="hint">Fills in as you type. Send the report sends it.</p><div id="magLive">${magDraft(z, f)}</div>`);
+};
+const magRender = render;
+render = function () {
+  magRender();
+  const box = $('magLive'); if (!box) return;
+  ['f8_court', 'f8_kept'].forEach((id) => { const el = $(id); if (el) el.addEventListener('input', () => { box.innerHTML = magDraft(S.j.seizure, F8()); }); });
+};
+const magSz = PLACES.szrec;
+PLACES.szrec = (...a) => {
+  const h = magSz(...a); const z = S.j.seizure; const m = z && z.mag; if (!m) return h;
+  const open = `<h3>Report to the Magistrate</h3>${magPaper(z, m)}<div class="card"><b>Sent</b><br>${esc(m.sent)} to ${esc(m.court)} · ${esc(m.how)}</div>`
+    + (m.order ? `<div class="card"><b>Custody order</b><br>Order of ${esc(m.order.date)} · custody with ${esc(m.order.cust)} · photo of the order kept ✓</div>`
+      : '<div class="card"><b>Custody order</b><br>Awaited.</div><button class="btn alt" data-act="f8go" data-place="magrep">Record the custody order</button>');
+  return h.replace(/<div class="card"><b>Report to the Magistrate<\/b><br>Sent [^<]*<\/div><button class="btn alt" data-act="f8go" data-place="magrep">Open the report<\/button>/, () => open);
+};
+/* ---------------- UXD-206 (the owner, 2026-11-24, form 11 of docs/Statutory_Forms_Review.md section 6): the Seeds (Control)
+   Order 1983 Schedule I (clause 13), how a seed sample is taken, labelled and sealed, is a short guide at Portions for a seed
+   sample (the minimum containers to sample, worked out when the bags in the lot are typed; the four seal impressions),
+   and the slip carries the six label items of Schedule I para III. No new required question. ---------------- */
+const s1Min = (n) => (!(n > 0) ? '' : n <= 5 ? `sample every container (${n}), and take at least 5 individual samples`
+  : n <= 30 ? `sample at least ${Math.max(5, Math.ceil(n / 3))} containers (one in every three, never fewer than 5)`
+  : `sample at least ${Math.max(10, Math.ceil(n / 5))} containers (one in every five, never fewer than 10)`);
+const s1Card = () => `<details class="card" style="text-align:left"><summary><b>How to take the sample (Schedule I)</b></summary>
+  <b>Containers to sample</b> (Seeds (Control) Order 1983, Schedule I, para II): up to 5 bags, every bag (at least 5 individual samples); 6 to 30, one in every three, never fewer than 5; 31 or more, one in every five, never fewer than 10. Seed in bulk: up to 500 kg at least 5 (3 for lots up to 50 kg); 501 to 3,000 kg one per 300 kg, at least 5; 3,001 to 20,000 kg one per 500 kg, at least 10, from varying depths. Combine them into one composite sample unless the lot looks uneven.<br>
+  <label class="f" for="s1_bags">Bags in this lot (optional, to work it out; not saved)</label><input class="t" id="s1_bags" inputmode="numeric" value="${esc((S.smp && S.smp.s1bags) || '')}">
+  <div id="s1_out" class="hint">${esc(s1Min(+((S.smp && S.smp.s1bags) || 0)))}</div>
+  <b>Packing and sealing</b> (para IV): a clean dry container closed tight; wrapped in strong paper, ends folded and gummed; twine above and across, fastened with sealing wax bearing at least <b style="display:inline">four clear impressions of your seal</b>: one on top, one at the bottom, two on the body; the knots covered with sealed wax.<br>
+  <b>The label</b> (para III) is the slip: it carries the six items the Schedule asks for.</details>`;
+const s1Sform = PLACES.sform;
+PLACES.sform = (...a) => {
+  const h = s1Sform(...a); const m = S.smp;
+  if (!m || m.part !== 4 || m.input !== 'Seeds') return h;
+  return h.replace(/(<h2 id="h" tabindex="-1">Portions<\/h2>)/, (x) => `${x}${s1Card()}`);
+};
+const s1Render = render;
+render = function () {
+  s1Render();
+  const el = $('s1_bags'); if (!el) return;
+  el.addEventListener('input', () => { S.smp.s1bags = el.value.replace(/\D/g, ''); const o = $('s1_out'); if (o) o.textContent = s1Min(+S.smp.s1bags); });
+};
+const s1Sheet = j5Sheet;
+j5Sheet = function () {
+  const h = s1Sheet(); const p = J() && J().prods[S.smpOpen];
+  if (S.jsheet !== 'slip' || !p || p.input !== 'Seeds' || !p.rec) return h;
+  const f = anyFirm(J().firm); const r = p.rec;
+  const lab = `<div style="text-align:left;margin-top:8px"><b>Label (Seeds (Control) Order, Schedule I, para III)</b><br>
+    (a) Serial number: ${esc(r.no)}<br>(b) Sender: ${lsWho()}<br>(c) Taken from: ${esc(f.name)}<br>(d) Date and place: ${esc(String(r.at || '').replace(/ \d{1,2}:\d{2}$/, ''))} 2026, ${esc(f.name)}, ${esc(f.village || '')}<br>
+    (e) Kind or variety: ${esc(p.name)}, lot ${esc(r.lot || '—')}<br>(f) Preservative, if any: none recorded</div>`;
+  return h.replace('</div><button data-act="j5print">Print</button>', () => `${lab}</div><button data-act="j5print">Print</button>`);
+};
+/* ---------------- UXD-207 (the owner, 2026-11-24, forms 12 to 16 of docs/Statutory_Forms_Review.md section 6): the firm's own
+   documents (licence and renewal, monthly return, cotton cash memo, certification tag) are not shown as papers; the seed
+   checklist point that checks each names its form in a help line, and the no-code product photo names the certification
+   tag. Form 16 (forms that are not the inspector's) stays out of the inspector's screens. ---------------- */
+const DOC_FORMS = {
+  no_licence: "Document to see: the licence, Seeds (Control) Order 1983 Form B; for cotton seed, the licence in Maharashtra Cotton Seeds Rules 2010 Form B.",
+  licence_not_renewed: "Document to see: the licence (Seeds (Control) Order 1983 Form B) and its renewal; for cotton seed, the renewal in Maharashtra Cotton Seeds Rules 2010 Form D.",
+  no_purchase_memo: "For cotton seed: the cash or credit memo, Maharashtra Cotton Seeds Rules 2010 Form F (r.10(e)).",
+  memo_missing_details: "For cotton seed: the cash or credit memo, Maharashtra Cotton Seeds Rules 2010 Form F (r.10(e)).",
+  monthly_report_not_sent: "Document to see: the monthly return, Seeds (Control) Order 1983 Form D (clause 18 prints Form 'C', a misprint); for cotton seed, Maharashtra Cotton Seeds Rules 2010 Form E, to the Controller by the 10th of every month (r.10).",
+};
+const docPoint = pointHtml;
+pointHtml = function (p, j) {
+  const h = docPoint(p, j); const d = p.inp === 'Seeds' && DOC_FORMS[p.id];
+  if (!d) return h;
+  const t = `${esc(p.t)}</b>`; const at = h.indexOf(t);
+  return at < 0 ? h : `${h.slice(0, at + t.length)}<span class="hint" style="display:block">${esc(d)}</span>${h.slice(at + t.length)}`;
+};
+const docSheet = j4Sheet;
+j4Sheet = function () {
+  const h = docSheet(); const j = J(); if (!j || !j.ps || j.ps.input !== 'Seeds') return h;
+  return h.replace('The bag or bottle itself where the label is missing or torn.</span>', () => 'The bag or bottle itself where the label is missing or torn. For certified seed, include the certification tag (Seeds Rules 1968 Form II).</span>');
+};
 $('scenarios').innerHTML = SCEN.map(([t], i) => `<button class="sc" data-sc="${i}">${t}</button>`).join('');
 $('scenarios').addEventListener('click', (e) => { const b = e.target.closest('[data-sc]'); if (b) { $('cNoSignal').checked = false; if (b.dataset.sc !== '8') $('cNoSms').checked = false; $('cWaiting').checked = false; if (!SCEN[+b.dataset.sc][0].includes('Location off')) $('cLocOff').checked = false; SCEN[+b.dataset.sc][1](); } });
 
