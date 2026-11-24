@@ -136,10 +136,51 @@ html:not(.simple) .panel { overflow:visible; }
 @media (max-width:500px) {
   html:not(.simple) .wrap > :first-child { max-width:none; height:calc(100vh - var(--above, 0px)); height:calc(100dvh - var(--above, 0px)); }
 }
+/* SXD-19 (the owner, 2026-11-24): the desktop web portal beside the phone app, on the same links, as the officer
+   prototype does (RMD-21, RMD-60). The layout of `10` section 8: the four sections in a left menu; two columns, the
+   paper or the list on the left, the action and the timeline on the right. The same screens, rules and words in both
+   (SXD-11); only the layout differs. On the links without the controls the layout follows the screen (desktop above
+   820 px); on the links with the controls the Layout buttons switch it. */
+.lbar { display:flex; flex-wrap:wrap; gap:6px 12px; align-items:center; max-width:1600px; margin:0 auto; padding:10px 16px 0; }
+.lbar .lbl { font-size:12px; color:var(--soft); }
+html.simple .lbar { display:none !important; }
+.desk { width:100%; border:2px solid var(--ink); border-radius:8px; background:var(--paper); overflow:hidden; display:flex; flex-direction:column; position:relative; flex:1 1 auto; min-height:0; }
+.desk .dscroll { flex:1 1 auto; min-height:0; overflow:auto; display:flex; flex-direction:column; }
+.desk .dwide { min-width:880px; flex:1 1 auto; min-height:0; display:flex; flex-direction:column; }
+.desk .gov { font-size:12px; padding:6px 20px; }
+.dtop { min-height:52px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:12px; padding:0 20px; background:var(--fill2); font-size:13px; flex:none; }
+.dtop .grow { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dbody { flex:1 1 auto; min-height:0; display:flex; }
+.dnav { width:230px; flex:none; border-right:1px solid var(--line); padding:10px 0; overflow:auto; }
+.dnav button { display:flex; justify-content:space-between; align-items:center; gap:8px; width:100%; text-align:left; border:0; background:none; padding:8px 18px; cursor:pointer; font-size:14px; min-height:44px; }
+.dnav button.sub { padding-left:34px; font-size:13px; min-height:36px; }
+.dnav button.on { font-weight:700; background:var(--fill); box-shadow:inset 4px 0 0 var(--ink); }
+.dnav .n { border:1px solid var(--ink); border-radius:9px; font-size:11px; padding:0 6px; font-weight:700; }
+.dmain { flex:1 1 auto; min-width:0; overflow:auto; padding:12px 28px 28px; position:relative; }
+.crumb { display:flex; align-items:center; gap:10px; font-size:12px; color:var(--soft); margin-bottom:6px; min-height:34px; }
+.col { max-width:760px; }
+.narrow { max-width:440px; margin:24px auto 0; }
+.two { display:grid; grid-template-columns:minmax(0,1fr) minmax(260px,320px); gap:28px; align-items:start; }
+.two > aside { border-left:1px solid var(--fill); padding-left:20px; }
+.two > aside.stick { position:sticky; top:0; }
+.desk .dmain .btn { width:auto; min-width:200px; padding:0 20px; margin-right:8px; }
+.desk .two > aside .btn, .desk .narrow .btn { width:100%; margin-right:0; }
+.desk > .scr { padding:20px max(20px, calc(50% - 380px)); }
+.desk > .scr .lnk { overflow-wrap:anywhere; }
+.desk .toast { left:auto; right:24px; bottom:24px; max-width:440px; }
+table.tt { border-collapse:collapse; width:100%; font-size:13px; margin-top:6px; }
+table.tt th, table.tt td { border-bottom:1px solid var(--fill); padding:8px; text-align:left; vertical-align:top; }
+table.tt th { color:var(--soft); font-weight:600; font-size:12px; }
+table.tt tr[data-act] { cursor:pointer; } table.tt tr[data-act]:hover td { background:var(--fill2); }
+table.tt .lnk { padding:0; min-height:0; font-weight:600; font-size:13px; }
+/* the desktop takes the width of the window, not the phone's */
+html.desk-mode body .wrap { grid-template-columns:minmax(0,1fr); max-width:1600px; }
+html.desk-mode body .wrap > :first-child { max-width:none; }
 html.simple .banner, html.simple .panel, html.simple #where { display:none !important; }
 html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:center; }
 </style>
-<div class="banner"><b>PROTOTYPE</b> · Seller portal (the regulated business's side), seller UX engagement phases 9 and 10: the screens of `09` and `10`, decisions SXD-01 to SXD-16. Low fidelity, every server answer SIMULATED, all businesses made up.</div>
+<div class="banner"><b>PROTOTYPE</b> · Seller portal (the regulated business's side), seller UX engagement phases 9 and 10: the screens of `09` and `10`, decisions SXD-01 to SXD-19, as the phone app and as the desktop web portal. Low fidelity, every server answer SIMULATED, all businesses made up.</div>
+<div class="lbar"><span class="lbl">Layout</span><div class="seg" role="group" aria-label="Layout" id="layout"><button type="button" data-view="desk" aria-pressed="false">Desktop (web portal)</button><button type="button" data-view="phone" aria-pressed="true">Phone (app)</button></div><span class="lbl">The same screens, rules and words in both; only the layout differs (SXD-11, SXD-19)</span></div>
 
 <div class="wrap">
   <div>
@@ -468,9 +509,11 @@ function five(m) {
   if (m.kind === 'insp' || m.kind === 'up') {
     const what = m.kind === 'up'
       ? bi(`Notice to ${B().name} as manufacturer of ${m.product}, issued by the ${o.name}, ${o.des}.`, `${m.product} चे उत्पादक म्हणून ${B().name} यांना ${o.name}, ${o.des} यांनी दिलेली नोटीस.`)
-      : bi(`Notice under the ${m.act}, issued by ${o.name}, ${o.des}.`, `${m.act} अंतर्गत नोटीस, ${o.name}, ${o.des} यांनी जारी केली.`);
+      : !(m.points || []).length ? bi(`Inspection by ${o.name}, ${o.des}.`, `${o.name}, ${o.des} यांनी केलेली तपासणी.`)
+      : bi(`Notice under the ${m.act}, issued by ${o.name}, ${o.des}.`,`${m.act} अंतर्गत नोटीस, ${o.name}, ${o.des} यांनी जारी केली.`);
     const why = m.kind === 'up'
       ? bi(`A sample of ${m.product} taken at ${m.shop} on ${fd(m.sampled)} failed analysis.`, `${m.shop} येथे ${fd(m.sampled)} रोजी घेतलेला ${m.product} चा नमुना अप्रमाणित ठरला.`)
+      : !(m.points || []).length ? bi(m.closedNote[0], m.closedNote[1]) // an inspection that found nothing (Northfield): no points, no notice
       : bi(`At the inspection on ${fd(m.date)}, ${m.points.length} point${m.points.length > 1 ? 's were' : ' was'} found.`, `${fd(m.date)} रोजीच्या तपासणीत ${m.points.length} ${m.points.length > 1 ? 'मुद्दे' : 'मुद्दा'} आढळले.`);
     let must; let next;
     if (m.state === 'due') { must = bi('Reply to each point.', 'प्रत्येक मुद्द्याला उत्तर द्या.'); next = bi('The officer checks your reply and records an outcome for each point. You will be told here and by SMS.', 'अधिकारी आपले उत्तर तपासतील आणि प्रत्येक मुद्द्यावर निर्णय नोंदवतील. आपल्याला येथे आणि SMS ने कळवले जाईल.'); }
@@ -501,9 +544,36 @@ function five(m) {
 
 /* ---------------- Rendering ---------------- */
 const SCR = {};
+/* SXD-19: the layout, 'desk' (the desktop web portal) or 'phone' (the app). Without the controls it follows the screen. */
+const NARROW = window.matchMedia ? matchMedia('(max-width:820px)') : { matches: false };
+let VIEW = NARROW.matches ? 'phone' : 'desk';
+const desk = () => VIEW === 'desk';
+const two = (left, right, cls = '') => `<div class="two"><div>${left}</div><aside class="${cls}">${right}</aside></div>`;
+const GOV = () => `<div class="gov"><div class="emb">emb.</div><div>Department header<br><span class="ghost">(placeholder: name and artwork to come)</span></div></div>`;
+const langSeg = () => `<div class="seg" role="group" aria-label="${t('language')}"><button data-act="lang" data-l="mr" aria-pressed="${S.lang === 'mr'}">मराठी</button><button data-act="lang" data-l="en" aria-pressed="${S.lang === 'en'}">English</button></div>`;
+const SUBS = [['licences', 'licences'], ['papers', 'allPapers'], ['subs', 'mySubs'], ['help', 'help'], ['account', 'account']];
+const SUB_OF = { licences: 'licences', licence: 'licences', leaving: 'licences', papers: 'papers', subs: 'subs', help: 'help', account: 'account' };
+/* the desktop frame: the header, a top bar (business, language, sign out), the four sections in a left menu with the
+   pages of My business under it, and the screen; signed out, the screen sits in a narrow column in the middle */
+function deskChrome(inner, opts) {
+  const signedIn = S.signed && S.screen !== 'choose';
+  const unread = B().messages.filter((g) => !S.read[g.id]).length;
+  const sub = SUB_OF[S.screen];
+  const menu = signedIn ? `<nav class="dnav" aria-label="Sections">${[['home', 'home'], ['matters', 'matters'], ['messages', 'messages'], ['business', 'business']].map(([s, k]) => {
+    const on = S.section === s && !(s === 'business' && sub);
+    return `<button data-act="dnav" data-s="${s}" class="${on ? 'on' : ''}" ${on ? 'aria-current="page"' : ''}><span>${t(k)}</span>${s === 'messages' && unread ? `<span class="n">${unread}</span>` : ''}</button>${s === 'business' ? SUBS.map(([x, k2]) => `<button data-act="dnav" data-s="${x}" class="sub ${sub === x ? 'on' : ''}" ${sub === x ? 'aria-current="page"' : ''}>${t(k2)}</button>`).join('') : ''}`;
+  }).join('')}</nav>` : '';
+  const top = `<div class="dtop"><b>${t('portal')}</b><span class="grow">${signedIn ? `· ${esc(B().name)}, ${esc(B().town)}` : `· ${t('dept')}`}</span>${langSeg()}${signedIn ? `<button class="topbtn" data-act="signout">${t('signout')}</button>` : ''}</div>`;
+  const back = opts.back && (S.stack.length || S.screen === 'code') ? `<button class="topbtn" data-act="back">‹ ${t('back')}</button>` : '';
+  const sect = signedIn && S.section && S.section !== S.screen ? `${t(S.section)} › ` : '';
+  const crumb = signedIn || back ? `<div class="crumb">${back}<span>${sect}${esc(opts.title || '')}</span></div>` : '';
+  const body = opts.wide ? inner : `<div class="${signedIn ? 'col' : 'narrow'}">${inner}</div>`;
+  return `<div class="dscroll"><div class="dwide">${GOV()}${top}<div class="dbody">${menu}<main class="dmain" id="scr">${crumb}${body}</main></div></div></div>${S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : ''}`;
+}
 function chrome(inner, opts = {}) {
-  const gov = `<div class="gov"><div class="emb">emb.</div><div>Department header<br><span class="ghost">(placeholder: name and artwork to come)</span></div></div>`;
-  const lang = `<div class="seg" role="group" aria-label="${t('language')}"><button data-act="lang" data-l="mr" aria-pressed="${S.lang === 'mr'}">मराठी</button><button data-act="lang" data-l="en" aria-pressed="${S.lang === 'en'}">English</button></div>`;
+  if (desk()) return deskChrome(inner, opts);
+  const gov = GOV();
+  const lang = langSeg();
   const back = opts.back ? `<button class="topbtn" data-act="back" aria-label="${t('back')}">‹ ${t('back')}</button>` : '';
   const top = `<div class="top">${back}<span class="grow"><b>${esc(opts.title || t('portal'))}</b></span>${lang}</div>`;
   const unread = B().messages.filter((g) => !S.read[g.id]).length;
@@ -513,8 +583,11 @@ function chrome(inner, opts = {}) {
 function go(screen, extra = {}) { if (S.screen && S.screen !== screen) S.stack.push({ screen: S.screen, mcur: S.mcur, pcur: S.pcur }); S.screen = screen; Object.assign(S, extra); S.err = ''; render(); const s = $('scr'); if (s) s.scrollTop = 0; }
 function nav(section) { S.section = section; S.stack = []; S.screen = section; S.err = ''; render(); }
 function render() {
-  const f = SCR[S.screen]; $('phone').innerHTML = f ? f() : '';
-  $('where').textContent = WHERE[S.screen] ? `Screen: ${WHERE[S.screen]}` : '';
+  const fr = $('phone'); fr.className = desk() ? 'desk' : 'phone';
+  document.documentElement.classList.toggle('desk-mode', desk());
+  document.querySelectorAll('#layout [data-view]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === VIEW)));
+  const f = SCR[S.screen]; fr.innerHTML = f ? f() : '';
+  $('where').textContent = WHERE[S.screen] ? `Screen: ${WHERE[S.screen]} · ${desk() ? 'desktop web portal' : 'phone app'}` : '';
   document.querySelectorAll('#scenarios .sc').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.biz === S.biz)));
   bindInputs();
 }
@@ -526,8 +599,13 @@ SCR.sms = function () {
   return `<div class="gov"><div class="emb">SMS</div><div>Messages · from AGRIMH<br><span class="ghost">(the phone’s own SMS app)</span></div></div>
   <div class="scr"><div class="sim">This is the SMS the Department’s gateway sends (a DLT-approved template, BR-S-16). Tap the link.</div>
   <div class="card"><b>AGRIMH</b><p style="margin:6px 0">${esc(B().sms).replace('{link}', `<button class="lnk" data-act="smsLink">${esc(link)}</button>`)}</p><span class="hint">21 Nov 2026, 09:12</span></div>
-  ${$('cApp').checked ? '<p class="hint">The app is installed: the link opens the paper in the app (SXD-12).</p>' : '<p class="hint">The app is not installed: the link opens the web page in the browser (SXD-12).</p>'}</div>`;
+  ${desk() ? '<p class="hint">On a computer: the SMS still reaches the registered mobile; the same link opens the paper in the web portal here. A seller who types the portal’s address lands on Home instead (the controls: “Opens the portal’s address”).</p>' : $('cApp').checked ? '<p class="hint">The app is installed: the link opens the paper in the app (SXD-12).</p>' : '<p class="hint">The app is not installed: the link opens the web page in the browser (SXD-12).</p>'}</div>`;
 };
+/* "Get the app" is offered on a phone's web page only, never on the desktop (SXD-12, SXD-19) */
+const getAppLine = () => (!$('cApp').checked && !desk() ? `<div class="getapp"><span>${t('getAppLine')}</span><button class="topbtn" data-act="getApp">${t('getApp')}</button></div>` : '');
+/* a short "by when" for the tables of the desktop */
+function dueShort(due) { const n = day(due) - day(TODAY); return n < 0 ? `<span class="chip late">${bi(`Late since ${fd(due)}`, `${fd(due)} पासून उशीर`)}</span>` : esc(n === 0 ? t('dayLeft', { d: fd(due) }) : t('daysLeft', { d: fd(due), n })); }
+const table = (cols, rows) => `<table class="tt"><thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
 SCR.signin = function () {
   return chrome(`<h2 id="h" tabindex="-1">${t('signin')}</h2><p class="hint">${t('portal')} · ${t('dept')}</p>
   ${S.err ? `<div class="msg err" role="alert">${esc(S.err)}</div>` : ''}
@@ -535,7 +613,7 @@ SCR.signin = function () {
   <p class="hint">${t('idHint')}</p>
   <button class="btn main" data-act="sendCode">${t('sendCode')}</button>
   <div class="sim">Type any 10-digit mobile or a licence number such as SEED-0000-1101. An unknown number gets the same answer as a known one (BR-S-02).</div>
-  ${!$('cApp').checked ? `<div class="getapp"><span>${t('getAppLine')}</span><button class="topbtn" data-act="getApp">${t('getApp')}</button></div>` : ''}`, { title: t('portal') });
+  ${getAppLine()}`, { title: t('portal') });
 };
 SCR.code = function () {
   const office = OFF[(B().matters[0] || {}).off || 'baramati'].office;
@@ -566,16 +644,17 @@ SCR.home = function () {
   const open = b.matters.filter(isOpen).length; const closed = b.matters.length - open;
   const samples = b.matters.filter((m) => m.kind === 'sample');
   const ann = b.messages.filter((g) => g.type === 'ann')[0];
-  return chrome(`<h2 id="h" tabindex="-1">${esc(b.name)}</h2><p class="hint">${esc(b.places.length > 1 ? `${b.places[0].name} ${bi(`and ${b.places.length - 1} other place`, `आणि आणखी ${b.places.length - 1} ठिकाण`)}` : (b.places[0] ? b.places[0].name : b.town))}</p>
-  <h3>${t('todo')}</h3>
+  const head = `<h2 id="h" tabindex="-1">${esc(b.name)}</h2><p class="hint">${esc(b.places.length > 1 ? `${b.places[0].name} ${bi(`and ${b.places.length - 1} other place`, `आणि आणखी ${b.places.length - 1} ठिकाण`)}` : (b.places[0] ? b.places[0].name : b.town))}</p>`;
+  const todoH = `<h3>${t('todo')}</h3>
   ${todo.length ? todo.map((m) => `<button class="card" data-act="openMatter" data-m="${m.id}"><b>${actionOf(m) === 'reply' ? `${t('reply')} · ${esc(m.papers[0].no)}` : `${t('contest')} · ${esc(m.sampleNo)}`}</b>${tags(m)}${dateBanner(dueOf(m))}</button>`).join('') : `<p class="hint">${t('nothingTodo')}</p>`}
-  ${fresh.length ? `<h3>${t('newSince')}</h3>${fresh.map(({ m, p }) => `<button class="card" data-act="openMatter" data-m="${m.id}"><b>${esc(p.form.split(' (')[0])}${p.result ? ` · ${p.result === 'pass' ? t('sPassed') : t('sFailed')}` : ''}</b><span class="hint">${esc(p.no)} · ${fd(p.date)}</span></button>`).join('')}` : ''}
-  <h3>${t('glance')}</h3>
+  ${fresh.length ? `<h3>${t('newSince')}</h3>${fresh.map(({ m, p }) => `<button class="card" data-act="openMatter" data-m="${m.id}"><b>${esc(p.form.split(' (')[0])}${p.result ? ` · ${p.result === 'pass' ? t('sPassed') : t('sFailed')}` : ''}</b><span class="hint">${esc(p.no)} · ${fd(p.date)}</span></button>`).join('')}` : ''}`;
+  const glanceH = `<h3>${t('glance')}</h3>
   ${b.licences.length ? `<p class="hint" style="margin-top:6px">${t('licences')}</p><div class="figs">${Object.entries(licBy).map(([inp, ls]) => `<button class="figb" data-act="nav" data-s="licences"><b>${ls.length}</b><span>${esc(inp)} · ${ls.map((l) => t(l.state === 'renew' ? 'vRenew' : l.state === 'expired' ? 'vExpired' : 'vValid')).join(', ')}</span></button>`).join('')}</div>` : ''}
   <p class="hint" style="margin-top:8px">${t('matters')}</p><div class="figs"><button class="figb" data-act="mattersOpen" data-o="open"><b>${open}</b><span>${t('openFirst')}</span></button><button class="figb" data-act="mattersOpen" data-o="closed"><b>${closed}</b><span>${t('closedL')}</span></button></div>
   ${samples.length ? `<p class="hint" style="margin-top:8px">${t('samples')}</p><div class="figs">${samples.map((m) => `<button class="figb" data-act="openMatter" data-m="${m.id}"><b>${esc(m.input)}</b><span>${m.state === 'lab' ? t('sLab') : m.state === 'passed' ? t('sPassed') : t('sFailed')}</span></button>`).join('')}</div>` : ''}
-  ${ann ? `<h3>${t('latestAnn')}</h3><button class="card" data-act="openMsg" data-g="${ann.id}"><span class="tag">${t('annLabel')}</span><b>${esc(ann.from)}</b><span class="hint">${esc(bi(ann.en, ann.mr)).slice(0, 90)}…</span></button><button class="lnk" data-act="nav" data-s="messages">${t('allMsgs')} ›</button>` : ''}
-  ${!$('cApp').checked ? `<div class="getapp"><span>${t('getAppLine')}</span><button class="topbtn" data-act="getApp">${t('getApp')}</button></div>` : ''}`, { title: t('home') });
+  ${ann ? `<h3>${t('latestAnn')}</h3><button class="card" data-act="openMsg" data-g="${ann.id}"><span class="tag">${t('annLabel')}</span><b>${esc(ann.from)}</b><span class="hint">${esc(bi(ann.en, ann.mr)).slice(0, 90)}…</span></button><button class="lnk" data-act="nav" data-s="messages">${t('allMsgs')} ›</button>` : ''}`;
+  if (desk()) return chrome(two(head + todoH, glanceH), { title: t('home'), wide: true });
+  return chrome(`${head}${todoH}${glanceH}${getAppLine()}`, { title: t('home') });
 };
 
 /* My matters */
@@ -586,13 +665,18 @@ SCR.matters = function () {
   if (F.kind !== 'all') list = list.filter((m) => m.kind === F.kind);
   if (F.place !== 'all') list = list.filter((m) => m.place === F.place);
   const open = list.filter(isOpen).sort((x, y) => day(y.date) - day(x.date)); const closed = list.filter((m) => !isOpen(m)).sort((x, y) => day(y.date) - day(x.date));
-  const row = (m) => `<button class="card" data-act="openMatter" data-m="${m.id}"><div class="row"><b>${esc(matterTitle(m))}</b>${chipOf(m)}</div>${tags(m)}${actionOf(m) ? dateBanner(dueOf(m)) : ''}</button>`;
+  const multi = b.places.length > 1;
+  const row = desk()
+    ? (m) => `<tr data-act="openMatter" data-m="${m.id}"><td><button class="lnk" data-act="openMatter" data-m="${m.id}">${esc(matterTitle(m))}</button></td><td>${esc(kindWord(m.kind))}</td>${multi ? `<td>${esc((placeOf(m) || {}).name || '')}</td>` : ''}<td>${esc(m.input)}</td><td>${chipOf(m)}</td><td>${actionOf(m) ? dueShort(dueOf(m)) : '<span class="ghost">—</span>'}</td></tr>`
+    : (m) => `<button class="card" data-act="openMatter" data-m="${m.id}"><div class="row"><b>${esc(matterTitle(m))}</b>${chipOf(m)}</div>${tags(m)}${actionOf(m) ? dateBanner(dueOf(m)) : ''}</button>`;
+  const cols = [bi('Matter', 'प्रकरण'), bi('Kind', 'प्रकार'), ...(multi ? [t('place')] : []), bi('Input', 'निविष्ठा'), bi('State', 'स्थिती'), t('byWhen')];
+  const block = (ms) => (desk() ? table(cols, ms.map(row)) : ms.map(row).join(''));
   return chrome(`<h2 id="h" tabindex="-1">${t('matters')}</h2>
   ${kinds.length > 1 ? `<div class="chips" role="group" aria-label="Kind"><button data-act="filt" data-f="kind" data-v="all" aria-pressed="${F.kind === 'all'}">${t('all')}</button>${kinds.map((k) => `<button data-act="filt" data-f="kind" data-v="${k}" aria-pressed="${F.kind === k}">${esc(kindWord(k))}</button>`).join('')}</div>` : ''}
   ${b.places.length > 1 ? `<div class="chips" role="group" aria-label="${t('place')}"><button data-act="filt" data-f="place" data-v="all" aria-pressed="${F.place === 'all'}">${t('all')} ${t('places').toLowerCase()}</button>${b.places.map((p) => `<button data-act="filt" data-f="place" data-v="${p.id}" aria-pressed="${F.place === p.id}">${esc(p.name.split(',')[0])}, ${esc(p.district)}</button>`).join('')}</div>` : ''}
   ${!list.length ? `<p class="hint">${t('noMatters')}</p>` : ''}
-  ${open.length ? `<h3>${t('openFirst')}</h3>${open.map(row).join('')}` : ''}
-  ${closed.length ? `<h3>${t('closedL')}</h3>${closed.map(row).join('')}` : ''}`, { title: t('matters') });
+  ${open.length ? `<h3>${t('openFirst')}</h3>${block(open)}` : ''}
+  ${closed.length ? `<h3>${t('closedL')}</h3>${block(closed)}` : ''}`, { title: t('matters'), wide: true });
 };
 
 /* The matter page */
@@ -607,17 +691,21 @@ SCR.matter = function () {
   const fertPanel = m.kind === 'sample' && m.state === 'failed' && m.remedy === 'fert' ? `<div class="card"><b>${bi('Appeal for referee analysis', 'रेफरी विश्लेषणासाठी अपील')}</b><p class="hint">${bi('Appeal to the Joint Director of Agriculture (BRD §24 to §27). The period is not yet confirmed by the Department, so no date is shown. Online filing is not yet allowed: until then, the appeal is made to the Joint Director’s office as the Department states.', 'कृषी सहसंचालकांकडे अपील (BRD §24 ते §27). मुदत विभागाने अद्याप निश्चित केलेली नाही, म्हणून तारीख दाखवलेली नाही. ऑनलाइन अपील अद्याप उपलब्ध नाही: तोपर्यंत विभाग सांगेल त्याप्रमाणे सहसंचालक कार्यालयात अपील करा.')}</p><span class="chip wait">${bi('Waiting on the Department', 'विभागाकडून प्रतीक्षा')}</span></div>` : '';
   const btn = a === 'reply' ? `<button class="btn main" data-act="startReply">${t('reply')}</button>` : a === 'contest' ? `<button class="btn main" data-act="startContest">${t('contest')}</button>` : '';
   const addBtn = (m.kind === 'insp' || m.kind === 'up') && m.state === 'replied' ? `<button class="btn alt" data-act="startAdd">${t('addReply')}</button>` : '';
-  return chrome(`${others && S.fromLink === m.id ? `<button class="lnk" data-act="nav" data-s="home">${others === 1 ? t('oneOther') : t('otherItems', { n: others })} ›</button>` : ''}
-  <div class="row"><h2 id="h" tabindex="-1" style="margin-bottom:2px">${esc(matterTitle(m))}</h2>${chipOf(m)}</div>${tags(m)}
-  <dl class="five"><dt>${t('what')}</dt><dd>${esc(f.what)}</dd>
+  const head = `${others && S.fromLink === m.id ? `<button class="lnk" data-act="nav" data-s="home">${others === 1 ? t('oneOther') : t('otherItems', { n: others })} ›</button>` : ''}
+  <div class="row"><h2 id="h" tabindex="-1" style="margin-bottom:2px">${esc(matterTitle(m))}</h2>${chipOf(m)}</div>${tags(m)}`;
+  const fiveH = (withBy) => `<dl class="five"><dt>${t('what')}</dt><dd>${esc(f.what)}</dd>
   <dt>${t('why')}</dt><dd>${esc(f.why)}${pts}</dd>
   <dt>${t('must')}</dt><dd>${esc(f.must)}</dd>
-  ${f.by ? `<dt>${t('byWhen')}</dt><dd>${dateBanner(f.by)}</dd>` : ''}
-  <dt>${t('next')}</dt><dd>${esc(f.next)}</dd></dl>
+  ${f.by && withBy ? `<dt>${t('byWhen')}</dt><dd>${dateBanner(f.by)}</dd>` : ''}
+  <dt>${t('next')}</dt><dd>${esc(f.next)}</dd></dl>`;
+  const papersH = m.papers.length ? `<h3>${t('papersIn')}</h3>${m.papers.map((p) => `<button class="card" data-act="openPaper" data-p="${p.id}"><b>${esc(p.form)}</b><span class="hint">${esc(p.no)} · ${fd(p.date)}${p.esign ? ' · eSign' : ''}</span></button>`).join('')}` : '';
+  const tlH = `<h3>${t('happened')}</h3><ul class="tl">${m.tl.map(([d, en, mr]) => `<li><span>${fd(d)}</span><br>${esc(bi(en, mr))}</li>`).join('')}</ul>`;
+  const contactH = `<h3>${t('contact')}</h3><p style="margin:2px 0">${esc(o.office)}<br><span class="hint">${esc(o.name)}, ${esc(o.des)}</span></p><p class="hint">${t('noPhone')}</p>`;
+  // desktop: the matter and its papers on the left; by when, the action, the timeline and the contact on the right (`10` section 8)
+  if (desk()) return chrome(two(`${head}${fiveH(false)}${sampleInfo}${upInfo}${reply}${outcome}${papersH}`, `${f.by ? `<h3 style="margin-top:4px">${t('byWhen')}</h3>${dateBanner(f.by)}` : ''}${btn}${addBtn}${fertPanel}${tlH}${contactH}`), { title: kindWord(m.kind), back: true, wide: true });
+  return chrome(`${head}${fiveH(true)}
   ${btn}${addBtn}${fertPanel}${sampleInfo}${upInfo}${reply}${outcome}
-  ${m.papers.length ? `<h3>${t('papersIn')}</h3>${m.papers.map((p) => `<button class="card" data-act="openPaper" data-p="${p.id}"><b>${esc(p.form)}</b><span class="hint">${esc(p.no)} · ${fd(p.date)}${p.esign ? ' · eSign' : ''}</span></button>`).join('')}` : ''}
-  <h3>${t('happened')}</h3><ul class="tl">${m.tl.map(([d, en, mr]) => `<li><span>${fd(d)}</span><br>${esc(bi(en, mr))}</li>`).join('')}</ul>
-  <h3>${t('contact')}</h3><p style="margin:2px 0">${esc(o.office)}<br><span class="hint">${esc(o.name)}, ${esc(o.des)}</span></p><p class="hint">${t('noPhone')}</p>`, { title: kindWord(m.kind), back: true });
+  ${papersH}${tlH}${contactH}`, { title: kindWord(m.kind), back: true });
 };
 
 /* The paper as issued */
@@ -646,14 +734,16 @@ function paperBody(p, m) {
 const PLAIN = { notice: ['This notice lists what was found at the inspection and asks you to reply to each point.', 'या नोटिशीत तपासणीत आढळलेले मुद्दे आहेत आणि प्रत्येक मुद्द्याला उत्तर मागितले आहे.'], upnotice: ['This notice asks you, as the manufacturer, to answer about the failed batch.', 'ही नोटीस उत्पादक म्हणून अप्रमाणित बॅचबाबत उत्तर मागते.'], formiii: ['This order stops the sale of the stock listed below for the period shown.', 'हा आदेश खालील साठ्याची विक्री दिलेल्या कालावधीसाठी थांबवतो.'], formva: ['This order stops the sale of the stock listed below for the period shown.', 'हा आदेश खालील साठ्याची विक्री दिलेल्या कालावधीसाठी थांबवतो.'], stopfail: ['This order stops the sale of the failed lot.', 'हा आदेश अप्रमाणित लॉटची विक्री थांबवतो.'], report: ['The laboratory’s result for your sample.', 'आपल्या नमुन्याचा प्रयोगशाळेचा निकाल.'], formvc: ['The written intimation the inspector gave when taking the sample.', 'नमुना घेताना निरीक्षकाने दिलेली लेखी सूचना.'], receipt: ['The receipt for the sample taken.', 'घेतलेल्या नमुन्याची पावती.'], formvi: ['The inspector’s notice, before taking the sample, that a sample would be taken.', 'नमुना घेण्यापूर्वी निरीक्षकाने दिलेली सूचना.'], formviii: ['The record of the sample drawn, left with you.', 'घेतलेल्या नमुन्याची नोंद, आपल्याकडे ठेवलेली.'], formj: ['The record of the fertiliser sample.', 'खत नमुन्याची नोंद.'], outcome: ['The officer’s outcome on each point of your reply.', 'आपल्या उत्तरातील प्रत्येक मुद्द्यावर अधिकाऱ्याचा निर्णय.'], seizure: ['The record of the stock seized.', 'जप्त केलेल्या साठ्याची नोंद.'], insreport: ['The report of the inspection.', 'तपासणीचा अहवाल.'], order: ['The licensing authority’s order on your licence.', 'आपल्या परवान्यावरील परवाना प्राधिकाऱ्याचा आदेश.'] };
 SCR.paper = function () {
   const r = P(S.pcur); const { p, m } = r; const o = p.off ? OFF[p.off] : null;
-  return chrome(`<h2 id="h" tabindex="-1">${esc(p.form)}</h2>
+  const left = `<h2 id="h" tabindex="-1">${esc(p.form)}</h2>
   <p class="hint">${esc(bi(PLAIN[p.kind][0], PLAIN[p.kind][1]))}</p>
   ${S.lang === 'mr' ? `<p class="hint">${t('papersEn')}</p>` : ''}
-  <div class="paper">${paperBody(p, m)}</div>
-  <div class="card"><dl class="kv"><dt>No.</dt><dd>${esc(p.no)}</dd><dt>${bi('Date', 'तारीख')}</dt><dd>${fd(p.date)}</dd>${o ? `<dt>${bi('Issued by', 'जारी करणारे')}</dt><dd>${esc(o.name)}, ${esc(o.des)}</dd>` : `<dt>${bi('Released by', 'प्रसिद्ध करणारे')}</dt><dd>${bi('The laboratory', 'प्रयोगशाळा')}</dd>`}<dt>${t('verify')}</dt><dd>${esc(p.ver)}</dd></dl>
+  <div class="paper">${paperBody(p, m)}</div>`;
+  const right = `<div class="card"><dl class="kv"><dt>No.</dt><dd>${esc(p.no)}</dd><dt>${bi('Date', 'तारीख')}</dt><dd>${fd(p.date)}</dd>${o ? `<dt>${bi('Issued by', 'जारी करणारे')}</dt><dd>${esc(o.name)}, ${esc(o.des)}</dd>` : `<dt>${bi('Released by', 'प्रसिद्ध करणारे')}</dt><dd>${bi('The laboratory', 'प्रयोगशाळा')}</dd>`}<dt>${t('verify')}</dt><dd>${esc(p.ver)}</dd></dl>
   ${p.esign ? `<p class="hint">✓ ${esc(t('esigned', { o: o.name, d: fd(p.date) }))}</p>` : ''}
   <button class="lnk" data-act="checkPaper">${t('checkPaper')}</button></div>
-  <button class="btn alt" data-act="download">${t('download')}</button>`, { title: bi('Paper', 'कागदपत्र'), back: true });
+  <button class="btn alt" data-act="download">${t('download')}</button>`;
+  if (desk()) return chrome(two(left, right), { title: bi('Paper', 'कागदपत्र'), back: true, wide: true });
+  return chrome(left + right, { title: bi('Paper', 'कागदपत्र'), back: true });
 };
 
 /* The reply (S-111 reused, UXD-113 to UXD-117) */
@@ -672,13 +762,14 @@ SCR.reply = function () {
     <textarea class="t" id="e_${p.key}" data-e="${p.key}" rows="2">${esc(a.text || '')}</textarea>
     ${(a.files || []).map((x) => `<span class="tag">${esc(x)}</span>`).join('')}
     <button class="btn alt" data-act="file" data-k="${p.key}" data-n="${p.n}">${t('addFiles')}</button></div>`; };
-  return chrome(`<h2 id="h" tabindex="-1">${bi('Reply to notice', 'नोटिशीला उत्तर')} ${esc(m.papers[0].no)}</h2>
-  ${dateBanner(m.due)}
-  <p class="hint">${d.saved ? t('draft', { t: esc(d.saved) }) : t('notStarted')} · ${t('left', { k: answered, n: m.points.length })}</p>
-  ${d.err ? `<div class="msg err" role="alert">${esc(d.err)}</div>` : ''}
-  ${m.points.map(card).join('')}
-  <button class="btn main" data-act="submitReply">${t('submitReply')}</button>
-  <p class="hint">${bi('No code is asked: your signed-in session shows who sent it (SXD-06).', 'कोड विचारला जात नाही: आपले साइन-इन सत्र कोणी पाठवले ते दर्शवते (SXD-06).')}</p>`, { title: t('reply'), back: true, noNav: true });
+  const h = `<h2 id="h" tabindex="-1">${bi('Reply to notice', 'नोटिशीला उत्तर')} ${esc(m.papers[0].no)}</h2>`;
+  const status = `<p class="hint">${d.saved ? t('draft', { t: esc(d.saved) }) : t('notStarted')} · ${t('left', { k: answered, n: m.points.length })}</p>
+  ${d.err ? `<div class="msg err" role="alert">${esc(d.err)}</div>` : ''}`;
+  const submit = `<button class="btn main" data-act="submitReply">${t('submitReply')}</button>
+  <p class="hint">${bi('No code is asked: your signed-in session shows who sent it (SXD-06).', 'कोड विचारला जात नाही: आपले साइन-इन सत्र कोणी पाठवले ते दर्शवते (SXD-06).')}</p>`;
+  // desktop: the points on the left; the date, the draft state and Submit stay in view on the right
+  if (desk()) return chrome(two(`${h}${m.points.map(card).join('')}`, `${dateBanner(m.due)}${status}${submit}`, 'stick'), { title: t('reply'), back: true, noNav: true, wide: true });
+  return chrome(`${h}${dateBanner(m.due)}${status}${m.points.map(card).join('')}${submit}`, { title: t('reply'), back: true, noNav: true });
 };
 SCR.received = function () {
   const m = M(S.mcur); const r = S.lastReceipt;
@@ -719,11 +810,15 @@ SCR.contest = function () {
 /* Messages */
 SCR.messages = function () {
   const b = B(); const msgs = b.messages.filter((g) => g.type === 'msg').sort((x, y) => day(y.date) - day(x.date)); const anns = b.messages.filter((g) => g.type === 'ann');
-  const row = (g) => `<button class="card" data-act="openMsg" data-g="${g.id}"><span class="tag">${g.type === 'ann' ? t('annLabel') : t('msgLabel')}</span>${S.read[g.id] ? '' : `<span class="tag">${bi('new', 'नवीन')}</span>`}<b style="font-weight:${S.read[g.id] ? 400 : 700}">${esc(bi(g.en, g.mr))}</b><span class="hint">${fd(g.date)}${g.from ? ` · ${esc(g.from)}` : ''}</span></button>`;
+  const newTag = (g) => (S.read[g.id] ? '' : `<span class="tag">${bi('new', 'नवीन')}</span>`);
+  const row = desk()
+    ? (g) => `<tr data-act="openMsg" data-g="${g.id}"><td>${newTag(g)}<button class="lnk" data-act="openMsg" data-g="${g.id}" style="font-weight:${S.read[g.id] ? 400 : 700}">${esc(bi(g.en, g.mr))}</button></td><td>${esc(g.from || '')}</td><td>${fd(g.date)}</td></tr>`
+    : (g) => `<button class="card" data-act="openMsg" data-g="${g.id}"><span class="tag">${g.type === 'ann' ? t('annLabel') : t('msgLabel')}</span>${newTag(g)}<b style="font-weight:${S.read[g.id] ? 400 : 700}">${esc(bi(g.en, g.mr))}</b><span class="hint">${fd(g.date)}${g.from ? ` · ${esc(g.from)}` : ''}</span></button>`;
+  const block = (gs) => (desk() ? table([bi('Subject', 'विषय'), bi('From', 'कडून'), bi('Date', 'तारीख')], gs.map(row)) : gs.map(row).join(''));
   return chrome(`<h2 id="h" tabindex="-1">${t('messages')}</h2>
-  <h3>${t('msgsFrom')}</h3>${msgs.length ? msgs.map(row).join('') : `<p class="hint">${t('noMsgs')}</p>`}
-  ${anns.length ? `<h3>${t('announcements')}</h3>${anns.map(row).join('')}` : ''}
-  <p class="hint">${bi('Nothing here is a legal paper. Papers that bind your business are in My matters.', 'येथील काहीही कायदेशीर कागदपत्र नाही. आपल्या व्यवसायाला बंधनकारक कागदपत्रे माझी प्रकरणे मध्ये आहेत.')}</p>`, { title: t('messages') });
+  <h3>${t('msgsFrom')}</h3>${desk() ? `<p class="hint">${t('msgLabel')}</p>` : ''}${msgs.length ? block(msgs) : `<p class="hint">${t('noMsgs')}</p>`}
+  ${anns.length ? `<h3>${t('announcements')}</h3>${block(anns)}` : ''}
+  <p class="hint">${bi('Nothing here is a legal paper. Papers that bind your business are in My matters.', 'येथील काहीही कायदेशीर कागदपत्र नाही. आपल्या व्यवसायाला बंधनकारक कागदपत्रे माझी प्रकरणे मध्ये आहेत.')}</p>`, { title: t('messages'), wide: true });
 };
 SCR.message = function () {
   const g = B().messages.find((x) => x.id === S.gcur);
@@ -741,13 +836,17 @@ SCR.business = function () {
   <dl class="kv"><dt>${bi('Constitution', 'घटना')}</dt><dd>${esc(b.constitution)}</dd><dt>${bi('Address', 'पत्ता')}</dt><dd>${esc(b.address)}</dd><dt>${t('regMobile')}</dt><dd>${esc(b.mobile)}</dd></dl>
   <p class="hint">${b.licensed ? t('correctEp') : t('correctOffice')}</p>
   ${b.places.length ? `<h3>${t('places')}</h3>${b.places.map((p) => `<div class="card"><b>${esc(p.name)}</b><span class="hint">${esc(p.district)} ${bi('district', 'जिल्हा')}</span></div>`).join('')}` : `<p class="hint">${bi('No place in Maharashtra on record: you appear only as a party to a notice about your products.', 'महाराष्ट्रात कोणतेही ठिकाण नोंदलेले नाही: आपण फक्त आपल्या उत्पादनांबाबतच्या नोटिशीतील पक्षकार आहात.')}</p>`}
-  <h3>${bi('More', 'अधिक')}</h3>
-  ${[['licences', 'licences'], ['papers', 'allPapers'], ['subs', 'mySubs'], ['help', 'help'], ['account', 'account']].map(([s, k]) => `<button class="card" data-act="goto" data-s="${s}"><b>${t(k)} ›</b></button>`).join('')}`, { title: t('business') });
+  ${desk() ? '' : `<h3>${bi('More', 'अधिक')}</h3>
+  ${SUBS.map(([s, k]) => `<button class="card" data-act="goto" data-s="${s}"><b>${t(k)} ›</b></button>`).join('')}`}`, { title: t('business') });
 };
 SCR.licences = function () {
   const b = B();
+  const chip = (l) => `<span class="chip ${l.state === 'renew' ? 'late' : 'ok'}">${t(l.state === 'renew' ? 'vRenew' : 'vValid')}</span>`;
+  const list = desk()
+    ? table([bi('Input', 'निविष्ठा'), bi('Kind', 'प्रकार'), bi('Licence no.', 'परवाना क्र.'), bi('Valid to', 'पर्यंत वैध'), bi('State', 'स्थिती')], b.licences.map((l, i) => `<tr data-act="openLic" data-i="${i}"><td><button class="lnk" data-act="openLic" data-i="${i}">${esc(l.input)}</button></td><td>${esc(l.kind)}</td><td>${esc(l.no)}</td><td>${fd(l.to)}</td><td>${chip(l)}</td></tr>`))
+    : b.licences.map((l, i) => `<button class="card" data-act="openLic" data-i="${i}"><div class="row"><b>${esc(l.input)}</b>${chip(l)}</div><span class="hint">${esc(l.kind)}<br>${esc(l.no)} · ${bi('valid to', 'पर्यंत वैध')} ${fd(l.to)}</span></button>`).join('');
   return chrome(`<h2 id="h" tabindex="-1">${t('licences')}</h2>
-  ${b.licences.length ? `<p class="hint">${t('asOn', { d: fd('2026-11-20') })} · e-Parwana</p>${b.licences.map((l, i) => `<button class="card" data-act="openLic" data-i="${i}"><div class="row"><b>${esc(l.input)}</b><span class="chip ${l.state === 'renew' ? 'late' : 'ok'}">${t(l.state === 'renew' ? 'vRenew' : 'vValid')}</span></div><span class="hint">${esc(l.kind)}<br>${esc(l.no)} · ${bi('valid to', 'पर्यंत वैध')} ${fd(l.to)}</span></button>`).join('')}` : `<p>${t('noLicence')}</p>`}`, { title: t('licences'), back: true });
+  ${b.licences.length ? `<p class="hint">${t('asOn', { d: fd('2026-11-20') })} · e-Parwana</p>${list}` : `<p>${t('noLicence')}</p>`}`, { title: t('licences'), back: true, wide: true });
 };
 SCR.licence = function () {
   const l = B().licences[S.lcur];
@@ -774,11 +873,18 @@ SCR.ep = function () {
 };
 SCR.papers = function () {
   const all = []; B().matters.forEach((m) => m.papers.forEach((p) => all.push({ p, m }))); all.sort((x, y) => day(y.p.date) - day(x.p.date));
-  return chrome(`<h2 id="h" tabindex="-1">${t('allPapers')}</h2>${all.length ? all.map(({ p }) => `<button class="card" data-act="openPaper" data-p="${p.id}"><b>${esc(p.form)}</b><span class="hint">${esc(p.no)} · ${fd(p.date)} · ${t('verify')} ${esc(p.ver)}</span></button>`).join('') : `<p class="hint">${t('noMatters')}</p>`}`, { title: t('allPapers'), back: true });
+  const list = desk()
+    ? table([bi('Paper', 'कागदपत्र'), 'No.', bi('Date', 'तारीख'), t('verify')], all.map(({ p }) => `<tr data-act="openPaper" data-p="${p.id}"><td><button class="lnk" data-act="openPaper" data-p="${p.id}">${esc(p.form)}</button></td><td>${esc(p.no)}</td><td>${fd(p.date)}</td><td>${esc(p.ver)}</td></tr>`))
+    : all.map(({ p }) => `<button class="card" data-act="openPaper" data-p="${p.id}"><b>${esc(p.form)}</b><span class="hint">${esc(p.no)} · ${fd(p.date)} · ${t('verify')} ${esc(p.ver)}</span></button>`).join('');
+  return chrome(`<h2 id="h" tabindex="-1">${t('allPapers')}</h2>${all.length ? list : `<p class="hint">${t('noMatters')}</p>`}`, { title: t('allPapers'), back: true, wide: true });
 };
 SCR.subs = function () {
   const subs = []; B().matters.forEach((m) => { if (m.reply) subs.push([m.reply.at, `${bi('Reply to', 'उत्तर')} ${m.papers[0].no}`, m.reply.no || '—']); (m.additions || []).forEach((x) => subs.push([x.at, `${bi('Addition to the reply to', 'उत्तरातील भर')} ${m.papers[0].no}`, x.no])); if (m.contested) subs.push([m.contestAt, `${bi('Contest notice on', 'हरकतीची सूचना')} ${m.sampleNo}`, m.contestNo]); });
-  return chrome(`<h2 id="h" tabindex="-1">${t('mySubs')}</h2>${subs.length ? subs.map(([at, w, no]) => `<div class="card"><b>${esc(w)}</b><span class="hint">${t('subAt', { t: esc(at) })} · ${t('receipt')} ${esc(no)}</span><br><button class="lnk" data-act="download">${bi('Download receipt', 'पावती डाउनलोड करा')}</button></div>`).join('') : `<p class="hint">${t('noSubs')}</p>`}`, { title: t('mySubs'), back: true });
+  const dl = `<button class="lnk" data-act="download">${bi('Download receipt', 'पावती डाउनलोड करा')}</button>`;
+  const list = desk()
+    ? table([bi('What', 'काय'), bi('Submitted', 'सादर'), t('receipt'), ''], subs.map(([at, w, no]) => `<tr><td>${esc(w)}</td><td>${esc(at)}</td><td>${esc(no)}</td><td>${dl}</td></tr>`))
+    : subs.map(([at, w, no]) => `<div class="card"><b>${esc(w)}</b><span class="hint">${t('subAt', { t: esc(at) })} · ${t('receipt')} ${esc(no)}</span><br>${dl}</div>`).join('');
+  return chrome(`<h2 id="h" tabindex="-1">${t('mySubs')}</h2>${subs.length ? list : `<p class="hint">${t('noSubs')}</p>`}`, { title: t('mySubs'), back: true, wide: true });
 };
 SCR.help = function () {
   const offs = [...new Set(B().matters.map((m) => m.off))].map((k) => OFF[k]);
@@ -802,6 +908,8 @@ const ACT = {
   lang: (b) => { S.lang = b.dataset.l; log(`screen words in ${S.lang === 'en' ? 'English' : 'Marathi'} (papers stay as issued, UXD-117)`); render(); },
   back: () => { const p = S.stack.pop(); if (!p) { if (S.screen === 'code') { S.screen = 'signin'; render(); } else nav('home'); return; } Object.assign(S, p); S.err = ''; render(); },
   nav: (b) => { if (['home', 'matters', 'messages', 'business'].includes(b.dataset.s)) nav(b.dataset.s); else { S.section = 'business'; go(b.dataset.s); } },
+  // the desktop's left menu: every item is a place of its own, so it starts a fresh trail (SXD-19)
+  dnav: (b) => { const s = b.dataset.s; S.section = ['home', 'matters', 'messages', 'business'].includes(s) ? s : 'business'; S.stack = []; S.screen = s; S.err = ''; render(); const sc = $('scr'); if (sc) sc.scrollTop = 0; },
   goto: (b) => go(b.dataset.s),
   smsLink: () => { log(`SMS link opened ${$('cApp').checked ? 'in the app' : 'in the web page (no app installed)'}; asks to sign in first`); S.arrived = 'link'; go('signin'); S.stack = []; },
   getApp: () => toast(bi('Opens the Play Store or App Store (simulated). Nothing blocks the reply (SXD-12).', 'प्ले स्टोअर किंवा ॲप स्टोअर उघडते (नमुना). उत्तर देण्यात काहीही अडथळा नाही (SXD-12).')),
@@ -896,9 +1004,13 @@ $('events').addEventListener('click', (e) => { const b = e.target.closest('[data
 $('restart').addEventListener('click', () => { D = freshData(); reset(S.biz); log('started again from the SMS'); render(); });
 ['cLink', 'cAddr'].forEach((id) => $(id).addEventListener('change', () => { if ($('cAddr').checked && S.screen === 'sms') { S.arrived = 'address'; S.screen = 'signin'; log('opened the portal’s address directly'); } render(); }));
 ['cApp', 'cTwo'].forEach((id) => $(id).addEventListener('change', () => render()));
+/* SXD-19: the Layout buttons (only on the link with the controls); without the controls the layout follows the screen,
+   also when the window is resized (the phone layout at 820 px wide or less) */
+$('layout').addEventListener('click', (e) => { const b = e.target.closest('[data-view]'); if (!b || b.dataset.view === VIEW) return; VIEW = b.dataset.view; log(`layout: ${desk() ? 'desktop web portal' : 'phone app'} (the same screens and rules)`); render(); });
+if (document.documentElement.classList.contains('simple') && NARROW.addEventListener) NARROW.addEventListener('change', () => { VIEW = NARROW.matches ? 'phone' : 'desk'; render(); });
 reset('patil'); log('scenario: Patil Traders, Baramati; the Department’s SMS has arrived'); hint(SCEN[0][2]); render();
-/* SXD-18: the height of what sits above the screen (the banner), so the screen fills the rest of the window */
-(() => { const fit = () => { const h = [...document.querySelectorAll('.banner, .page > .bar')].reduce((a, el) => a + el.offsetHeight, 0);
+/* SXD-18: the height of what sits above the screen (the banner and the Layout buttons), so the screen fills the rest of the window */
+(() => { const fit = () => { const h = [...document.querySelectorAll('.banner, .lbar')].reduce((a, el) => a + el.offsetHeight, 0);
   document.documentElement.style.setProperty('--above', `${h}px`); }; fit(); addEventListener('resize', fit); })();
 
 // The owner of the shared page sees the prototype controls; everyone else only the phone screen.
