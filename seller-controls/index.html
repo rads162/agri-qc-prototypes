@@ -1027,7 +1027,8 @@ reset('patil'); log('scenario: Patil Traders, Baramati; the Department’s SMS h
 /* SXD-20: on the link with the controls, move the banner and the Layout buttons below the screen (before the controls) */
 if (!document.documentElement.classList.contains('simple')) {
   const panel = document.querySelector('.wrap > .panel');
-  if (panel) ['.lbar', '.banner'].forEach((s) => { const el = document.querySelector(s); if (el) panel.parentNode.insertBefore(el, panel); });
+/* SXD-23 (the owner, 2026-11-24): the "Screen: ..." line moves below the screen as well, so the screen gets all the height */
+  if (panel) ['#where', '.lbar', '.banner'].forEach((s) => { const el = document.querySelector(s); if (el) panel.parentNode.insertBefore(el, panel); });
 }
 /* SXD-18: the height of what sits above the screen (the banner and the Layout buttons), so the screen fills the rest of the window */
 (() => { const fit = () => { const h = [...document.querySelectorAll('.banner, .lbar')].filter((el) => !el.closest('.wrap, .stage')).reduce((a, el) => a + el.offsetHeight, 0);
