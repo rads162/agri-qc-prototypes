@@ -219,6 +219,11 @@ html:not(.simple) .panel { overflow:visible; }
 .lbar .lbl { font-size:12px; color:var(--soft); }
 .lbar .seg button:disabled { color:var(--line); cursor:not-allowed; }
 html.simple .lbar { display:none !important; }
+/* UXD-214 (the owner, 2026-11-24): on the link with the prototype controls, the black banner and the Layout buttons sit below
+   the screen, above the controls, so the screen (phone or desktop web portal) starts at the top of the window. */
+html:not(.simple) .wrap > .banner, html:not(.simple) .wrap > .lbar { margin:0; max-width:none; }
+html:not(.simple) .wrap > .banner { border-radius:6px; }
+html:not(.simple) .wrap > .lbar { padding:0; }
 html.simple .banner, html.simple .panel, html.simple #where { display:none !important; }
 html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:center; }
 </style>
@@ -6774,8 +6779,13 @@ const J1_SCREENS = ['device', 'signin', 'otp', 'setpw', 'forgot', 'forgotCode', 
 const pfRender210 = render;
 render = function (...a) { const r = pfRender210(...a); document.documentElement.classList.toggle('j1', !!S && J1_SCREENS.includes(S.screen)); return r; };
 render();
+/* UXD-214: on the link with the controls, move the banner and the Layout buttons below the screen (before the controls) */
+if (!document.documentElement.classList.contains('simple')) {
+  const panel = document.querySelector('.wrap > .panel');
+  if (panel) ['.lbar', '.banner'].forEach((s) => { const el = document.querySelector(s); if (el) panel.parentNode.insertBefore(el, panel); });
+}
 /* UXD-208: the height of what sits above the screen (the banner), so the screen fills the rest of the window */
-(() => { const fit = () => { const h = [...document.querySelectorAll('.banner, .lbar, .page > .bar')].reduce((a, el) => a + el.offsetHeight, 0);
+(() => { const fit = () => { const h = [...document.querySelectorAll('.banner, .lbar, .page > .bar')].filter((el) => !el.closest('.wrap, .stage')).reduce((a, el) => a + el.offsetHeight, 0);
   document.documentElement.style.setProperty('--above', `${h}px`); }; fit(); addEventListener('resize', fit); })();
 /* ---------------- UXD-211 (the owner, 2026-11-24; phase 9, desktop): the inspector's screens as the web portal on a desktop
    browser. The page is drawn as on the phone, then laid out by the kind of screen: main places (with the bottom bar on

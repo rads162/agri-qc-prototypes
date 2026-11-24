@@ -176,6 +176,11 @@ table.tt .lnk { padding:0; min-height:0; font-weight:600; font-size:13px; }
 /* the desktop takes the width of the window, not the phone's */
 html.desk-mode body .wrap { grid-template-columns:minmax(0,1fr); max-width:1600px; }
 html.desk-mode body .wrap > :first-child { max-width:none; }
+/* SXD-20 (the owner, 2026-11-24): on the link with the prototype controls, the black banner and the Layout buttons sit below
+   the screen, above the controls, so the screen (phone or desktop web portal) starts at the top of the window. */
+html:not(.simple) .wrap > .banner, html:not(.simple) .wrap > .lbar { margin:0; max-width:none; }
+html:not(.simple) .wrap > .banner { border-radius:6px; }
+html:not(.simple) .wrap > .lbar { padding:0; }
 html.simple .banner, html.simple .panel, html.simple #where { display:none !important; }
 html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:center; }
 </style>
@@ -1010,8 +1015,13 @@ $('restart').addEventListener('click', () => { D = freshData(); reset(S.biz); lo
 $('layout').addEventListener('click', (e) => { const b = e.target.closest('[data-view]'); if (!b || b.dataset.view === VIEW) return; VIEW = b.dataset.view; log(`layout: ${desk() ? 'desktop web portal' : 'phone app'} (the same screens and rules)`); render(); });
 if (document.documentElement.classList.contains('simple') && NARROW.addEventListener) NARROW.addEventListener('change', () => { VIEW = NARROW.matches ? 'phone' : 'desk'; render(); });
 reset('patil'); log('scenario: Patil Traders, Baramati; the Department’s SMS has arrived'); hint(SCEN[0][2]); render();
+/* SXD-20: on the link with the controls, move the banner and the Layout buttons below the screen (before the controls) */
+if (!document.documentElement.classList.contains('simple')) {
+  const panel = document.querySelector('.wrap > .panel');
+  if (panel) ['.lbar', '.banner'].forEach((s) => { const el = document.querySelector(s); if (el) panel.parentNode.insertBefore(el, panel); });
+}
 /* SXD-18: the height of what sits above the screen (the banner and the Layout buttons), so the screen fills the rest of the window */
-(() => { const fit = () => { const h = [...document.querySelectorAll('.banner, .lbar')].reduce((a, el) => a + el.offsetHeight, 0);
+(() => { const fit = () => { const h = [...document.querySelectorAll('.banner, .lbar')].filter((el) => !el.closest('.wrap, .stage')).reduce((a, el) => a + el.offsetHeight, 0);
   document.documentElement.style.setProperty('--above', `${h}px`); }; fit(); addEventListener('resize', fit); })();
 
 // The owner of the shared page sees the prototype controls; everyone else only the phone screen.

@@ -181,11 +181,15 @@ body { display:flex; flex-direction:column; height:100vh; height:100dvh; overflo
 html:not(.simple) body { display:block; height:auto; overflow:visible; }
 html:not(.simple) .page { display:block; }
 html:not(.simple) .stage, html:not(.simple) .stage.phone-mode { grid-template-columns:minmax(0,1fr); grid-template-rows:none; }
-html:not(.simple) .stage > :first-child { height:calc(100vh - var(--above, 0px) - 36px); height:calc(100dvh - var(--above, 0px) - 36px); }
+html:not(.simple) .stage > :first-child { height:calc(100vh - var(--above, 0px) - 24px); height:calc(100dvh - var(--above, 0px) - 24px); }
 html:not(.simple) .panel { overflow:visible; }
 @media (max-width:500px) {
   html:not(.simple) .stage > :first-child { height:calc(100vh - var(--above, 0px)); height:calc(100dvh - var(--above, 0px)); }
 }
+/* RMD-63 (the owner, 2026-11-24): on the link with the prototype controls, the black banner and the Role and Layout buttons sit below
+   the screen, above the controls, so the screen (phone or desktop web portal) starts at the top of the window. */
+html:not(.simple) .stage > .banner, html:not(.simple) .stage > .bar { margin:0; }
+html:not(.simple) .stage > .banner { border-radius:6px; }
 html.simple .banner, html.simple .panel, html.simple #where { display:none !important; }
 /* RMD-60 (the owner, 2026-11-24): the Role and Layout buttons only on the link with the prototype controls */
 html.simple .bar { display:none !important; }
@@ -1041,8 +1045,13 @@ if (document.documentElement.classList.contains('simple') && window.matchMedia) 
 renderControls();
 log('Prototype loaded. All data is sample; every answer is simulated.');
 render();
+/* RMD-63: on the link with the controls, move the banner and the Role and Layout buttons below the screen (before the controls) */
+if (!document.documentElement.classList.contains('simple')) {
+  const panel = document.querySelector('.stage > .panel');
+  if (panel) ['.page > .bar', '.banner'].forEach((s) => { const el = document.querySelector(s); if (el) panel.parentNode.insertBefore(el, panel); });
+}
 /* RMD-62: the height of what sits above the screen (the banner and the Role and Layout bar), so the screen fills the rest of the window */
-(() => { const fit = () => { const h = [...document.querySelectorAll('.banner, .page > .bar')].reduce((a, el) => a + el.offsetHeight, 0);
+(() => { const fit = () => { const h = [...document.querySelectorAll('.banner, .page > .bar')].filter((el) => !el.closest('.wrap, .stage')).reduce((a, el) => a + el.offsetHeight, 0);
   document.documentElement.style.setProperty('--above', `${h}px`); }; fit(); addEventListener('resize', fit); })();
 </script>
 </body>
