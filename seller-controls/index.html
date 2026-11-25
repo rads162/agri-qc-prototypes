@@ -271,7 +271,8 @@ const W = {
   msgLabel: ['Message from the Department, not a legal paper', 'विभागाकडून संदेश, कायदेशीर कागदपत्र नाही'], annLabel: ['Announcement', 'घोषणा'],
   msgsFrom: ['Messages from the Department', 'विभागाकडून संदेश'], announcements: ['Announcements', 'घोषणा'], noMsgs: ['No messages yet.', 'अद्याप संदेश नाहीत.'],
   openMatter: ['Open the matter', 'प्रकरण उघडा'], places: ['Places', 'ठिकाणे'], regMobile: ['Registered mobile', 'नोंदणीकृत मोबाईल'],
-  allPapers: ['All papers', 'सर्व कागदपत्रे'], mySubs: ['My submissions', 'मी सादर केलेले'], help: ['Help and contact', 'मदत व संपर्क'], account: ['Account', 'खाते'], signout: ['Sign out', 'बाहेर पडा'],
+  allPapers: ['Notices and intimations', 'नोटिसा व सूचनापत्रे'], pkNotice: ['Notices', 'नोटिसा'], pkInt: ['Intimations', 'सूचनापत्रे'], pkOrder: ['Orders', 'आदेश'], pkReceipt: ['Receipts', 'पावत्या'], pkReport: ['Reports', 'अहवाल'],
+  papersHint: ['Every notice, intimation, order, receipt and report issued to your firm, newest first. Each is also in its matter.', 'आपल्या फर्मला दिलेल्या सर्व नोटिसा, सूचनापत्रे, आदेश, पावत्या व अहवाल, नवीन प्रथम. प्रत्येक कागदपत्र त्याच्या प्रकरणातही आहे.'], noPapersKind: ['None of this kind.', 'या प्रकारचे काहीही नाही.'], mySubs: ['My submissions', 'मी सादर केलेले'], help: ['Help and contact', 'मदत व संपर्क'], account: ['Account', 'खाते'], signout: ['Sign out', 'बाहेर पडा'],
   correctEp: ['These details come from e-Parwana. To correct them, apply in e-Parwana.', 'हे तपशील ई-परवाना मधून येतात. दुरुस्तीसाठी ई-परवाना मध्ये अर्ज करा.'],
   correctOffice: ['To correct these details, ask your district office.', 'या तपशिलांच्या दुरुस्तीसाठी आपल्या जिल्हा कार्यालयाशी संपर्क साधा.'],
   noLicence: ['The portal has no licence on record for this business.', 'या व्यवसायाचा कोणताही परवाना पोर्टलकडे नोंदलेला नाही.'],
@@ -612,7 +613,7 @@ function render() {
   document.querySelectorAll('#scenarios .sc').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.biz === S.biz)));
   bindInputs();
 }
-const WHERE = { sms: 'the SMS on the seller’s phone (not part of the portal)', signin: 'SS-01 Sign in', code: 'SS-02 Enter the code', choose: 'SS-03 Choose the business', home: 'SS-04 Home', matters: 'SS-05 My matters', matter: 'SS-06 Matter page', paper: 'SS-07 Paper', reply: 'SS-08 Reply (as S-111 of the inspector prototype)', received: 'SS-09 Reply received', add: 'SS-08a Add to my reply (SXD-15)', contest: 'SS-10 Contest notice', messages: 'SS-12 Messages', message: 'SS-13 Message or announcement', business: 'SS-14 My firm', licences: 'SS-15 Licences', licence: 'SS-16 Licence', leaving: 'SS-17 Leaving for e-Parwana', ep: 'e-Parwana (MOCK page, not part of the portal)', papers: 'SS-18 All papers', subs: 'SS-19 My submissions', help: 'SS-20 Help and contact', account: 'SS-21 Account' };
+const WHERE = { sms: 'the SMS on the seller’s phone (not part of the portal)', signin: 'SS-01 Sign in', code: 'SS-02 Enter the code', choose: 'SS-03 Choose the business', home: 'SS-04 Home', matters: 'SS-05 My matters', matter: 'SS-06 Matter page', paper: 'SS-07 Paper', reply: 'SS-08 Reply (as S-111 of the inspector prototype)', received: 'SS-09 Reply received', add: 'SS-08a Add to my reply (SXD-15)', contest: 'SS-10 Contest notice', messages: 'SS-12 Messages', message: 'SS-13 Message or announcement', business: 'SS-14 My firm', licences: 'SS-15 Licences', licence: 'SS-16 Licence', leaving: 'SS-17 Leaving for e-Parwana', ep: 'e-Parwana (MOCK page, not part of the portal)', papers: 'SS-18 Notices and intimations', subs: 'SS-19 My submissions', help: 'SS-20 Help and contact', account: 'SS-21 Account' };
 
 /* SMS on the phone (outside the portal) */
 SCR.sms = function () {
@@ -903,12 +904,20 @@ SCR.ep = function () {
   <button class="btn alt" data-act="epState" data-v="down">MOCK: e-Parwana not available</button>
   <button class="btn main" data-act="epBack">Return to the seller portal</button></div>`;
 };
+/* SXD-27: "Notices and intimations" (was All papers): every paper issued to the firm, with filters by kind. An intimation
+   is a standard-format communication the inspecting officer gives the firm as the Acts and Rules prescribe (Form VI,
+   Form VIII, Form V(C), the fertiliser sample record); Messages from the Department are not papers and stay in Messages. */
+const PKIND = { notice: 'notice', upnotice: 'notice', formvi: 'int', formviii: 'int', formvc: 'int', formj: 'int', formiii: 'order', formva: 'order', stopfail: 'order', order: 'order', receipt: 'receipt', seizure: 'receipt', report: 'report', outcome: 'report', insreport: 'report' };
+const PKW = { notice: 'pkNotice', int: 'pkInt', order: 'pkOrder', receipt: 'pkReceipt', report: 'pkReport' };
 SCR.papers = function () {
-  const all = []; B().matters.forEach((m) => m.papers.forEach((p) => all.push({ p, m }))); all.sort((x, y) => day(y.p.date) - day(x.p.date));
+  const every = []; B().matters.forEach((m) => m.papers.forEach((p) => every.push({ p, m }))); every.sort((x, y) => day(y.p.date) - day(x.p.date));
+  const k = S.pkind || 'all'; const all = k === 'all' ? every : every.filter(({ p }) => PKIND[p.kind] === k);
+  const kinds = Object.keys(PKW).filter((x) => every.some(({ p }) => PKIND[p.kind] === x));
+  const chips = `<div class="chips" role="group" aria-label="${t('allPapers')}"><button data-act="pfilt" data-v="all" aria-pressed="${k === 'all'}">${t('all')} (${every.length})</button>${kinds.map((x) => `<button data-act="pfilt" data-v="${x}" aria-pressed="${k === x}">${t(PKW[x])} (${every.filter(({ p }) => PKIND[p.kind] === x).length})</button>`).join('')}</div>`;
   const list = desk()
     ? table([bi('Paper', 'कागदपत्र'), 'No.', bi('Date', 'तारीख'), t('verify')], all.map(({ p }) => `<tr data-act="openPaper" data-p="${p.id}"><td><button class="lnk" data-act="openPaper" data-p="${p.id}">${esc(p.form)}</button></td><td>${esc(p.no)}</td><td>${fd(p.date)}</td><td>${esc(p.ver)}</td></tr>`))
     : all.map(({ p }) => `<button class="card" data-act="openPaper" data-p="${p.id}"><b>${esc(p.form)}</b><span class="hint">${esc(p.no)} · ${fd(p.date)} · ${t('verify')} ${esc(p.ver)}</span></button>`).join('');
-  return chrome(`<h2 id="h" tabindex="-1">${t('allPapers')}</h2>${all.length ? list : `<p class="hint">${t('noMatters')}</p>`}`, { title: t('allPapers'), back: true, wide: true });
+  return chrome(`<h2 id="h" tabindex="-1">${t('allPapers')}</h2><p class="hint">${t('papersHint')}</p>${every.length ? chips : ''}${all.length ? list : `<p class="hint">${every.length ? t('noPapersKind') : t('noMatters')}</p>`}`, { title: t('allPapers'), back: true, wide: true });
 };
 SCR.subs = function () {
   const subs = []; B().matters.forEach((m) => { if (m.reply) subs.push([m.reply.at, `${bi('Reply to', 'उत्तर')} ${m.papers[0].no}`, m.reply.no || '—']); (m.additions || []).forEach((x) => subs.push([x.at, `${bi('Addition to the reply to', 'उत्तरातील भर')} ${m.papers[0].no}`, x.no])); if (m.contested) subs.push([m.contestAt, `${bi('Contest notice on', 'हरकतीची सूचना')} ${m.sampleNo}`, m.contestNo]); });
@@ -1010,6 +1019,8 @@ function afterSignin() {
   if (arriveByLink && link) { S.section = 'matters'; S.screen = 'matter'; S.mcur = link; S.fromLink = link; log('landed on the paper the SMS was about, Home one tap away (SXD-13)'); return render(); }
   S.section = 'home'; S.screen = 'home'; log('landed on Home (signed in from the portal’s address)'); render();
 }
+
+ACT.pfilt = (b) => { S.pkind = b.dataset.v; render(); };
 
 /* ---------------- Events on the officer side (prototype controls) ---------------- */
 const EVENTS = [
