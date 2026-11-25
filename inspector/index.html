@@ -6,6 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 </head>
 <body>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23777'/%3E%3C/svg%3E"><!-- UXD-222: a plain grey tab icon, so the browser does not ask for a missing one -->
 <title>Inspector portal prototype</title>
 <style>
 /* Low-fidelity clickable prototype of the inspector's web portal (docs/ux/inspector-portal).
@@ -6796,6 +6797,15 @@ const docSheet = j4Sheet;
 j4Sheet = function () {
   const h = docSheet(); const j = J(); if (!j || !j.ps || j.ps.input !== 'Seeds') return h;
   return h.replace('The bag or bottle itself where the label is missing or torn.</span>', () => 'The bag or bottle itself where the label is missing or torn. For certified seed, include the certification tag (Seeds Rules 1968 Form II).</span>');
+};
+/* ---------------- UXD-222 (the owner, 2026-11-25, from the desktop browser check of phase 10): on the desktop layout the
+   "Screen:" line names the left menu, which replaces the bottom bar there, not "S-21 bottom bar". ---------------- */
+const scRender222 = render;
+render = function (...a) {
+  const r = scRender222(...a); const w = document.getElementById('where');
+  let desk = false; try { desk = DK_WIDE.matches; } catch (e) { desk = false; }   // DK_WIDE is declared further down
+  if (w && desk && w.textContent.includes(' · S-21 bottom bar')) w.textContent = w.textContent.replace(' · S-21 bottom bar', ' · left menu (desktop)');
+  return r;
 };
 $('scenarios').innerHTML = SCEN.map(([t], i) => `<button class="sc" data-sc="${i}">${t}</button>`).join('');
 $('scenarios').addEventListener('click', (e) => { const b = e.target.closest('[data-sc]'); if (b) { $('cNoSignal').checked = false; if (b.dataset.sc !== '8') $('cNoSms').checked = false; $('cWaiting').checked = false; if (!SCEN[+b.dataset.sc][0].includes('Location off')) $('cLocOff').checked = false; SCEN[+b.dataset.sc][1](); } });
