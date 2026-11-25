@@ -150,7 +150,7 @@ html:not(.simple) .panel { overflow:visible; }
    officer opens the desktop portal; an inspector still sees the phone screens until phase 9 designs them for desktop. */
 @media (min-width:821px) {
   html.j1 body .wrap > :first-child { max-width:none; }
-  html.j1 body .phone { max-width:none; max-height:none; border-radius:8px; background:var(--bg); }
+  html.j1 body .phone { max-width:none; max-height:none; border:0; border-radius:0; background:var(--bg); }   /* UXD-223: no black border on the controls link either */
   html.j1.simple body .wrap { grid-template-columns:minmax(0,1fr); max-width:none; padding:0; }
   html.j1.simple body .phone { border:0; border-radius:0; }
   html.j1 .phone .gov { flex:none; background:#fff; padding:8px max(24px, calc(50% - 560px)); min-height:56px; font-size:12px; }
@@ -166,9 +166,10 @@ html:not(.simple) .panel { overflow:visible; }
    column of about 720 px with the phone's steps and buttons. Same features as the phone; on a phone nothing changes. */
 @media (min-width:821px) {
   html.dk body .wrap > :first-child { max-width:none; }
-  html.dk body .phone { max-width:none; max-height:none; border-radius:8px; display:grid; grid-template-columns:220px minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) auto; }
+  html.dk body .phone { max-width:none; max-height:none; border:0; border-radius:0; display:grid; grid-template-columns:220px minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) auto; }
   html.dk.simple body .wrap { grid-template-columns:minmax(0,1fr); max-width:none; padding:0; }
   html.dk.simple body .phone { border:0; border-radius:0; }
+  /* UXD-223 (the owner, 2026-11-25): no black border round the desktop web portal on the controls link either; the phone and app views keep their frame */
   html.dk .phone > * { grid-column:2; min-width:0; }
   html.dk .phone > .top { grid-column:1 / -1; grid-row:1; padding:0 16px; min-height:52px; }
   html.dk .phone > .dside { grid-column:1; grid-row:2 / 4; }
