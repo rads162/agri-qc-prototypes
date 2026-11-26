@@ -254,6 +254,27 @@ html.simple .lbar { display:none !important; }
 html:not(.simple) .wrap > .banner, html:not(.simple) .wrap > .lbar { margin:0; max-width:none; }
 html:not(.simple) .wrap > .banner { border-radius:6px; }
 html:not(.simple) .wrap > .lbar { padding:0; }
+/* UXD-224 (the owner, 2026-11-26): the sign-in screens have one header bar, not two strips: the emblem, the Department's
+   name over the portal's name, and the language. On a phone it is compact, with one button for the other language; on a
+   desktop the Department's name and the portal's name are larger and the language is a two-button switch. */
+.gov.hd1 { min-height:52px; padding:6px 12px; gap:10px; background:#fff; flex:none; }
+.gov.hd1 .lock { display:flex; flex-direction:column; flex:1; min-width:0; line-height:1.25; }
+.gov.hd1 .dept { font-size:10.5px; color:var(--soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.gov.hd1 .dept br { display:none; }
+.gov.hd1 .dept .ghost::before { content:" "; }
+.gov.hd1 .pname { font-size:15px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.gov.hd1 .langs { display:flex; flex:none; }
+.gov.hd1 .langs [aria-pressed="true"] { display:none; }
+@media (min-width:821px) {
+  html.j1 .phone .gov.hd1 { min-height:60px; padding:8px max(24px, calc(50% - 560px)); gap:12px; }
+  html.j1 .gov.hd1 .emb { width:36px; height:36px; }
+  html.j1 .gov.hd1 .dept { font-size:12px; }
+  html.j1 .gov.hd1 .pname { font-size:18px; }
+  html.j1 .gov.hd1 .langs { border:1px solid var(--ink); border-radius:4px; overflow:hidden; }
+  html.j1 .gov.hd1 .langs button { display:block; border:0; border-radius:0; margin:0; min-height:34px; padding:4px 12px; background:#fff; }
+  html.j1 .gov.hd1 .langs button + button { border-left:1px solid var(--ink); }
+  html.j1 .gov.hd1 .langs button[aria-pressed="true"] { background:var(--ink); color:#fff; }
+}
 html.simple .banner, html.simple .panel, html.simple #where { display:none !important; }
 html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:center; }
 </style>
@@ -459,8 +480,8 @@ function signOut(reason, keepPlace) {
 }
 
 /* ---------------- screens ---------------- */
-const GOV = `<div class="gov"><span class="emb">emblem</span><span>Department header<br><span class="ghost">(placeholder: name and artwork to come)</span></span></div>
-  <div class="brand"><b>Input Quality Control</b><button class="topbtn" data-act="lang">मराठी</button></div>`;
+/* UXD-224: one header bar (it was two strips: the Department, then the portal's name with the language) */
+const GOV = `<div class="gov hd1"><span class="emb">emblem</span><span class="lock"><span class="dept">Department header<br><span class="ghost">(placeholder: name and artwork to come)</span></span><b class="pname">Input Quality Control</b></span><span class="langs" role="group" aria-label="Language"><button class="topbtn" data-act="lang" data-l="mr" aria-pressed="false">मराठी</button><button class="topbtn" data-act="lang" data-l="en" aria-pressed="true">English</button></span></div>`;
 function msgs() {
   return (S.reason ? `<div class="msg note" role="status">${esc(S.reason)}</div>` : '') +
     (S.err ? `<div class="msg err" role="alert">${S.err}</div>` : '') +
@@ -6907,7 +6928,7 @@ function j1Layout() {
   const scr = ph.querySelector(':scope > .scr'); if (!scr || ph.querySelector('.j1main')) return;
   const main = document.createElement('div'); main.className = 'j1main';
   const side = document.createElement('aside'); side.className = 'j1side';
-  side.innerHTML = '<h2>Input Quality Control</h2><p>The Agriculture Department\'s portal for the quality of seeds, fertilisers and insecticides: inspections, samples, notices and the acts that follow, for its inspectors and officers.</p>'
+  side.innerHTML = '<h2>Quality control of seeds, fertilisers and insecticides</h2><p>The Agriculture Department\'s portal for its inspectors and officers: inspections, samples, notices and the acts that follow.</p>'
     + `<h3>Need help?</h3>${S.screen === 'lost' ? '' : '<button class="lnk" data-act="lost">No longer have this mobile?</button>'}`;
   const foot = ph.querySelector(':scope > .foot');
   if (foot && foot.textContent.trim()) { const h = document.createElement('h3'); h.textContent = 'Licence holders'; side.appendChild(h); [...foot.children].forEach((c) => side.appendChild(c)); foot.remove(); }
@@ -7094,6 +7115,8 @@ render();
   const prev = PLACES[k]; if (typeof prev !== 'function') return;
   PLACES[k] = (...a) => { const s = j9State(); if (!s.dv) s.dv = j9DivNew(false); return prev(...a); };
 });
+/* UXD-224: "English" is the language in use, so pressing it does nothing; "मराठी" says what the portal will do */
+(() => { const lang224 = ACT.lang; ACT.lang = (b, ...r) => (b && b.dataset && b.dataset.l === 'en' ? undefined : lang224(b, ...r)); })();
 
 // The owner of the shared page sees the prototype controls; everyone else only the phone screen.
 (async () => {

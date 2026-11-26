@@ -187,6 +187,17 @@ html.desk-mode body .wrap > :first-child { max-width:none; }
 html:not(.simple) .wrap > .banner, html:not(.simple) .wrap > .lbar { margin:0; max-width:none; }
 html:not(.simple) .wrap > .banner { border-radius:6px; }
 html:not(.simple) .wrap > .lbar { padding:0; }
+/* SXD-29 (the owner, 2026-11-26): the sign-in screens have one header bar, not two strips: the emblem, the Department's
+   name over the portal's name, and the language. On a phone it is compact, with one button for the other language; on a
+   desktop the Department's name and the portal's name are larger and the language is a two-button switch. */
+.gov.hd1 { min-height:52px; padding:6px 12px; gap:10px; background:var(--paper); flex:none; }
+.gov.hd1 .lock { display:flex; flex-direction:column; flex:1; min-width:0; line-height:1.25; }
+.gov.hd1 .dept { font-size:10.5px; color:var(--soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.gov.hd1 .dept br { display:none; }
+.gov.hd1 .dept .ghost::before { content:" "; }
+.gov.hd1 .pname { font-size:15px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.gov.hd1 .langs { display:flex; flex:none; }
+.gov.hd1 .langs [aria-pressed="true"] { display:none; }
 html.simple .banner, html.simple .panel, html.simple #where { display:none !important; }
 html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:center; }
 </style>
@@ -615,7 +626,11 @@ function chrome(inner, opts = {}) {
   const nav = S.signed && !opts.noNav ? `<nav class="bbar" aria-label="Sections">${[['home', 'home'], ['matters', 'matters'], ['messages', 'messages'], ['business', 'business']].map(([s, k]) => `<button data-act="nav" data-s="${s}" class="${S.section === s ? 'on' : ''}" ${S.section === s ? 'aria-current="page"' : ''}>${t(k)}${s === 'messages' && unread ? `<i class="badge">${unread}</i>` : ''}</button>`).join('')}</nav>` : '';
   // SXD-24: on the phone the Department strip shows on the sign-in screens only; once signed in, the screen's own top bar alone
   const signedIn = S.signed && S.screen !== 'choose';
-  return `${signedIn ? '' : gov}${top}<div class="scr" id="scr">${inner}</div>${S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : ''}${nav}`;
+  // SXD-29: signed out, the Department and the top bar are one header bar: emblem, the Department over the portal's name,
+  // and one button for the other language
+  const other = S.lang === 'mr' ? ['en', 'English'] : ['mr', 'मराठी'];
+  const bar = `<div class="gov hd1">${back}<div class="emb">emb.</div><div class="lock"><span class="dept">${GOV_TEXT}</span><b class="pname">${esc(opts.title || t('portal'))}</b></div><button class="topbtn" data-act="lang" data-l="${other[0]}">${other[1]}</button></div>`;
+  return `${signedIn ? top : bar}<div class="scr" id="scr">${inner}</div>${S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : ''}${nav}`;
 }
 function go(screen, extra = {}) { if (S.screen && S.screen !== screen) S.stack.push({ screen: S.screen, mcur: S.mcur, pcur: S.pcur }); S.screen = screen; Object.assign(S, extra); S.err = ''; render(); const s = $('scr'); if (s) s.scrollTop = 0; }
 function nav(section) { S.section = section; S.stack = []; S.screen = section; S.err = ''; render(); }
