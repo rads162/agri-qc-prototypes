@@ -6961,25 +6961,9 @@ render();
   WIDE.addEventListener('change', () => { if (!WIDE.matches) view = 'phone'; render(); });
   render();
 })();
-/* ---------------- UXD-215 (the owner, 2026-11-24, thread c18f11f5): New inspection keeps UXD-96's gate (opens once the
-   sampling targets are met); every other start (required inspections, complaints, intel, a target row, the firm record's
-   Inspect) stays open. Starting any inspection shows, on Before you start, the sampling targets still pending, per input,
-   each in its own period, with what is overdue. Field inspectors only (supervisory inspectors have no targets). ---------------- */
-function tgtReminder() {
-  if (!S.me || S.me.kind === 'supervisory' || !tgtLeft()) return '';
-  const lines = INPUTS.map((inp) => {
-    const ts = TGT.filter((t) => t.input === inp && tLeft(t) > 0); if (!ts.length) return '';
-    const left = ts.reduce((n, t) => n + tLeft(t), 0); const over = ts.filter((t) => t.over).reduce((n, t) => n + tLeft(t), 0);
-    const periods = [...new Set(ts.map((t) => t.period))].join(', ');
-    return `${esc(inp)}: ${left} left${over ? `, ${over} overdue` : ''} · ${esc(periods)}`;
-  }).filter(Boolean);
-  return `<div class="card" style="text-align:left"><b>Sampling targets pending</b>${lines.join('<br>')}<br><span class="hint">Draw toward them where this shop has the product. This inspection goes ahead; only New inspection waits for the targets (UXD-96).</span></div>`;
-}
-const tgBefore = PLACES.before;
-PLACES.before = (...a) => {
-  const h = tgBefore(...a); const card = tgtReminder(); if (!card) return h;
-  const at = h.indexOf('</h2>'); return at < 0 ? card + h : h.slice(0, at + 5) + card + h.slice(at + 5);
-};
+/* ---------------- UXD-215 (the owner, 2026-11-24): New inspection keeps UXD-96's gate; every other start stays open (as built
+   elsewhere). Its reminder of the sampling targets on Before you start was removed by UXD-225 (the owner, 2026-11-26:
+   "This is not needed"). ---------------- */
 /* ---------------- UXD-220 (the owner, 2026-11-24; phase 10): the app view. On the link with the controls the third Layout
    button, "App (Android / iPhone)", shows the phone screens inside an app frame with the app's behaviours decided in
    UXD-176 to UXD-184, each marked SIMULATED where a browser can only imitate it: the phone-lock unlock (176), entries kept
