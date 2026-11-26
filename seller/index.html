@@ -309,7 +309,12 @@ const W = {
   leavingText: ['Licence renewal is done in e-Parwana, the Department’s licensing system. This portal only takes you there; it does not renew your licence.', 'परवाना नूतनीकरण ई-परवाना या विभागाच्या परवाना प्रणालीत होते. हे पोर्टल फक्त आपल्याला तेथे नेते; ते आपला परवाना नूतनीकरण करत नाही.'],
   esigned: ['eSigned by {o} on {d}', '{o} यांनी {d} रोजी ई-स्वाक्षरी केली'], verify: ['Verification number', 'पडताळणी क्रमांक'], checkPaper: ['Check this paper', 'हे कागदपत्र तपासा'],
   langNote: ['', 'मराठी शब्द: विभागाच्या पुनरावलोकनासाठी मसुदा'], noPhone: ['Officers’ phone numbers are not shown. Write to or visit the office.', 'अधिकाऱ्यांचे फोन क्रमांक दाखवले जात नाहीत. कार्यालयाशी लेखी किंवा प्रत्यक्ष संपर्क साधा.'],
-  changeMobile: ['To change the registered mobile: licensed businesses through e-Parwana; others through the district office. The old number is told by SMS.', 'नोंदणीकृत मोबाईल बदलण्यासाठी: परवानाधारक व्यवसाय ई-परवाना मार्फत; इतर जिल्हा कार्यालयामार्फत. जुन्या क्रमांकावर SMS ने कळवले जाते.'],
+  changeMobile: ['While you still have the old phone, change the registered mobile here yourself: a code to the old number, then a code to the new one. If the old phone is lost, the district office changes it after a check. The old number is always told by SMS.', 'जुना फोन आपल्याकडे असताना नोंदणीकृत मोबाईल येथे स्वतः बदला: जुन्या क्रमांकावर कोड, नंतर नवीन क्रमांकावर कोड. जुना फोन हरवला असल्यास जिल्हा कार्यालय तपासणीनंतर तो बदलते. जुन्या क्रमांकावर नेहमी SMS ने कळवले जाते.'],
+  chMob: ['Change the registered mobile', 'नोंदणीकृत मोबाईल बदला'], chOld: ['Step 1 of 2: we sent a code to your current mobile ending {m}.', 'पायरी 1/2: आपल्या सध्याच्या {m} ने संपणाऱ्या मोबाईलवर कोड पाठवला आहे.'],
+  chNewL: ['Step 2 of 2: the new mobile number', 'पायरी 2/2: नवीन मोबाईल क्रमांक'], chNewCode: ['We sent a code to the new mobile ending {m}.', '{m} ने संपणाऱ्या नवीन मोबाईलवर कोड पाठवला आहे.'],
+  chDone: ['The registered mobile is changed. The old number has been told by SMS and the district office informed.', 'नोंदणीकृत मोबाईल बदलला. जुन्या क्रमांकावर SMS ने कळवले आणि जिल्हा कार्यालयाला माहिती दिली.'],
+  chLost: ['I no longer have the old phone', 'जुना फोन आता माझ्याकडे नाही'], chConfirm: ['Confirm', 'निश्चित करा'],
+  chLostText: ['Then the district office changes it after a check (it may ask for the licence and the proprietor’s identity): {o}. Until then papers still reach the portal and the shop.', 'अशा वेळी जिल्हा कार्यालय तपासणीनंतर तो बदलते (परवाना व मालकाची ओळख मागू शकते): {o}. तोपर्यंत कागदपत्रे पोर्टलवर व दुकानात येत राहतात.'],
   states: ['What the states mean', 'स्थितींचा अर्थ'], mobileFrom: ['Where it came from', 'कोठून आला'], language: ['Language', 'भाषा'],
   noSubs: ['Nothing submitted yet.', 'अद्याप काहीही सादर केलेले नाही.'], subAt: ['Submitted {t}', '{t} रोजी सादर'],
 };
@@ -411,7 +416,7 @@ function freshData() {
       messages: [{ id: 'g5', type: 'msg', date: '2026-11-15', matter: 'n1', en: 'Laboratory report for sample S-2026-0388 is available.', mr: 'नमुना S-2026-0388 चा प्रयोगशाळा अहवाल उपलब्ध आहे.' }],
     },
     sunrise: {
-      name: 'Sunrise Crop Care Pvt. Ltd.', town: 'Ahmedabad (Gujarat)', mobile: '••••• ••090', mobileFrom: ['Recorded by the Director, Quality Control when issuing the notice (no Maharashtra licence, SXD-05); changed only by the office', 'नोटीस देताना गुणवत्ता नियंत्रण संचालकांनी नोंदवला (महाराष्ट्र परवाना नाही, SXD-05); बदल फक्त कार्यालयाद्वारे'],
+      name: 'Sunrise Crop Care Pvt. Ltd.', town: 'Ahmedabad (Gujarat)', mobile: '••••• ••090', mobileFrom: ['Recorded by the Director, Quality Control when issuing the notice (no Maharashtra licence, SXD-05)', 'नोटीस देताना गुणवत्ता नियंत्रण संचालकांनी नोंदवला (महाराष्ट्र परवाना नाही, SXD-05)'],
       constitution: 'Private limited company', address: 'Plot 12, GIDC Vatva, Ahmedabad, Gujarat (made up)', licensed: false, upstreamOnly: true, lastVisit: null,
       places: [], licences: [],
       sms: 'Agri Dept Maharashtra: Notice UPN-2026-0007 to Sunrise Crop Care Pvt. Ltd. as manufacturer of Kranti 25 EC, batch K-2291. Open: {link}',
@@ -647,7 +652,7 @@ function render() {
   document.querySelectorAll('#scenarios .sc').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.biz === S.biz)));
   bindInputs();
 }
-const WHERE = { sms: 'the SMS on the seller’s phone (not part of the portal)', signin: 'SS-01 Sign in', code: 'SS-02 Enter the code', choose: 'SS-03 Choose the business', home: 'SS-04 Home', matters: 'SS-05 My matters', matter: 'SS-06 Matter page', paper: 'SS-07 Paper', reply: 'SS-08 Reply (as S-111 of the inspector prototype)', received: 'SS-09 Reply received', add: 'SS-08a Add to my reply (SXD-15)', contest: 'SS-10 Contest notice', messages: 'SS-12 Updates (SXD-30)', message: 'SS-13 Message or announcement', business: 'SS-14 My firm', licences: 'SS-15 Licences', licence: 'SS-16 Licence', leaving: 'SS-17 Leaving for e-Parwana', ep: 'e-Parwana (MOCK page, not part of the portal)', papers: 'SS-18 Notices and intimations', subs: 'SS-19 My submissions', help: 'SS-20 Help and contact', account: 'SS-21 Account' };
+const WHERE = { sms: 'the SMS on the seller’s phone (not part of the portal)', signin: 'SS-01 Sign in', code: 'SS-02 Enter the code', choose: 'SS-03 Choose the business', home: 'SS-04 Home', matters: 'SS-05 My matters', matter: 'SS-06 Matter page', paper: 'SS-07 Paper', reply: 'SS-08 Reply (as S-111 of the inspector prototype)', received: 'SS-09 Reply received', add: 'SS-08a Add to my reply (SXD-15)', contest: 'SS-10 Contest notice', messages: 'SS-12 Updates (SXD-30)', message: 'SS-13 Message or announcement', business: 'SS-14 My firm', licences: 'SS-15 Licences', licence: 'SS-16 Licence', leaving: 'SS-17 Leaving for e-Parwana', ep: 'e-Parwana (MOCK page, not part of the portal)', papers: 'SS-18 Notices and intimations', subs: 'SS-19 My submissions', help: 'SS-20 Help and contact', account: 'SS-21 Account', chmob: 'SS-21a Change the registered mobile (SXD-31)' };
 
 /* SMS on the phone (outside the portal) */
 SCR.sms = function () {
@@ -1005,11 +1010,26 @@ SCR.help = function () {
   <h3>${t('regMobile')}</h3><p class="hint">${t('changeMobile')}</p>
   <h3>${t('states')}</h3><dl class="kv"><dt>${t('sDue')}</dt><dd>${bi('The paper asks you to reply by its date.', 'कागदपत्रात दिलेल्या तारखेपर्यंत उत्तर द्यायचे आहे.')}</dd><dt>${t('sReplied')}</dt><dd>${bi('Your reply is with the officer.', 'आपले उत्तर अधिकाऱ्याकडे आहे.')}</dd><dt>${t('sOutcome')}</dt><dd>${bi('The officer recorded an outcome for each point.', 'अधिकाऱ्याने प्रत्येक मुद्द्यावर निर्णय नोंदवला.')}</dd><dt>${t('sNotComplied')}</dt><dd>${bi('No reply came in the period. You can still reply; it is marked late.', 'मुदतीत उत्तर आले नाही. आपण अजूनही उत्तर देऊ शकता; ते उशिराचे म्हणून नोंदवले जाते.')}</dd><dt>${t('sLicAuth')}</dt><dd>${bi('The licensing authority will decide on your licence.', 'परवाना प्राधिकारी आपल्या परवान्यावर निर्णय घेतील.')}</dd></dl>`, { title: t('help'), back: true });
 };
+/* SXD-31 (the owner, 2026-11-26): the firm changes its registered mobile itself while it still has the old phone: a
+   code to the old number, then a code to the new one; it takes effect at once, the old number is told by SMS and the
+   district office is informed. A lost phone goes to the district office after a check. Never a second mobile. */
+SCR.chmob = function () {
+  const C = S.cm; const b = B(); const office = OFF[(b.matters[0] || {}).off || 'baramati'].office;
+  const err = C.err ? `<div class="msg err" role="alert">${esc(C.err)}</div>` : '';
+  let body;
+  if (C.step === 'old') body = `<p>${t('chOld', { m: b.mobile.slice(-3) })}</p>${err}<label class="f" for="cmv">${t('code')}</label><input class="t otp" id="cmv" inputmode="numeric" maxlength="6" autocomplete="one-time-code"><button class="btn main" data-act="chOld">${t('cont')}</button>
+    <button class="lnk" data-act="chLost">${t('chLost')}</button>${C.lost ? `<div class="msg note">${esc(t('chLostText', { o: office }))}</div>` : ''}`;
+  else if (C.step === 'new') body = `${err}<label class="f" for="cmv">${t('chNewL')}</label><input class="t" id="cmv" inputmode="numeric" autocomplete="tel" value="${esc(C.newv || '')}"><button class="btn main" data-act="chNew">${t('sendCode')}</button>`;
+  else body = `<p>${t('chNewCode', { m: C.newv.slice(-3) })}</p>${err}<label class="f" for="cmv">${t('code')}</label><input class="t otp" id="cmv" inputmode="numeric" maxlength="6" autocomplete="one-time-code"><button class="btn main" data-act="chNewCode">${t('chConfirm')}</button>`;
+  return chrome(`<h2 id="h" tabindex="-1">${t('chMob')}</h2>${body}
+  <div class="sim">The code is 246810 on both phones. In the portal each code reaches only its own phone and is never shown on screen.</div>`, { title: t('chMob'), back: true, noNav: true });
+};
 SCR.account = function () {
   const b = B();
   return chrome(`<h2 id="h" tabindex="-1">${t('account')}</h2>
   <dl class="kv"><dt>${t('regMobile')}</dt><dd>${esc(b.mobile)}</dd><dt>${t('mobileFrom')}</dt><dd>${esc(bi(b.mobileFrom[0], b.mobileFrom[1]))}</dd></dl>
   <p class="hint">${t('changeMobile')}</p>
+  <button class="btn alt" data-act="chStart">${t('chMob')}</button>
   <p class="hint">${bi('One login for the whole business: every licence and place (SXD-01). There are no staff accounts.', 'संपूर्ण व्यवसायासाठी एकच लॉगिन: प्रत्येक परवाना व ठिकाण (SXD-01). कर्मचारी खाती नाहीत.')}</p>
   <button class="btn alt" data-act="signout">${t('signout')}</button>`, { title: t('account'), back: true });
 };
@@ -1081,6 +1101,11 @@ const ACT = {
   toEp: () => { log('hand-over to e-Parwana (MOCK): nothing is sent'); go('ep'); },
   epState: (b) => { S.mockEp = b.dataset.v; log(`e-Parwana MOCK state: ${b.dataset.v}`); render(); },
   epBack: () => { S.mockEp = null; S.stack = S.stack.filter((x) => x.screen !== 'leaving'); S.screen = 'licence'; render(); },
+  chStart: () => { S.cm = { step: 'old', err: '', lost: false }; log(`change of mobile: a code sent to the current registered mobile ••${B().mobile.slice(-3)}`); go('chmob'); },
+  chLost: () => { S.cm.lost = !S.cm.lost; render(); },
+  chOld: () => { const v = ($('cmv') || {}).value || ''; if (v !== '246810') { S.cm.err = t('wrongCode', { n: 2 }); return render(); } S.cm = { step: 'new', err: '' }; log('the old phone confirmed by its code'); render(); },
+  chNew: () => { const v = (($('cmv') || {}).value || '').replace(/\D/g, ''); S.cm.newv = v; if (v.length !== 10) { S.cm.err = bi('Type the new 10-digit mobile number.', 'नवीन 10 अंकी मोबाईल क्रमांक टाका.'); return render(); } if (B().mobile.endsWith(v.slice(-3))) { S.cm.err = bi('That is the number already registered.', 'हाच क्रमांक आधीच नोंदणीकृत आहे.'); return render(); } S.cm.step = 'newcode'; S.cm.err = ''; log(`a code sent to the new mobile ••${v.slice(-3)}`); render(); },
+  chNewCode: () => { const v = ($('cmv') || {}).value || ''; if (v !== '246810') { S.cm.err = t('wrongCode', { n: 2 }); return render(); } const b = B(); const old = b.mobile.slice(-3); b.mobile = `••••• ••${S.cm.newv.slice(-3)}`; b.mobileFrom = [`Changed by the firm on ${fd(TODAY)}, confirmed by codes to the old and the new phone (SXD-31)`, `${fd(TODAY)} रोजी फर्मने बदलला, जुन्या व नवीन फोनवरील कोडने निश्चित (SXD-31)`]; log(`registered mobile changed ••${old} → ••${S.cm.newv.slice(-3)}; SMS to the old number; the district office informed; other sessions ended`); S.stack = S.stack.filter((x) => x.screen !== 'chmob'); S.screen = 'account'; toast(t('chDone')); },
   signout: () => { log('signed out; the session is ended'); S.signed = false; S.stack = []; S.screen = 'signin'; render(); },
 };
 function afterSignin() {
