@@ -262,11 +262,14 @@ const W = {
   noCodeHelp: ['Wait a minute and send a new code. If this is no longer your number, contact your district office: {o}. The portal never shows a code on screen.', 'एक मिनिट थांबा आणि नवीन कोड पाठवा. हा क्रमांक आता आपला नसल्यास आपल्या जिल्हा कार्यालयाशी संपर्क साधा: {o}. पोर्टल कधीही कोड स्क्रीनवर दाखवत नाही.'],
   resend: ['Send a new code', 'नवीन कोड पाठवा'], chooseBiz: ['Choose the business', 'व्यवसाय निवडा'],
   chooseHint: ['This mobile is registered for two businesses.', 'हा मोबाईल दोन व्यवसायांसाठी नोंदणीकृत आहे.'], cont: ['Continue', 'पुढे'],
-  home: ['Home', 'मुख्यपृष्ठ'], matters: ['My matters', 'माझी प्रकरणे'], messages: ['Messages', 'संदेश'], business: ['My firm', 'माझी फर्म'],
+  home: ['Home', 'मुख्यपृष्ठ'], matters: ['My matters', 'माझी प्रकरणे'], messages: ['Updates', 'अद्यतने'], business: ['My firm', 'माझी फर्म'],
   todo: ['To do', 'करायची कामे'], nothingTodo: ['Nothing to do now.', 'सध्या काहीही करायचे नाही.'],
-  newSince: ['New since your last visit', 'मागील भेटीनंतर नवीन'], glance: ['At a glance', 'एका दृष्टीक्षेपात'],
-  licences: ['Licences', 'परवाने'], samples: ['Samples', 'नमुने'], latestAnn: ['Latest announcement', 'नवीन घोषणा'],
-  allMsgs: ['All messages', 'सर्व संदेश'], getApp: ['Get the app', 'ॲप मिळवा'], getAppLine: ['Use the seller portal as an app on this phone.', 'हे पोर्टल या फोनवर ॲप म्हणून वापरा.'],
+  latestUpd: ['Latest updates', 'नवीन अद्यतने'], allUpd: ['All updates', 'सर्व अद्यतने'],
+  paperLabel: ['Paper', 'कागदपत्र'], updPapers: ['Papers', 'कागदपत्रे'], updMsgs: ['Messages', 'संदेश'],
+  updHint: ['Everything that reached your firm, newest first. Papers bind your firm; messages and announcements only inform.', 'आपल्या फर्मला मिळालेले सर्व, नवीन आधी. कागदपत्रे आपल्या फर्मला बंधनकारक आहेत; संदेश व घोषणा फक्त माहितीसाठी आहेत.'],
+  noUpd: ['Nothing has reached your firm yet. When the Department issues a paper, you will get an SMS and it will appear here.', 'आपल्या फर्मला अद्याप काहीही मिळालेले नाही. विभागाने कागदपत्र दिल्यावर आपल्याला SMS येईल आणि ते येथे दिसेल.'], glance: ['At a glance', 'एका दृष्टीक्षेपात'],
+  licences: ['Licences', 'परवाने'], samples: ['Samples', 'नमुने'], 
+  getApp: ['Get the app', 'ॲप मिळवा'], getAppLine: ['Use the seller portal as an app on this phone.', 'हे पोर्टल या फोनवर ॲप म्हणून वापरा.'],
   otherItems: ['{n} other items need your attention', 'आणखी {n} बाबींकडे लक्ष द्यायचे आहे'], oneOther: ['1 other item needs your attention', 'आणखी 1 बाबीकडे लक्ष द्यायचे आहे'],
   what: ['What it is', 'हे काय आहे'], why: ['Why', 'का'], must: ['What you must do', 'आपण काय करायचे'], byWhen: ['By when', 'कधीपर्यंत'], next: ['What happens next', 'पुढे काय होईल'],
   papersIn: ['Papers in this matter', 'या प्रकरणातील कागदपत्रे'], happened: ['What happened', 'काय घडले'], contact: ['Who to contact', 'संपर्क'],
@@ -460,7 +463,7 @@ function freshData() {
         { id: 'l1', kind: 'lic', date: '2026-11-12', place: 'o1', input: 'Seeds', off: 'dsao', state: 'licauth', licNo: 'SEED-0000-8808 (made up)', fromMatter: 'l0',
           papers: [],
           tl: [['2026-11-12', 'Referral accepted by the licensing authority (DSAO, Pune)', 'परवाना प्राधिकाऱ्याने (जिअकृअ, पुणे) प्रकरण स्वीकारले']] }],
-      messages: [{ id: 'g11', type: 'msg', date: '2026-11-18', matter: 'l2', en: 'Notice about court proceedings NCP-PUN-2026-0009 on sample S-2026-0102.', mr: 'नमुना S-2026-0102 बाबत न्यायालयीन कार्यवाहीची नोटीस NCP-PUN-2026-0009.' }, { id: 'g10', type: 'msg', date: '2026-10-20', matter: 'l2', en: 'Seed Analyst’s certificate for sample S-2026-0102 is available.', mr: 'नमुना S-2026-0102 चे बियाणे विश्लेषकाचे प्रमाणपत्र उपलब्ध आहे.' }, { id: 'g7', type: 'msg', date: '2026-11-12', matter: 'l1', en: 'Licence SEED-0000-8808: the inspector’s verification of notice NTC-PUN-2026-0122 (point 11) has been referred to the District Superintending Agriculture Officer, Pune, for a decision on the licence.', mr: 'परवाना SEED-0000-8808: नोटीस NTC-PUN-2026-0122 (मुद्दा 11) बाबत निरीक्षकाची पडताळणी परवान्यावरील निर्णयासाठी जिल्हा अधीक्षक कृषी अधिकारी, पुणे यांच्याकडे पाठवली आहे.' }],
+      messages: [{ id: 'g11', type: 'msg', date: '2026-11-18', matter: 'l2', en: 'Notice about court proceedings NCP-PUN-2026-0009 on sample S-2026-0102.', mr: 'नमुना S-2026-0102 बाबत न्यायालयीन कार्यवाहीची नोटीस NCP-PUN-2026-0009.' }, { id: 'g10', type: 'msg', date: '2026-10-20', matter: 'l2', en: 'Seed Analyst’s certificate for sample S-2026-0102 is available.', mr: 'नमुना S-2026-0102 चे बियाणे विश्लेषकाचे प्रमाणपत्र उपलब्ध आहे.' }, { id: 'g7', type: 'msg', keep: true, date: '2026-11-12', matter: 'l1', en: 'Licence SEED-0000-8808: the inspector’s verification of notice NTC-PUN-2026-0122 (point 11) has been referred to the District Superintending Agriculture Officer, Pune, for a decision on the licence.', mr: 'परवाना SEED-0000-8808: नोटीस NTC-PUN-2026-0122 (मुद्दा 11) बाबत निरीक्षकाची पडताळणी परवान्यावरील निर्णयासाठी जिल्हा अधीक्षक कृषी अधिकारी, पुणे यांच्याकडे पाठवली आहे.' }],
     },
     ganesh: {
       name: 'Shree Ganesh Krushi (no licence on record)', town: 'Daund', mobile: '••••• ••233', mobileFrom: ['Confirmed at the shop by code on 19 Nov 2026 (the person present, SXD-03)', '19 नोव्हें 2026 रोजी दुकानात कोडने निश्चित (उपस्थित व्यक्ती, SXD-03)'],
@@ -600,7 +603,7 @@ const SUB_OF = { licences: 'licences', licence: 'licences', leaving: 'licences',
    pages of My business under it, and the screen; signed out, the screen sits in a narrow column in the middle */
 function deskChrome(inner, opts) {
   const signedIn = S.signed && S.screen !== 'choose';
-  const unread = B().messages.filter((g) => !S.read[g.id]).length;
+  const unread = unreadCount();
   const sub = SUB_OF[S.screen];
   const menu = signedIn ? `<nav class="dnav" aria-label="Sections">${[['home', 'home'], ['matters', 'matters'], ['messages', 'messages'], ['business', 'business']].map(([s, k]) => {
     const on = S.section === s && !(s === 'business' && sub);
@@ -622,7 +625,7 @@ function chrome(inner, opts = {}) {
   const lang = langSeg();
   const back = opts.back ? `<button class="topbtn" data-act="back" aria-label="${t('back')}">‹ ${t('back')}</button>` : '';
   const top = `<div class="top">${back}<span class="grow"><b>${esc(opts.title || t('portal'))}</b></span>${lang}</div>`;
-  const unread = B().messages.filter((g) => !S.read[g.id]).length;
+  const unread = unreadCount();
   const nav = S.signed && !opts.noNav ? `<nav class="bbar" aria-label="Sections">${[['home', 'home'], ['matters', 'matters'], ['messages', 'messages'], ['business', 'business']].map(([s, k]) => `<button data-act="nav" data-s="${s}" class="${S.section === s ? 'on' : ''}" ${S.section === s ? 'aria-current="page"' : ''}>${t(k)}${s === 'messages' && unread ? `<i class="badge">${unread}</i>` : ''}</button>`).join('')}</nav>` : '';
   // SXD-24: on the phone the Department strip shows on the sign-in screens only; once signed in, the screen's own top bar alone
   const signedIn = S.signed && S.screen !== 'choose';
@@ -643,7 +646,7 @@ function render() {
   document.querySelectorAll('#scenarios .sc').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.biz === S.biz)));
   bindInputs();
 }
-const WHERE = { sms: 'the SMS on the seller’s phone (not part of the portal)', signin: 'SS-01 Sign in', code: 'SS-02 Enter the code', choose: 'SS-03 Choose the business', home: 'SS-04 Home', matters: 'SS-05 My matters', matter: 'SS-06 Matter page', paper: 'SS-07 Paper', reply: 'SS-08 Reply (as S-111 of the inspector prototype)', received: 'SS-09 Reply received', add: 'SS-08a Add to my reply (SXD-15)', contest: 'SS-10 Contest notice', messages: 'SS-12 Messages', message: 'SS-13 Message or announcement', business: 'SS-14 My firm', licences: 'SS-15 Licences', licence: 'SS-16 Licence', leaving: 'SS-17 Leaving for e-Parwana', ep: 'e-Parwana (MOCK page, not part of the portal)', papers: 'SS-18 Notices and intimations', subs: 'SS-19 My submissions', help: 'SS-20 Help and contact', account: 'SS-21 Account' };
+const WHERE = { sms: 'the SMS on the seller’s phone (not part of the portal)', signin: 'SS-01 Sign in', code: 'SS-02 Enter the code', choose: 'SS-03 Choose the business', home: 'SS-04 Home', matters: 'SS-05 My matters', matter: 'SS-06 Matter page', paper: 'SS-07 Paper', reply: 'SS-08 Reply (as S-111 of the inspector prototype)', received: 'SS-09 Reply received', add: 'SS-08a Add to my reply (SXD-15)', contest: 'SS-10 Contest notice', messages: 'SS-12 Updates (SXD-30)', message: 'SS-13 Message or announcement', business: 'SS-14 My firm', licences: 'SS-15 Licences', licence: 'SS-16 Licence', leaving: 'SS-17 Leaving for e-Parwana', ep: 'e-Parwana (MOCK page, not part of the portal)', papers: 'SS-18 Notices and intimations', subs: 'SS-19 My submissions', help: 'SS-20 Help and contact', account: 'SS-21 Account' };
 
 /* SMS on the phone (outside the portal) */
 SCR.sms = function () {
@@ -700,22 +703,19 @@ SCR.home = function () {
   const b = B();
   // SXD-26: a licence near expiry (state "renew", the configured period) or expired is a dated item in To do, beside replies and contest notices
   const todo = [...b.matters.filter(actionOf).map((m) => ({ m, due: dueOf(m) })), ...licTodo(b).map(({ l, i }) => ({ l, i, due: l.to }))].sort((x, y) => day(x.due) - day(y.due));
-  const fresh = [];
-  b.matters.forEach((m) => m.papers.forEach((p) => { if (b.lastVisit && day(p.date) > day(b.lastVisit)) fresh.push({ m, p }); }));
-  fresh.sort((x, y) => day(y.p.date) - day(x.p.date));
+  const latest = updates(b).slice(0, 3); // SXD-30: the latest three updates replace "New since your last visit" and the latest announcement
   const licBy = {}; b.licences.forEach((l) => { (licBy[l.input] = licBy[l.input] || []).push(l); });
   const open = b.matters.filter(isOpen).length; const closed = b.matters.length - open;
   const samples = b.matters.filter((m) => m.kind === 'sample');
-  const ann = b.messages.filter((g) => g.type === 'ann')[0];
   const head = `<h2 id="h" tabindex="-1">${esc(b.name)}</h2><p class="hint">${esc(b.places.length > 1 ? `${b.places[0].name} ${bi(`and ${b.places.length - 1} other place`, `आणि आणखी ${b.places.length - 1} ठिकाण`)}` : (b.places[0] ? b.places[0].name : b.town))}</p>`;
   const todoH = `<h3>${t('todo')}</h3>
   ${todo.length ? todo.map(({ m, l, i }) => (l ? licCard(l, i) : `<button class="card" data-act="openMatter" data-m="${m.id}"><b>${actionOf(m) === 'reply' ? `${t('reply')} · ${esc(noticeNo(m))}` : `${t('contest')} · ${esc(m.sampleNo)}`}</b>${tags(m)}${dateBanner(dueOf(m))}</button>`)).join('') : `<p class="hint">${t('nothingTodo')}</p>`}
-  ${fresh.length ? `<h3>${t('newSince')}</h3>${fresh.map(({ m, p }) => `<button class="card" data-act="openMatter" data-m="${m.id}"><b>${esc(p.form.split(' (')[0])}${p.result ? ` · ${p.result === 'pass' ? t('sPassed') : t('sFailed')}` : ''}</b><span class="hint">${esc(p.no)} · ${fd(p.date)}</span></button>`).join('')}` : ''}`;
+  ${latest.length ? `<h3>${t('latestUpd')}</h3>${latest.map((x) => updRow(x, true)).join('')}<button class="lnk" data-act="nav" data-s="messages">${t('allUpd')} ›</button>` : ''}`;
   const glanceH = `<h3>${t('glance')}</h3>
   ${b.licences.length ? `<p class="hint" style="margin-top:6px">${t('licences')}</p><div class="figs">${Object.entries(licBy).map(([inp, ls]) => `<button class="figb" data-act="nav" data-s="licences"><b>${ls.length}</b><span>${esc(inp)} · ${ls.map((l) => t(licWord(l))).join(', ')}</span></button>`).join('')}</div>` : ''}
   <p class="hint" style="margin-top:8px">${t('matters')}</p><div class="figs"><button class="figb" data-act="mattersOpen" data-o="open"><b>${open}</b><span>${t('openFirst')}</span></button><button class="figb" data-act="mattersOpen" data-o="closed"><b>${closed}</b><span>${t('closedL')}</span></button></div>
   ${samples.length ? `<p class="hint" style="margin-top:8px">${t('samples')}</p><div class="figs">${samples.map((m) => `<button class="figb" data-act="openMatter" data-m="${m.id}"><b>${esc(m.input)}</b><span>${m.state === 'lab' ? t('sLab') : m.state === 'passed' ? t('sPassed') : t('sFailed')}</span></button>`).join('')}</div>` : ''}
-  ${ann ? `<h3>${t('latestAnn')}</h3><button class="card" data-act="openMsg" data-g="${ann.id}"><span class="tag">${t('annLabel')}</span><b>${esc(ann.from)}</b><span class="hint">${esc(bi(ann.en, ann.mr)).slice(0, 90)}…</span></button><button class="lnk" data-act="nav" data-s="messages">${t('allMsgs')} ›</button>` : ''}`;
+  `;
   if (desk()) return chrome(two(head + todoH, glanceH), { title: t('home'), wide: true });
   return chrome(`${head}${todoH}${glanceH}${getAppLine()}`, { title: t('home') });
 };
@@ -890,18 +890,37 @@ SCR.contest = function () {
   <p class="hint">${bi('No code is asked (SXD-06). Whether an online notice counts as the written one the Act asks for is a Department question (DQ-202).', 'कोड विचारला जात नाही (SXD-06). ऑनलाइन सूचना कायद्यातील लेखी सूचनेप्रमाणे ग्राह्य आहे का हा विभागाचा प्रश्न आहे (DQ-202).')}</p>`, { title: t('contest'), back: true, noNav: true });
 };
 
-/* Messages */
+/* SXD-30 (the owner, 2026-11-26): one Updates list in place of Messages and Home's "New since your last visit".
+   Everything that reached the firm, newest first, each labelled: a paper (opens the paper as issued), a Message from the
+   Department (only what no paper or To do item already says, `keep`), an announcement. A message that only announces a
+   paper or repeats a To do item goes by SMS alone; the paper itself is the update. */
+const inUpdates = (g) => g.type === 'ann' || g.keep;
+function updates(b = B()) {
+  const items = [];
+  b.matters.forEach((m) => m.papers.forEach((p) => items.push({ kind: 'paper', id: `p:${p.id}`, date: p.date, p, m, fresh: !b.lastVisit || day(p.date) > day(b.lastVisit) })));
+  b.messages.filter(inUpdates).forEach((g) => items.push({ kind: g.type === 'ann' ? 'ann' : 'msg', id: g.id, date: g.date, g, fresh: true }));
+  items.forEach((x) => { x.unread = x.fresh && !S.read[x.id]; });
+  return items.sort((x, y) => day(y.date) - day(x.date));
+}
+const unreadCount = () => (S.biz ? updates().filter((x) => x.unread).length : 0);
+function updRow(x, card) {
+  const lab = x.kind === 'paper' ? t('paperLabel') : x.kind === 'ann' ? t('annLabel') : t('msgLabel');
+  const act = x.kind === 'paper' ? `data-act="openPaper" data-p="${x.p.id}"` : `data-act="openMsg" data-g="${x.g.id}"`;
+  const title = x.kind === 'paper' ? `${esc(x.p.form.split(' (')[0])}${x.p.result ? ` · ${x.p.result === 'pass' ? t('sPassed') : t('sFailed')}` : ''}` : esc(bi(x.g.en, x.g.mr));
+  const sub = x.kind === 'paper' ? `${esc(x.p.no)} · ${esc(x.m.kind === 'sample' ? `${t('kSample')} ${x.m.sampleNo}` : kindWord(x.m.kind))}` : esc(x.g.from || ''); // the matter without its date: the item's own date follows
+  const nw = x.unread ? `<span class="tag">${bi('new', 'नवीन')}</span>` : '';
+  const w = `style="font-weight:${x.unread ? 700 : 400}"`;
+  if (desk() && !card) return `<tr ${act}><td><span class="tag">${lab}</span>${nw}</td><td><button class="lnk" ${act} ${w}>${title}</button></td><td>${sub}</td><td>${fd(x.date)}</td></tr>`;
+  return `<button class="card" ${act}><span class="tag">${lab}</span>${nw}<b ${w}>${title}</b><span class="hint">${sub ? `${sub} · ` : ''}${fd(x.date)}</span></button>`;
+}
 SCR.messages = function () {
-  const b = B(); const msgs = b.messages.filter((g) => g.type === 'msg').sort((x, y) => day(y.date) - day(x.date)); const anns = b.messages.filter((g) => g.type === 'ann');
-  const newTag = (g) => (S.read[g.id] ? '' : `<span class="tag">${bi('new', 'नवीन')}</span>`);
-  const row = desk()
-    ? (g) => `<tr data-act="openMsg" data-g="${g.id}"><td>${newTag(g)}<button class="lnk" data-act="openMsg" data-g="${g.id}" style="font-weight:${S.read[g.id] ? 400 : 700}">${esc(bi(g.en, g.mr))}</button></td><td>${esc(g.from || '')}</td><td>${fd(g.date)}</td></tr>`
-    : (g) => `<button class="card" data-act="openMsg" data-g="${g.id}"><span class="tag">${g.type === 'ann' ? t('annLabel') : t('msgLabel')}</span>${newTag(g)}<b style="font-weight:${S.read[g.id] ? 400 : 700}">${esc(bi(g.en, g.mr))}</b><span class="hint">${fd(g.date)}${g.from ? ` · ${esc(g.from)}` : ''}</span></button>`;
-  const block = (gs) => (desk() ? table([bi('Subject', 'विषय'), bi('From', 'कडून'), bi('Date', 'तारीख')], gs.map(row)) : gs.map(row).join(''));
-  return chrome(`<h2 id="h" tabindex="-1">${t('messages')}</h2>
-  <h3>${t('msgsFrom')}</h3>${desk() ? `<p class="hint">${t('msgLabel')}</p>` : ''}${msgs.length ? block(msgs) : `<p class="hint">${t('noMsgs')}</p>`}
-  ${anns.length ? `<h3>${t('announcements')}</h3>${block(anns)}` : ''}
-  <p class="hint">${bi('Nothing here is a legal paper. Papers that bind your business are in My matters.', 'येथील काहीही कायदेशीर कागदपत्र नाही. आपल्या व्यवसायाला बंधनकारक कागदपत्रे माझी प्रकरणे मध्ये आहेत.')}</p>`, { title: t('messages'), wide: true });
+  const all = updates(); const k = S.ufilt || 'all';
+  const KW = { paper: 'updPapers', msg: 'updMsgs', ann: 'announcements' };
+  const kinds = Object.keys(KW).filter((x) => all.some((u) => u.kind === x));
+  const list = k === 'all' ? all : all.filter((u) => u.kind === k);
+  const chips = kinds.length > 1 ? `<div class="chips" role="group" aria-label="${t('messages')}"><button data-act="ufilt" data-v="all" aria-pressed="${k === 'all'}">${t('all')} (${all.length})</button>${kinds.map((x) => `<button data-act="ufilt" data-v="${x}" aria-pressed="${k === x}">${t(KW[x])} (${all.filter((u) => u.kind === x).length})</button>`).join('')}</div>` : '';
+  const body = !list.length ? `<p class="hint">${t('noUpd')}</p>` : desk() ? table([bi('Kind', 'प्रकार'), bi('Subject', 'विषय'), bi('No. or from', 'क्रमांक किंवा कडून'), bi('Date', 'तारीख')], list.map((x) => updRow(x))) : list.map((x) => updRow(x)).join('');
+  return chrome(`<h2 id="h" tabindex="-1">${t('messages')}</h2><p class="hint">${t('updHint')}</p>${chips}${body}`, { title: t('messages'), wide: true });
 };
 SCR.message = function () {
   const g = B().messages.find((x) => x.id === S.gcur);
@@ -1017,7 +1036,7 @@ const ACT = {
   openMatter: (b) => { S.section = 'matters'; go('matter', { mcur: b.dataset.m }); },
   mattersOpen: () => nav('matters'),
   filt: (b) => { S.filt[b.dataset.f] = b.dataset.v; render(); },
-  openPaper: (b) => go('paper', { pcur: b.dataset.p }),
+  openPaper: (b) => { S.read[`p:${b.dataset.p}`] = true; go('paper', { pcur: b.dataset.p }); }, // SXD-30: an opened paper is read in Updates
   checkPaper: () => toast(bi('Opens the public check of the verification number (simulated).', 'पडताळणी क्रमांकाची सार्वजनिक तपासणी उघडते (नमुना).')),
   download: () => toast(bi('Downloads the PDF (simulated).', 'PDF डाउनलोड होते (नमुना).')),
   toast: (b) => toast(b.dataset.m),
@@ -1055,6 +1074,7 @@ const ACT = {
     S.lastReceipt = { title: bi('Contest notice received', 'हरकतीची सूचना प्राप्त झाली'), no, at, late: false, seal: 'c4d2…7e55', text: bi(`Your contest notice on report ${m.papers.find((p) => p.kind === 'report').no} was received on ${at}.`, `अहवाल ${m.papers.find((p) => p.kind === 'report').no} वरील आपली हरकतीची सूचना ${at} रोजी प्राप्त झाली.`), next: bi('What follows is for the court (Insecticides Act s.24(4)).', 'पुढील कार्यवाही न्यायालयाची (कीटकनाशक अधिनियम कलम 24(4)).') };
     log(`contest notice on ${m.sampleNo} given within the 28 days (s.24(3)-(4), statutory); no code; sealed; receipt ${no}`);
     S.stack = S.stack.filter((x) => x.screen !== 'contest'); S.screen = 'received'; render(); },
+  ufilt: (b) => { S.ufilt = b.dataset.v; render(); },
   openMsg: (b) => { S.read[b.dataset.g] = true; go('message', { gcur: b.dataset.g }); },
   openLic: (b) => { S.section = 'business'; go('licence', { lcur: +b.dataset.i }); },
   toEp: () => { log('hand-over to e-Parwana (MOCK): nothing is sent'); go('ep'); },
