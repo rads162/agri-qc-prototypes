@@ -196,7 +196,7 @@ html.simple .bar { display:none !important; }
 </style>
 </head>
 <body>
-<div class="banner"><b>PROTOTYPE</b> · Officer modules · <b>DSAO, D.Q.C.I. and DJDA so far</b> (journeys J-D1 to J-D7, J-Q1 to J-Q6, J-J1 to J-J8); the Director QC and Commissioner are not designed yet · Low fidelity · <b>All data is SAMPLE and every server answer is SIMULATED</b>: nothing is sent, no SMS goes out, all names and numbers are made up.</div>
+<div class="banner"><b>PROTOTYPE</b> · Officer modules · <b>DSAO, D.Q.C.I., DJDA and Director QC so far</b> (journeys J-D1 to J-D7, J-Q1 to J-Q6, J-J1 to J-J8, J-S1 to J-S8); the Commissioner is not designed yet · Low fidelity · <b>All data is SAMPLE and every server answer is SIMULATED</b>: nothing is sent, no SMS goes out, all names and numbers are made up.</div>
 
 <div class="page">
   <div class="bar">
@@ -261,12 +261,12 @@ const TODAY = '23 Nov 2026';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const TALUKAS = ['Haveli', 'Baramati', 'Indapur', 'Junnar', 'Maval'];
 const INSPECTORS = TALUKAS.flatMap((t) => [`A.O.(TAO) ${t}`, `A.O.(PS) ${t}`]);
-const ROLES = [['Inspector', true], ['DSAO', true], ['D.Q.C.I.', true], ['DJDA', true], ['Director QC', false], ['Commissioner', false]];
+const ROLES = [['Inspector', true], ['DSAO', true], ['D.Q.C.I.', true], ['DJDA', true], ['Director QC', true], ['Commissioner', false]];
 // RMD-53: "Inspector" opens the inspector prototype (the inspector workstream's file) as its sample field inspector, 101101
 const FIELD_INSPECTOR_CODE = '101101';
-const ROLE_OF_CODE = { '150028':'DSAO', '150041':'DQCI', '170012':'DJDA' };
-const CODE_OF_ROLE = { DSAO:'150028', DQCI:'150041', DJDA:'170012' };
-const ROLE_NAME = { DSAO:'DSAO', DQCI:'D.Q.C.I.', DJDA:'DJDA' };
+const ROLE_OF_CODE = { '150028':'DSAO', '150041':'DQCI', '170012':'DJDA', '190001':'DQC' };
+const CODE_OF_ROLE = { DSAO:'150028', DQCI:'150041', DJDA:'170012', DQC:'190001' };
+const ROLE_NAME = { DSAO:'DSAO', DQCI:'D.Q.C.I.', DJDA:'DJDA', DQC:'Director QC' };
 // the DJDA's out-of-state referee laboratories (a list kept as configuration, proposed; RMD-51); here because jfresh() uses it at start
 const JLABS = ['Referee laboratory A (out of state, sample)', 'Referee laboratory B (out of state, sample)', 'Referee laboratory C (out of state, sample)'];
 
@@ -274,6 +274,7 @@ function fresh() {
   return {
     ...qfresh(),
     ...jfresh(),
+    ...sfresh(),
     referrals: [
       { id:'R1', firm:'Patil Traders', taluka:'Baramati', village:'Katewadi', lic:'PUN/SEED/2024/0412', valid:'31 Mar 2027', level:'District (retail counter)', varieties:['Soybean · SB-21 (sample)', 'Cotton · CT-7 (sample)', 'Gram · GR-3 (sample)'],
         point:'11', pointText:'Sale bill carries full particulars (buyer, crop and variety, producer, weight, lot no., amount and rate)', clause:'Seeds (Control) Order cl.9 (as in the action sheet)',
@@ -371,7 +372,7 @@ const MENU_DQCI = [
   ['Communicate', [['ann', 'Announcements']]],
   ['My own work', [['inspect', 'Inspect (inspector module)']]],
 ];
-const menu = () => (S.role === 'DQCI' ? MENU_DQCI : S.role === 'DJDA' ? MENU_DJDA : MENU_DSAO);
+const menu = () => (S.role === 'DQCI' ? MENU_DQCI : S.role === 'DJDA' ? MENU_DJDA : S.role === 'DQC' ? MENU_DQC : MENU_DSAO);
 const DSAO_ONLY = new Set(['refs', 'ref', 'orders', 'order', 'divs', 'div', 'late']);
 const TOP = new Set(['home', 'refs', 'orders', 'divs', 'late', 'insp', 'samp', 'court', 'seized', 'intel', 'dash', 'people', 'ann', 'inspect', 'alerts', 'mfg', 'grades', 'forum']);
 
@@ -401,7 +402,7 @@ const SCREENS = {
       <p class="sub" style="margin-top:12px">Every figure opens the records behind it. <button type="button" class="lnk" data-go="people">Inspectors in your area</button></p>` };
   },
   refs() {
-    const rows = S.empty ? [] : S.D.referrals.filter((r) => r.status !== 'routed');
+    const rows = S.empty ? [] : S.D.referrals.filter((r) => r.status !== 'routed' && !r.dqc);
     return { id:'D-02', title:'Licence referrals', refs:'F1 · J-D1 · RMD-14', html:`
       <h2>Licence referrals</h2><p class="sub">Pune district only. A referral reaches you after the inspector's notice and the seller's reply (or no reply in time).</p>
       ${list(['Firm', 'Taluka', 'Point', 'Proposed by the inspector', 'From', 'Received', 'State'], rows.map((r) => ({ go:`ref:${r.id}`, cells:[esc(r.firm) + (r.stateLevel ? '<span class="tag">State-level</span>' : '') + (r.expired ? '<span class="tag">Licence ended</span>' : ''), esc(r.taluka), esc(r.point), esc(shape(r.proposal)), esc(r.inspector), esc(r.received), stateTag(r)] })), { empty:'No licence referrals waiting.' })}` };
@@ -422,7 +423,7 @@ const SCREENS = {
       <details class="sec"><summary>Laboratory report</summary><div>${esc(r.lab)}</div></details>`;
     let side;
     if (r.status !== 'waiting') side = decidedPanel(r);
-    else if (r.stateLevel) side = `<div class="msg err">This licence is State-level (multi-district). It is for the Director QC, not the DSAO.</div>
+    else if (r.stateLevel && !r.dqc) side = `<div class="msg err">This licence is State-level (multi-district). It is for the Director QC, not the DSAO.</div>
         <p class="sub">You cannot suspend or cancel it (owner's matrix, RMD-04).</p><button type="button" class="btn main full" data-act="route-dqc" data-id="${r.id}">Send to the Director QC</button>`;
     else side = decisionForm(r);
     const banner = r.expired && r.status === 'waiting' ? '<div class="msg note">e-Parwana shows this licence ended on 15 Nov 2026, after the referral. You can still decide; "No action" with the reason "licence no longer in force" is one choice.</div>' : '';
@@ -573,6 +574,7 @@ const SCREENS = {
   people() {
     return { id:'D-19', title:'Inspectors in your area', refs:'F11 · built · UXD-10', html:`
       <h2>Inspectors in your area</h2><p class="sub">Read-only for the ${ROLE_NAME[S.role]}; transfers and charges are changed by the Director QC, as built (proposed).</p>
+      ${S.role === 'DSAO' || S.role === 'DQCI' ? '<button type="button" class="btn alt" data-act="s-mobreq">Request a mobile change</button><p class="hint">For an inspector who lost the registered mobile (UXD-10): you confirm who they are and send the new number to the Director QC, who changes it (RMD-77).</p>' : ''}
       ${list(['Post', 'Taluka', 'Mobile', 'State'], INSPECTORS.map((p, i) => ({ go:`who:${p}`, cells:[esc(p), esc(TALUKAS[Math.floor(i / 2)]), `98xxxxxx${String(10 + i)}`, p === 'A.O.(PS) Maval' ? 'Vacant · charge held by A.O.(TAO) Maval' : (p === 'A.O.(PS) Baramati' ? 'Joined 15 Nov 2026' : 'In post')] })))}` };
   },
   inspect() {
@@ -639,7 +641,7 @@ function decisionForm(r) {
     <p class="hint">No hearing step and no interim suspension in this prototype: points for the Department (RMD-15, RMD-16).</p>`;
 }
 function decidedPanel(r) {
-  if (r.status === 'decided') return `<div class="msg ok">${esc(r.outcome)}.</div><button type="button" class="btn alt" data-go="order:${r.orderNo}">Open order ${esc(r.orderNo)}</button>`;
+  if (r.status === 'decided') return `<div class="msg ok">${esc(r.outcome)}.</div><button type="button" class="btn alt" data-go="${r.dqc ? 'sorder' : 'order'}:${r.orderNo}">Open order ${esc(r.orderNo)}</button>`;
   if (r.status === 'closed') return `<div class="msg ok">Closed with no action on ${TODAY}. The seller and the inspector were told.</div><p class="sub">Reasons: ${esc(r.reasons)}</p>`;
   if (r.status === 'back') return `<div class="msg ok">Sent back to ${esc(r.inspector)} on ${TODAY}.</div><p class="sub">What is missing: ${esc(r.missing)}</p><p class="hint">The seller is not told of a send-back (RMD-20). The referral returns here when the inspector refers again.</p>`;
   if (r.status === 'routed') return '<div class="msg ok">Sent to the Director QC.</div>';
@@ -700,14 +702,14 @@ function modalHtml() {
 /* ---------- render ---------- */
 function screen() {
   if (S.loading) return { id:'', title:'Loading', refs:'loading state', html:'<div class="skel w6"></div><div class="skel box"></div><div class="skel w8"></div><div class="skel box"></div>' };
-  if ((S.role !== 'DSAO' && DSAO_ONLY.has(S.route)) || (S.role !== 'DQCI' && DQCI_ONLY.has(S.route)) || (S.role !== 'DJDA' && DJDA_ONLY.has(S.route))) return SCREENS.qdenied();
+  if ((S.role !== 'DSAO' && DSAO_ONLY.has(S.route)) || (S.role !== 'DQCI' && DQCI_ONLY.has(S.route)) || (S.role !== 'DJDA' && DJDA_ONLY.has(S.route)) || (S.role !== 'DQC' && DQC_ONLY.has(S.route)) || (S.role === 'DQC' && DQC_NOT.has(S.route))) return SCREENS.qdenied();
   const f = SCREENS[S.route]; return f ? f(S.p) : SCREENS.home();
 }
-function counts() { return S.role === 'DQCI' ? qdue() : S.role === 'DJDA' ? jdue() : waiting(); }
+function counts() { return S.role === 'DQCI' ? qdue() : S.role === 'DJDA' ? jdue() : S.role === 'DQC' ? sdue() : waiting(); }
 function render() {
-  const sc = screen(), w = counts(), alerts = S.empty ? 0 : (S.role === 'DQCI' ? S.D.qalerts : S.role === 'DJDA' ? S.D.jalerts : S.D.alerts).length;
+  const sc = screen(), w = counts(), alerts = S.empty ? 0 : (S.role === 'DQCI' ? S.D.qalerts : S.role === 'DJDA' ? S.D.jalerts : S.role === 'DQC' ? S.D.salerts : S.D.alerts).length;
   const MENU = menu();
-  const post = S.role === 'DQCI' ? 'D.Q.C.I., Pune (sample post)' : S.role === 'DJDA' ? 'DJDA, Pune division (sample post)' : 'DSAO, Pune (sample post)';
+  const post = S.role === 'DQCI' ? 'D.Q.C.I., Pune (sample post)' : S.role === 'DJDA' ? 'DJDA, Pune division (sample post)' : S.role === 'DQC' ? 'Director QC, Maharashtra (sample post)' : 'DSAO, Pune (sample post)';
   const fr = document.getElementById('frame');
   document.getElementById('stage').className = 'stage' + (S.view === 'phone' ? ' phone-mode' : '');
   const toastHtml = S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : '';
@@ -717,12 +719,13 @@ function render() {
       <div class="inner"><div class="wide"><nav class="side" aria-label="Menu">${side}</nav><main class="dmain">${sc.html}</main></div></div>${modalHtml()}${toastHtml}</div>`;
   } else {
     const isTop = TOP.has(S.route);
-    const q = S.role === 'DQCI', jj = S.role === 'DJDA';
+    const q = S.role === 'DQCI', jj = S.role === 'DJDA', dq = S.role === 'DQC';
     const bb = q ? [['home', 'Home', ''], ['mfg', 'Manufacturers', 'mfg'], ['dash', 'District', ''], ['ann', 'Announce', ''], ['more', 'More', '']]
       : jj ? [['home', 'Home', ''], ['jcons', 'Consent', 'cons'], ['dash', 'Division', ''], ['ann', 'Announce', ''], ['more', 'More', '']]
+      : dq ? [['home', 'Home', ''], ['srefs', 'Licences', 'refs'], ['dash', 'State', ''], ['sppl', 'Officers', 'ofc'], ['more', 'More', '']]
       : [['home', 'Home', ''], ['refs', 'Referrals', 'refs'], ['dash', 'District', ''], ['ann', 'Announce', ''], ['more', 'More', '']];
-    const inBar = q ? ['mfg', 'ann'] : jj ? ['jcons', 'ann'] : ['refs', 'ann'];
-    const moreN = q ? w.grades + w.forum : jj ? w.ref + w.tgt + w.late : w.divs + w.lift + w.late;
+    const inBar = q ? ['mfg', 'ann'] : jj ? ['jcons', 'ann'] : dq ? ['srefs', 'sppl'] : ['refs', 'ann'];
+    const moreN = q ? w.grades + w.forum : jj ? w.ref + w.tgt + w.late : dq ? w.cfg + w.tgt + w.late + w.legal : w.divs + w.lift + w.late;
     fr.innerHTML = `<div class="phone"><div class="ptop">${isTop ? '' : '<button type="button" class="topbtn" data-act="back" aria-label="Back">‹ Back</button>'}<span class="grow">${esc(sc.title)}</span><button type="button" class="topbtn" data-go="alerts" aria-label="Alerts">Alerts${alerts ? ` ${alerts}` : ''}</button></div>
       <main class="pmain">${sc.html}</main>
       <nav class="bbar" aria-label="Main">${bb.map(([r, t, n]) => `<button type="button" ${r === 'more' ? 'data-act="more"' : `data-go="${r}"`} class="${(r === 'more' ? S.sheet : navOn(r)) ? 'on' : ''}">${esc(t)}${n && w[n] ? `<i class="badge">${w[n]}</i>` : ''}${r === 'more' && moreN ? `<i class="badge">${moreN}</i>` : ''}</button>`).join('')}</nav>
@@ -734,7 +737,7 @@ function render() {
   S.err = '';
 }
 function navOn(r) {
-  const map = { ref:'refs', order:'orders', div:'divs', taluka:'insp', who:'insp', unit:'mfg', fcase:'forum', fnew:'forum', jcon:'jcons', jre:'jref' };
+  const map = { ref:'refs', order:'orders', div:'divs', taluka:'insp', who:'insp', unit:'mfg', fcase:'forum', fnew:'forum', jcon:'jcons', jre:'jref', sref:'srefs', sorder:'sorders', scfg:'scfgs', sofc:'sppl', sdiv:'dash' };
   return S.route === r || map[S.route] === r;
 }
 
@@ -818,7 +821,7 @@ function act(a, t, e) {
     log(`Order DSAO-PUNE/2026/${no} issued (hash fixed): ${status}; takes effect ${TODAY}; seller told in the seller portal${S.sms ? ' and by SMS' : ''}; ${r.inspector} told; nothing written back to e-Parwana (DQ-12)`);
     toast(`Order ${no} issued.`); go('order', no); return;
   }
-  if (a === 'route-dqc') { const r = S.D.referrals.find((x) => x.id === t.dataset.id); r.status = 'routed'; log(`${r.firm}: referral sent to the Director QC (State-level licence)`); toast('Sent to the Director QC.'); go('refs', null); return; }
+  if (a === 'route-dqc') { const r = S.D.referrals.find((x) => x.id === t.dataset.id); r.status = 'routed'; S.D.referrals.push(Object.assign(JSON.parse(JSON.stringify(r)), { id:`${r.id}Q`, dqc:true, status:'waiting', received:`${TODAY} (sent on by the DSAO, Pune)` })); S.D.salerts.unshift([`State-level referral sent on by the DSAO, Pune: ${r.firm}`, 'srefs']); log(`${r.firm}: referral sent to the Director QC (State-level licence); it arrives in the Director QC's "Waiting on you"`); toast('Sent to the Director QC.'); go('refs', null); return; }
   if (a === 'lift') { const o = S.D.orders.find((x) => x.no === t.dataset.no); o.open = false; o.lifted = TODAY; o.status = 'In force again (suspension lifted)'; log(`Order ${o.no}: suspension lifted (hash fixed); seller and inspector told`); toast('Suspension lifted.'); render(); return; }
   if (a === 'approve-div') { const d = S.D.divisions.find((x) => x.taluka === t.dataset.t); d.status = 'approved'; d.when = TODAY; d.reason = ''; log(`Division of ${d.taluka} approved; shop lists change from ${TODAY}; open work stays with the officer who began it (UXD-77); both inspectors told`); toast('Division approved. Both inspectors were told.'); go('divs', null); return; }
   if (a === 'find') { const i = S.D.late.findIndex((x) => x.id === t.dataset.id); const l = S.D.late.splice(i, 1)[0]; S.D.found.push({ who:l.who, step:l.step, v:t.dataset.v + ((S.lateRemark || {})[l.id] ? ` · "${S.lateRemark[l.id]}"` : '') }); log(`Finding on ${l.who}: ${t.dataset.v}; ${l.who} told`); toast(`Found ${t.dataset.v.toLowerCase()}.`); render(); return; }
@@ -1022,7 +1025,7 @@ function setRole(r) {
     return;
   }
   if (!ROLE_NAME[r] || r === S.role) return;
-  S.role = r; S.back = []; S.Q = {}; S.modal = null; S.sheet = false;
+  S.role = r; S.back = []; S.Q = {}; S.modal = null; S.sheet = false; S.D.annDraft = null;
   log(`Role switched to ${ROLE_NAME[r]} (prototype demonstration, not a sign-in; brief 18.1)`);
   renderControls(); go('home', null, false);
 }
@@ -1285,16 +1288,365 @@ const renderControlsJBase = renderControls;
 renderControls = function () { renderControlsJBase(); document.querySelectorAll('[data-djda-only]').forEach((el) => { el.style.display = S.role === 'DJDA' ? '' : 'none'; }); };
 const JJUMP = [['home', 'J-01 Home: Waiting on you'], ['jcons', 'J-02 Consent requests'], ['jcon:K2', 'J-03 A late consent request'], ['jref', 'J-04 Referee appeals'], ['jre:F1', 'J-05 Round 1 to decide'], ['jre:F2', 'J-05 Round 2 to decide'], ['jtgt', 'J-06 Inspector-wise targets'], ['jmfg', 'J-07 Manufacturers'], ['jseed', 'J-08 Seed sampling'], ['jlate', 'J-09 Late steps escalated'], ['dash', 'J-10 Division dashboard'], ['inspect', 'J-11 Inspect'], ['alerts', 'J-12 Alerts'], ['people', 'D-19 Inspectors in your area (shared)'], ['ann', 'D-16 Announcements (shared)'], ['refs', 'A DSAO screen (refused)']];
 
+/* ---------- the Director QC: screens S-01 to S-16 (RMD-72 to RMD-85; director-qc/04) ---------- */
+// the Department's 8 divisions and 34 districts (config/geo/divisions.yaml, from the Guideline's target tables)
+const SDIVS = [['Thane', ['Thane', 'Palghar', 'Raigad', 'Ratnagiri', 'Sindhudurg']], ['Nashik', ['Nashik', 'Dhule', 'Nandurbar', 'Jalgaon']], ['Pune', ['Pune', 'Ahilyanagar', 'Solapur']], ['Kolhapur', ['Satara', 'Sangli', 'Kolhapur']], ['Chh.Sambhajinagar', ['Chh.Sambhajinagar', 'Jalna', 'Beed']], ['Latur', ['Latur', 'Dharashiv', 'Nanded', 'Parbhani', 'Hingoli']], ['Amaravati', ['Buldhana', 'Akola', 'Washim', 'Amaravati', 'Yavatmal']], ['Nagpur', ['Nagpur', 'Wardha', 'Bhandara', 'Gondia', 'Chandrapur', 'Gadchiroli']]];
+const SDISTRICTS = SDIVS.flatMap(([v, ds]) => ds.map((d) => [d, v]));
+const DQC_ONLY = new Set(['srefs', 'sref', 'sorders', 'sorder', 'stgt', 'scfgs', 'scfg', 'sppl', 'sofc', 'slate', 'srep', 'sdiv']);
+const DQC_NOT = new Set(['insp', 'taluka', 'who', 'samp', 'court', 'seized', 'intel']); // the district's own lists: the Director QC opens them through a division and district (Pune's as the sample)
+['srefs', 'sorders', 'stgt', 'scfgs', 'sppl', 'slate', 'srep'].forEach((r) => TOP.add(r));
+const MENU_DQC = [
+  [null, [['home', 'Home']]],
+  ['Decide', [['srefs', 'State-level licences', 'refs'], ['sorders', 'Orders and suspensions', 'lift'], ['stgt', 'District targets', 'tgt'], ['scfgs', 'Configuration changes', 'cfg'], ['slate', 'Late acts and legal limits', 'late']]],
+  ['People', [['sppl', 'Officers and posts', 'ofc'], ['people', 'Inspectors in your area']]],
+  ['State', [['dash', 'Dashboard'], ['srep', 'Reports (downloads)']]],
+  ['Communicate', [['ann', 'Announcements']]],
+  ['My own work', [['inspect', 'Inspect (inspector module)']]],
+];
+const sh = (s) => { let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 997; return h; }; // steady sample figures per district
+const sfig = (d) => { const h = sh(d); return { ov:5 + h % 40, mleft:h % 4, mnos:(h >> 2) % 3, court:(h >> 3) % 4, seized:(h >> 4) % 3, S:60 + h % 70, F:80 + (h * 3) % 90, I:20 + (h * 7) % 50 }; };
+const sdivSum = (v) => SDIVS.find((x) => x[0] === v)[1].map(sfig).reduce((a, f) => ({ ov:a.ov + f.ov, mleft:a.mleft + f.mleft, mnos:a.mnos + f.mnos, court:a.court + f.court, seized:a.seized + f.seized }), { ov:0, mleft:0, mnos:0, court:0, seized:0 });
+function sfresh() {
+  return {
+    sorders: [
+      { no:'0021', firm:'Western Seeds Corporation (sample)', district:'Nashik', lic:'MH/SEED/2020/0019', out:'suspend', kind:'cond', cond:'the lot-wise distribution report is produced', scope:'whole', date:'04 Nov 2026', reasons:'Distribution report of certified seed not available (point 17); reply not compliant.', status:'Suspended until the lot-wise distribution report is produced', met:'18 Nov 2026 (report attached)', checked:'21 Nov 2026 by A.O.(TAO) Niphad (sample): condition met', open:true },
+      { no:'0018', firm:'Deccan Hybrid Seeds (sample)', district:'Latur', lic:'MH/SEED/2019/0044', out:'suspend', kind:'date', end:'31 Dec 2026', scope:'variety', variety:'Soybean · SB-35 (sample)', date:'22 Oct 2026', reasons:'Seed sold without a valid release (point 3).', status:'Variety Soybean · SB-35 (sample) suspended until 31 Dec 2026', open:true },
+    ],
+    snextOrder:22,
+    stgt: { year:'2026-27', version:1, status:'draft', source:'', fig:{}, enclosure:false, reason:'' },
+    scfg: [
+      { id:'C1', what:'Service level LIC-01, accept or return a referral', was:'5 days', becomes:'7 days', by:'State administrator (sample)', why:'Referrals reaching the DSAOs in the Kharif rush are routinely late; the Department asked for a longer period (sample).', from:'01 Dec 2026', status:'waiting' },
+      { id:'C2', what:'Risk-based seed target rule: the top failure band\'s figure', was:'150 samples', becomes:'160 samples', by:'State administrator (sample)', why:'The seeds team\'s figure for 2026-27 (sample).', from:'01 Apr 2027', status:'waiting' },
+      { id:'C3', what:'Service level PLN-02, inspector-wise fertiliser split', was:'by 15 April', becomes:'by 20 April', by:'Director QC, Maharashtra (sample post, while holding the state administrator\'s charge)', why:'More time for the DJDAs (sample).', from:'01 Apr 2027', status:'waiting', mine:true },
+    ],
+    smob: [{ id:'MB1', who:'A.O.(TAO) Junnar', post:'Inspector, Junnar (Pune)', now:'98xxxxxx16', newNo:'97xxxxxx41', by:'DSAO, Pune', why:'Phone lost on 20 Nov 2026; identity confirmed in person at the district office', when:'22 Nov 2026', status:'waiting' }],
+    sprop: [{ id:'PT1', who:'A.O.(PS) Shirur (sample)', code:'101455', was:'Inspector, Daund (Pune)', now:'Inspector, Shirur (Pune)', when:'21 Nov 2026', status:'waiting' }],
+    sofficers: [
+      { id:'O1', name:'A.O.(TAO) Baramati', code:'101101', post:'Inspector, Baramati (Pune)', units:'Baramati taluka', charge:'', mobile:'98xxxxxx12', state:'In post' },
+      { id:'O2', name:'A.O.(TAO) Indapur', code:'101201', post:'Inspector, Indapur (Pune)', units:'Indapur taluka', charge:'Additional charge: Inspector, Baramati 2 (Pune)', mobile:'98xxxxxx14', state:'In post' },
+      { id:'O3', name:'A.O.(TAO) Junnar', code:'101302', post:'Inspector, Junnar (Pune)', units:'Junnar taluka', charge:'', mobile:'98xxxxxx16', state:'In post' },
+      { id:'O4', name:'A.O.(TAO) Niphad (sample)', code:'121104', post:'Inspector, Niphad (Nashik)', units:'Niphad taluka', charge:'', mobile:'98xxxxxx31', state:'In post' },
+      { id:'O5', name:'A.O.(PS) Udgir (sample)', code:'141207', post:'Inspector, Udgir (Latur)', units:'Udgir taluka', charge:'', mobile:'98xxxxxx52', state:'In post' },
+      { id:'O6', name:'A.O.(TAO) Wani (sample)', code:'161309', post:'Inspector, Wani (Yavatmal)', units:'Wani taluka', charge:'', mobile:'98xxxxxx73', state:'In post' },
+    ],
+    slegal: [{ id:'LG1', what:'Court case CC-298, Ganesh Agro (Pune): to be filed immediately on the report of 05 Oct 2026 (Guideline p.29); not filed', who:'A.O.(TAO) Haveli', since:'05 Nov 2026' }],
+    sacts: [
+      { id:'SA1', who:'DSAO, Satara', post:'DSAO', step:'Accept or return the licence referral of Krishna Traders (LIC-01, 5 days, proposed)', due:'16 Nov 2026', days:7, reason:'On leave 12 to 20 Nov 2026; no one held the post\'s charge', more:'', note:'A district referral stays with the DSAO: you remind and find; you do not decide the district licence (RMD-83).' },
+      { id:'SA2', who:'DJDA, Nashik division', post:'DJDA', step:'Decide consent request K-0091 (Chlorpyrifos, Malegaon) (7 days, customised)', due:'19 Nov 2026', days:4, reason:'Waiting for the laboratory\'s reanalysis copy', more:'3 more days asked', note:'' },
+    ],
+    swatch: [['Pune', 3], ['Nashik', 2], ['Latur', 4], ['Nagpur', 1]], // inspectors' and D.Q.C.I.s' late steps reaching the State at a later level
+    sfound: [], sreminded:{}, schip:'Pune', sdiv:'Pune', soff:'all',
+    salerts: [['Legal limit passed: court case CC-298 (Ganesh Agro)', 'slate'], ['Configuration change to approve: LIC-01 (5 to 7 days)', 'scfg:C1'], ['Mobile-change request: A.O.(TAO) Junnar (from the DSAO, Pune)', 'sppl'], ['State-level licence referral: Sahyadri Seeds Pvt Ltd', 'srefs']],
+    sann: [{ title:'Kharif 2027 quality-control drive', to:'Sellers of all inputs · all divisions · 52,300 sellers (sample)', sms:false, when:'02 Nov 2026' }],
+  };
+}
+// the Director QC's State-level referral, beside the DSAO's (the DSAO's R5 reaches it by "Send to the Director QC")
+const SREF_SEED = { id:'SR1', dqc:true, firm:'Sahyadri Seeds Pvt Ltd', taluka:'Niphad', village:'Ozar', district:'Nashik', lic:'MH/SEED/2018/0033', valid:'31 Mar 2028', level:'State-level (multi-district)', stateLevel:true, varieties:['Onion · ON-5 (sample)', 'Tomato · TM-12 (sample)', 'Wheat · WH-9 (sample)'],
+  point:'7', pointText:'Seed stock register and sale register maintained', clause:'Rule 38 (as in the action sheet)',
+  inspector:'A.O.(TAO) Niphad (sample)', inspected:'07 Nov 2026', evidence:'Photo of the registers (4 photos)', notice:'Notice issued 07 Nov 2026; reply within 8 days', reply:'Reply 13 Nov 2026: "Registers kept at the head office in Pune."',
+  verify:'Not complied: registers not produced at the Ozar depot on 19 Nov 2026; the licence covers depots in 6 districts.', proposal:{ out:'suspend', kind:'cond', cond:'the stock and sale registers are kept at every depot', date:'', scope:'whole', variety:'' },
+  history:['14 Feb 2026: point 7 found at the Malegaon depot (A.O.(PS) Malegaon, sample)'], lab:'None linked', received:'21 Nov 2026', status:'waiting' };
+(() => { const f0 = fresh; fresh = function () { const D = f0(); D.referrals.push(JSON.parse(JSON.stringify(SREF_SEED))); return D; }; S.D = fresh(); })();
+function sdue() {
+  if (S.empty) return { legal:0, refs:0, cfg:0, ofc:0, late:0, tgt:0, lift:0 };
+  const D = S.D;
+  return { legal:D.slegal.length, refs:D.referrals.filter((r) => r.dqc && r.status === 'waiting').length, cfg:D.scfg.filter((c) => c.status === 'waiting' && !c.mine).length,
+    ofc:D.smob.filter((m) => m.status === 'waiting').length + D.sprop.filter((p) => p.status === 'waiting').length, late:D.sacts.length, tgt:D.stgt.status === 'draft' ? 1 : 0,
+    lift:D.sorders.filter((o) => o.open && o.kind === 'cond' && o.checked).length };
+}
+function sstateTable() {
+  return `<h3>The State, division by division</h3>${list(['Division', 'Inspections overdue', 'Manufacturer inspections left', 'Manufacturers with no sample', 'Court cases late', 'Seized stock over 3 months'], SDIVS.map(([v]) => { const f = sdivSum(v); return { go:`sdiv:${v}`, cells:[esc(v), S.empty ? 0 : f.ov, S.empty ? 0 : f.mleft, S.empty ? 0 : f.mnos, S.empty ? 0 : f.court, S.empty ? 0 : f.seized] }; }))}`;
+}
+const homeJ = SCREENS.home, inspectJ = SCREENS.inspect, alertsJ = SCREENS.alerts, dashJ = SCREENS.dash, annJ = SCREENS.ann, peopleJ = SCREENS.people;
+SCREENS.home = () => (S.role === 'DQC' ? SCREENS.shome() : homeJ());
+SCREENS.inspect = () => (S.role === 'DQC' ? { id:'S-15', title:'Inspect', refs:'K10 · UXD-13', html:`
+  <h2>Inspect</h2><div class="msg note">The Director QC inspects as a supervisory inspector in the inspector module (UXD-13). Those screens are the inspector workstream's; in this prototype they do not yet open for the Director QC's code (observation O17).</div>` } : inspectJ());
+SCREENS.alerts = () => (S.role === 'DQC' ? { id:'S-16', title:'Alerts', refs:'Alerts bell · App Q5', html:`
+  <h2>Alerts</h2><p class="sub">On the phone app each alert is also a notification that says only "Agri QC: 1 new alert" (App Q5).</p>
+  ${list(['Alert'], (S.empty ? [] : S.D.salerts).map((a) => ({ go:a[1], cells:[esc(a[0])] })), { empty:'No alerts.' })}` } : alertsJ());
+SCREENS.shome = () => {
+  const w = sdue(), none = !(w.legal + w.refs + w.cfg + w.ofc + w.late + w.tgt);
+  return { id:'S-01', title:'Home', refs:'K1, K7 · J-S5 · RMD-79', html:`
+    <h2>Waiting on you</h2><p class="sub">Director QC, Maharashtra (sample post) · ${TODAY}</p>
+    ${w.legal ? `<button type="button" class="btn main full" data-go="slate" style="text-align:left">${w.legal} legal limit passed: a period set by law or the Guideline has run out (RMD-78)</button>` : ''}
+    ${none ? '<div class="msg ok">Nothing waits on you.</div>' : `<div class="wait">
+      <button type="button" data-go="srefs" ${w.refs ? '' : 'disabled'}><b>${w.refs}</b><span>State-level licence referrals to decide</span></button>
+      <button type="button" data-go="scfgs" ${w.cfg ? '' : 'disabled'}><b>${w.cfg}</b><span>Configuration changes to approve or return</span></button>
+      <button type="button" data-go="sppl" ${w.ofc ? '' : 'disabled'}><b>${w.ofc}</b><span>Mobile-change requests and proposed transfers</span></button>
+      <button type="button" data-go="slate" ${w.late ? '' : 'disabled'}><b>${w.late}</b><span>Officers' late acts to find on</span></button>
+      <button type="button" data-go="stgt" ${w.tgt ? '' : 'disabled'}><b>${w.tgt}</b><span>District targets to issue (2026-27)</span></button></div>`}
+    ${sstateTable()}
+    <p class="sub" style="margin-top:12px">A division opens its districts; the figures are the same records every level reads (sample). <button type="button" class="lnk" data-go="people">Inspectors in your area</button> · <button type="button" class="lnk" data-go="sppl">Officers and posts</button></p>` };
+};
+SCREENS.sdiv = (v) => {
+  v = v || S.D.sdiv; const ds = (SDIVS.find((x) => x[0] === v) || SDIVS[2])[1];
+  return { id:'S-02', title:`${v} division`, refs:'K1, K7 · J-S5 · RMD-79', html:`
+    <h2>${esc(v)} division</h2><p class="sub">District by district (sample figures). Read only: each district's work is its own officers'.</p>
+    ${list(['District', 'Inspections overdue', 'Manufacturer inspections left', 'Manufacturers with no sample', 'Court cases late', 'Seized stock over 3 months'], ds.map((d) => { const f = sfig(d); return { cells:[esc(d), S.empty ? 0 : f.ov, S.empty ? 0 : f.mleft, S.empty ? 0 : f.mnos, S.empty ? 0 : f.court, S.empty ? 0 : f.seized] }; }))}
+    <p class="hint">In the portal a district opens its lists (inspections, court cases, seized stock) read only; the DSAO's Pune screens show what they hold.</p>` };
+};
+SCREENS.srefs = () => {
+  const rows = S.empty ? [] : S.D.referrals.filter((r) => r.dqc);
+  return { id:'S-03', title:'State-level licences', refs:'K2 · J-S1 · RMD-74', html:`
+    <h2>State-level licence referrals</h2><p class="sub">Licences that operate across districts reach you by the licence's jurisdiction, after the inspector's notice and the seller's reply. Decided as the DSAO decides district licences (RMD-74).</p>
+    ${list(['Firm', 'District', 'Point', 'Proposed by the inspector', 'From', 'Received', 'State'], rows.map((r) => ({ go:`sref:${r.id}`, cells:[esc(r.firm), esc(r.district || r.taluka), esc(r.point), esc(shape(r.proposal)), esc(r.inspector), esc(r.received), stateTag(r)] })), { empty:'No State-level referrals waiting.' })}
+    <p class="hint">A district referral a DSAO leaves waiting is not here: it stays with the DSAO, and you remind and find on it in Late acts (RMD-83).</p>` };
+};
+SCREENS.sref = (id) => {
+  const r = S.D.referrals.find((x) => x.id === id && x.dqc); if (!r) return SCREENS.srefs();
+  const s = SCREENS.ref(id);
+  s.html = s.html.replace('No hearing step and no interim suspension in this prototype', 'The order names the Commissioner as the appeal authority (RMD-74; the period is the Department\'s). The CQCO is not defined, so your post decides alone (DQ-16). No hearing step and no interim suspension in this prototype');
+  return Object.assign(s, { id:'S-04', refs:'K2 · J-S1 · RMD-74, RMD-20, RMD-26, RMD-27' });
+};
+SCREENS.sorders = () => {
+  const rows = S.empty ? [] : S.D.sorders.slice().reverse();
+  return { id:'S-05', title:'Orders and suspensions', refs:'K2 · RMD-74, RMD-28', html:`
+    <h2>Orders and suspensions</h2><p class="sub">Your orders on State-level licences. A suspension until a date ends by itself; one until a condition ends when you lift it, after the inspector's check (RMD-28).</p>
+    ${list(['Order', 'Firm', 'District', 'Status', 'Issued', 'Needs you'], rows.map((o) => ({ go:`sorder:${o.no}`, cells:[`DQC-MH/2026/${esc(o.no)}`, esc(o.firm), esc(o.district), esc(o.status), esc(o.date), o.open && o.kind === 'cond' && o.checked ? '<span class="tag solid">Lift suspension</span>' : ''] })), { empty:'No orders yet.' })}` };
+};
+SCREENS.sorder = (no) => {
+  const o = S.D.sorders.find((x) => x.no === no); if (!o) return SCREENS.sorders();
+  let end = '';
+  if (o.out === 'suspend' && o.kind === 'date') end = `<div class="msg note">Ends by itself at the end of ${esc(o.end)}. No one needs to act (RMD-28).</div>`;
+  if (o.out === 'suspend' && o.kind === 'cond') end = o.open ? `<h3>The condition</h3><ol class="steps"><li class="${o.met ? 'done' : ''}">The seller says it is done, with proof: ${o.met ? esc(o.met) : '<span class="ghost">not yet</span>'}</li><li class="${o.checked ? 'done' : ''}">The inspector checks it: ${o.checked ? esc(o.checked) : '<span class="ghost">not yet</span>'}</li><li>You lift the suspension</li></ol>${o.checked ? `<button type="button" class="btn main" data-act="s-lift" data-no="${o.no}">Lift suspension</button>` : '<p class="sub">Lift suspension appears once the inspector reports the condition met.</p>'}`
+    : `<div class="msg ok">Suspension lifted on ${esc(o.lifted)}. The licence is in force again; the seller and the inspector were told.</div>`;
+  return { id:'S-06', title:`Order ${o.no}`, refs:'K2 · RMD-74, RMD-27, RMD-28', html:`
+    <h2>Order DQC-MH/2026/${esc(o.no)}</h2><p class="sub">${esc(o.firm)} · ${esc(o.district)} · issued ${esc(o.date)} <span class="tag">Issued · never changed</span></p>
+    <div class="doc"><div class="hd">ORDER (SIMULATED)</div><p class="ghost" style="margin-top:0">The prescribed form of the order is not supplied (Department); this box shows what it carries.</p>
+      <div class="kv"><span>Licence</span><span>${esc(o.lic)} (State-level)</span><span>Decision</span><span>${esc(o.status)}</span><span>Takes effect</span><span>${esc(o.date)}, the date of the order</span><span>Reasons</span><span>${esc(o.reasons)}</span><span>Appeal</span><span>To the Commissioner of Agriculture (RMD-74); the period is the Department's</span><span>By</span><span>Director QC, Maharashtra (sample post), with the act's own button</span></div></div>
+    <p class="sub">The seller sees it in the seller portal${S.sms ? ' and got an SMS' : ' (SMS waits on the gateway)'}; the referring inspector sees it on the case; the DSAOs of the districts where the firm operates see it, read only.</p>${end}` };
+};
+function stgtFill(src) { const T = S.D.stgt; T.fig = {}; SDISTRICTS.forEach(([d]) => { const f = sfig(d); T.fig[d] = src === 'import' ? { S:f.S, F:f.F, I:f.I } : { S:0, F:0, I:0 }; }); T.source = src; T.enclosure = src === 'import'; }
+function stgtOk() { const T = S.D.stgt; return T.source && SDISTRICTS.every(([d]) => T.fig[d] && ['S', 'F', 'I'].every((i) => T.fig[d][i] > 0)); }
+SCREENS.stgt = () => {
+  const T = S.D.stgt, v = S.D.schip, ds = SDIVS.find((x) => x[0] === v)[1], issued = T.status === 'issued';
+  const tot = (i) => SDISTRICTS.reduce((a, [d]) => a + ((T.fig[d] || {})[i] || 0), 0);
+  const okDiv = (x) => SDIVS.find((y) => y[0] === x)[1].every((d) => T.fig[d] && ['S', 'F', 'I'].every((i) => T.fig[d][i] > 0));
+  return { id:'S-07', title:'District targets', refs:'K3 · J-S2 · RMD-75', html:`
+    <h2>District targets · ${esc(T.year)} · version ${T.version} ${issued ? '<span class="tag">Issued</span>' : '<span class="tag solid">Draft</span>'}</h2>
+    <p class="sub">Import the circular's district-wise figures, or enter them; then <b>Issue district targets</b>: each DJDA's "Targets to finalise" opens with them, binding as issued, no Accept or Return (RMD-75). One total per input in this prototype; the real set carries crops, grades, manufacturers and months.</p>
+    ${!T.source && !issued ? '<button type="button" class="btn alt" data-act="s-import">Import the circular\'s figures</button><button type="button" class="btn alt" data-act="s-blank">Enter the figures myself</button><p class="hint">For seeds the risk-based rule may propose figures, as built.</p>' : ''}
+    ${T.source ? `<div class="chips">${SDIVS.map(([x]) => `<button type="button" data-schip="${x}" aria-pressed="${x === v}">${x}${okDiv(x) ? ' ✓' : ''}</button>`).join('')}</div>
+    ${list(['District', 'Seed', 'Fertiliser', 'Insecticide'], ds.map((d) => ({ cells:[esc(d), ...['S', 'F', 'I'].map((i) => (issued ? String(T.fig[d][i]) : `<input class="t" style="width:90px" type="number" min="0" value="${T.fig[d][i]}" data-st="${d}.${i}" aria-label="${esc(d)} ${i}">`))] })))}
+    <div class="msg note" id="s-tot">The State: seed ${tot('S').toLocaleString('en-IN')} · fertiliser ${tot('F').toLocaleString('en-IN')} · insecticide ${tot('I').toLocaleString('en-IN')} samples</div>
+    <label class="chk"><input type="checkbox" data-bind="s.enclosure" ${T.enclosure ? 'checked' : ''} ${issued ? 'disabled' : ''}> Send the Commissionerate's inspector-wise, month-wise enclosure with them (the DJDAs start from it, RMD-54)</label>` : ''}
+    ${S.err ? `<div class="msg err">${esc(S.err)}</div>` : ''}
+    ${issued ? `<div class="msg ok">Issued on ${esc(T.when)} to the 8 DJDAs${T.enclosure ? ', with the enclosure' : ''}. Each DJDA's "Targets to finalise" is open; the DSAOs and D.Q.C.I.s read their district's figures.</div>
+      <label class="f">Reason for a new version</label><input class="t" value="${esc(T.reason)}" data-bind="s.reason" placeholder="e.g. the Department revised the fertiliser targets">
+      <button type="button" class="btn alt" id="s-newver" data-act="s-newver" ${T.reason.trim() ? '' : 'disabled'}>Make a new version</button>`
+    : T.source ? `<button type="button" class="btn main" id="s-issue" data-act="s-issue" ${stgtOk() ? '' : 'disabled'}>Issue district targets</button><p class="hint" id="s-issue-hint">${stgtOk() ? 'Pressing it fixes the set and sends it at once; no confirm step (UXD-146).' : 'Issue district targets is enabled once every district has a figure for each input (a ✓ on each division).'}</p>` : ''}` };
+};
+SCREENS.scfgs = () => {
+  const rows = S.empty ? [] : S.D.scfg;
+  return { id:'S-08', title:'Configuration changes', refs:'K4 · J-S3 · RMD-76', html:`
+    <h2>Configuration changes</h2><p class="sub">State-wide settings (service levels, the risk-based rule) are prepared by the state administrator and take effect only when you approve them; never approved by whoever prepared them (RMD-76).</p>
+    ${list(['Change', 'From', 'To', 'Prepared by', 'Applies from', 'State'], rows.map((c) => ({ go:`scfg:${c.id}`, cells:[esc(c.what), esc(c.was), esc(c.becomes), esc(c.by), esc(c.from), c.mine && c.status === 'waiting' ? '<span class="tag">Another officer approves</span>' : ({ waiting:'<span class="tag solid">To approve</span>', approved:'<span class="tag">Approved</span>', returned:'<span class="tag">Returned</span>' })[c.status]] })), { empty:'No changes waiting.' })}` };
+};
+SCREENS.scfg = (id) => {
+  const c = S.D.scfg.find((x) => x.id === id); if (!c) return SCREENS.scfgs();
+  if (S.Q.c !== id) S.Q = { c:id, reasons:'' };
+  let side;
+  if (c.status === 'approved') side = `<div class="msg ok">Approved on ${esc(c.when)}; in effect from ${esc(c.from)}. The preparer was told.</div>`;
+  else if (c.status === 'returned') side = `<div class="msg ok">Returned on ${esc(c.when)}: ${esc(c.reasons)}</div>`;
+  else if (c.mine) side = `<div class="msg err">You prepared this change; another officer must approve it (RMD-76). The server refuses your approval.</div><button type="button" class="btn main full" disabled>Approve</button>`;
+  else side = `${S.err ? `<div class="msg err">${esc(S.err)}</div>` : ''}<button type="button" class="btn main full" data-act="s-cfg-ok" data-id="${c.id}">Approve</button>
+    <label class="f">Or return it, with reasons</label><textarea class="t" data-bind="q.reasons">${esc(S.Q.reasons)}</textarea>
+    <button type="button" class="btn alt full" id="s-cfg-ret" data-act="s-cfg-ret" data-id="${c.id}" ${(S.Q.reasons || '').trim() ? '' : 'disabled'}>Return</button>
+    <p class="hint">Pressing it takes the act at once; no confirm step (UXD-146).</p>`;
+  return { id:'S-09', title:c.what, refs:'K4 · J-S3 · RMD-76', html:`
+    <h2>${esc(c.what)}</h2><p class="sub">Prepared by ${esc(c.by)} · applies from ${esc(c.from)}</p>
+    <div class="two"><div><div class="kv"><span>Now</span><span>${esc(c.was)}</span><span>Becomes</span><span>${esc(c.becomes)}</span><span>Why</span><span>${esc(c.why)}</span><span>Applies from</span><span>${esc(c.from)}</span></div>
+      <p class="hint">A Department period marked customised stays marked so (FD-08); this screen never changes a period the Guideline or an Act sets.</p></div>
+      <div class="sticky"><h3 style="margin-top:0">Your decision</h3>${side}</div></div>` };
+};
+SCREENS.sppl = () => {
+  const D = S.D, mob = S.empty ? [] : D.smob.filter((m) => m.status === 'waiting'), prop = S.empty ? [] : D.sprop.filter((p) => p.status === 'waiting');
+  const offs = D.sofficers.filter((o) => D.soff === 'all' || o.post.includes(`(${D.soff}`) || (D.soff === 'Pune' && o.post.includes('(Pune)')));
+  return { id:'S-10', title:'Officers and posts', refs:'K5 · J-S4 · RMD-77', html:`
+    <h2>Officers and posts</h2><p class="sub">The State's inspectors. Other officers (DSAOs, D.Q.C.I.s, DJDAs) are recorded by the state administrator, as built. Nobody changes their own profile.</p>
+    <h3>Mobile-change requests (${mob.length})</h3>${mob.length ? mob.map((m) => `<div class="card"><b>${esc(m.who)}</b> · ${esc(m.post)}<div class="k">From ${esc(m.by)} · ${esc(m.when)} · now ${esc(m.now)} → <b>${esc(m.newNo)}</b></div><p style="margin:6px 0">"${esc(m.why)}"</p>
+      <button type="button" class="btn main" data-act="s-mob-ok" data-id="${m.id}">Change mobile</button><button type="button" class="btn alt" data-act="s-mob-ret" data-id="${m.id}">Return</button></div>`).join('') : '<div class="msg note">No mobile-change requests.</div>'}
+    <h3>Proposed transfers from the officer list (${prop.length})</h3>${prop.length ? prop.map((p) => `<div class="card"><b>${esc(p.who)}</b> · code ${esc(p.code)}<div class="k">The Department's list of ${esc(p.when)} shows: ${esc(p.was)} → <b>${esc(p.now)}</b></div>
+      <button type="button" class="btn main" data-act="s-prop-ok" data-id="${p.id}">Confirm transfer</button><button type="button" class="btn alt" data-act="s-prop-no" data-id="${p.id}">Reject</button></div>`).join('') : '<div class="msg note">No proposed transfers.</div>'}
+    <h3>Inspectors</h3><div class="chips">${['all', 'Pune', 'Nashik', 'Latur', 'Yavatmal'].map((x) => `<button type="button" data-soff="${x}" aria-pressed="${D.soff === x}">${x === 'all' ? 'All (sample)' : x}</button>`).join('')}</div>
+    ${list(['Officer', 'Post', 'Charge', 'Mobile', 'State'], offs.map((o) => ({ go:`sofc:${o.id}`, cells:[`${esc(o.name)} <span class="ghost">${esc(o.code)}</span>`, esc(o.post), esc(o.charge || '—'), esc(o.mobile), esc(o.state)] })))}` };
+};
+SCREENS.sofc = (id) => {
+  const o = S.D.sofficers.find((x) => x.id === id); if (!o) return SCREENS.sppl();
+  if (S.Q.o !== id) S.Q = { o:id, tpost:'', tdate:'', cpost:'', units:'', why:'' };
+  const posts = ['Inspector, Shirur (Pune)', 'Inspector, Daund (Pune)', 'Inspector, Sinnar (Nashik)', 'Inspector, Ausa (Latur)', 'Inspector, Pusad (Yavatmal)'];
+  const sel = (b, ph, opts) => `<select class="t" data-bind="q.${b}"><option value="">${ph}</option>${opts.map((p) => `<option ${S.Q[b] === p ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select>`;
+  const gone = o.state === 'Deactivated';
+  return { id:'S-11', title:o.name, refs:'K5 · J-S4 · RMD-77 · access plan s.5, s.6', html:`
+    <h2>${esc(o.name)}</h2><p class="sub">Code ${esc(o.code)} · ${esc(o.post)} · ${esc(o.state)}</p>
+    <div class="kv"><span>Post</span><span>${esc(o.post)}</span><span>Units</span><span>${esc(o.units)}</span><span>Charge</span><span>${esc(o.charge || '—')}</span><span>Mobile</span><span>${esc(o.mobile)}</span></div>
+    ${S.err ? `<div class="msg err">${esc(S.err)}</div>` : ''}
+    ${gone ? '<div class="msg ok">Deactivated; sessions and remembered devices were signed out.</div>' : `
+    <h3>Transfer</h3>${sel('tpost', 'Choose the new post', posts)}<input class="t" type="date" style="margin-top:6px" value="${esc(S.Q.tdate)}" data-bind="q.tdate" aria-label="From">
+    <button type="button" class="btn main" data-act="s-transfer" data-id="${o.id}" ${S.Q.tpost && S.Q.tdate ? '' : 'disabled'}>Record transfer</button><p class="hint">In effect at once: authority belongs to the post; the old seat code resolves to the successor.</p>
+    <h3>Additional charge</h3>${sel('cpost', 'Choose the post to hold in addition', posts)}
+    <button type="button" class="btn alt" data-act="s-charge" data-id="${o.id}" ${S.Q.cpost ? '' : 'disabled'}>Record additional charge</button><p class="hint">Full powers of the post held in addition, chosen as the acting post after signing in (access plan).</p>
+    <h3>Units</h3>${sel('units', 'Choose the units', [`${o.units}`, `${o.units} and the next taluka (sample)`])}
+    <button type="button" class="btn alt" data-act="s-units" data-id="${o.id}" ${S.Q.units && S.Q.units !== o.units ? '' : 'disabled'}>Change units</button>
+    <h3>Deactivate</h3><input class="t" value="${esc(S.Q.why)}" data-bind="q.why" placeholder="Reason (e.g. retired on 30 Nov 2026)">
+    <button type="button" class="btn alt" data-act="s-deact" data-id="${o.id}" ${(S.Q.why || '').trim() ? '' : 'disabled'}>Deactivate</button>`}
+    <p class="hint">Each is the Director QC's own named button, recorded with who and when (UXD-146).</p>` };
+};
+SCREENS.slate = () => {
+  const D = S.D, legal = S.empty ? [] : D.slegal, acts = S.empty ? [] : D.sacts;
+  return { id:'S-12', title:'Late acts and legal limits', refs:'K6 · J-S6 · RMD-78, RMD-83', html:`
+    <h2>Late acts and legal limits</h2><p class="sub">By the built escalation ladder (interim, D-121; DQ-232).</p>
+    <h3>Legal limits passed (${legal.length})</h3>${legal.length ? legal.map((l) => `<div class="card"><b>${esc(l.what)}</b><div class="k">${esc(l.who)} · passed ${esc(l.since)}</div>${D.sreminded[l.who] ? '<span class="tag">Reminded today</span>' : `<button type="button" class="btn alt" data-act="s-remind" data-who="${esc(l.who)}">Remind</button>`}</div>`).join('') : '<div class="msg note">No legal limit has passed.</div>'}
+    <h3>Officers' late acts to find on (${acts.length})</h3><p class="sub">Where you are the first level: a DSAO's, DJDA's or licensing authority's own act (RMD-78).</p>
+    ${acts.map((l) => `<div class="card"><b>${esc(l.who)}</b> · ${esc(l.step)}<div class="k">Due ${esc(l.due)} · ${l.days} days late</div><p style="margin:6px 0">Reason given: "${esc(l.reason)}"</p>${l.note ? `<p class="hint">${esc(l.note)}</p>` : ''}
+      ${l.more ? `<p style="margin:6px 0">Request: ${esc(l.more)} <button type="button" class="btn alt" data-act="s-more" data-id="${l.id}" data-v="granted">Grant</button><button type="button" class="btn alt" data-act="s-more" data-id="${l.id}" data-v="refused">Refuse</button></p>` : ''}
+      ${D.sreminded[l.who] ? '<span class="tag">Reminded today</span> ' : `<button type="button" class="btn alt" data-act="s-remind" data-who="${esc(l.who)}">Remind</button>`}<button type="button" class="btn alt" data-act="s-find" data-id="${l.id}" data-v="Attributable">Attributable</button><button type="button" class="btn alt" data-act="s-find" data-id="${l.id}" data-v="Not attributable">Not attributable</button></div>`).join('') || '<div class="msg note">No late acts to find on.</div>'}
+    ${D.sfound.length ? `<h3>Found today</h3>${list(['Officer', 'Step', 'Finding'], D.sfound.map((f) => ({ cells:[esc(f.who), esc(f.step), esc(f.v)] })))}` : ''}
+    <h3>The watch: inspectors' and D.Q.C.I.s' late steps reaching the State</h3><p class="sub">Found by the first level; you remind only, so no act is judged twice.</p>
+    ${list(['Division', 'Late steps at a later level', ''], (S.empty ? [] : D.swatch).map(([v, n]) => ({ cells:[esc(v), String(n), D.sreminded[v] ? '<span class="tag">Reminded today</span>' : `<button type="button" class="lnk" data-act="s-remind" data-who="${esc(v)}">Remind the division's officers</button>`] })), { empty:'Nothing late at a later level.' })}` };
+};
+SCREENS.srep = () => ({ id:'S-13', title:'Reports (downloads)', refs:'K9 · J-S8 · RMD-23, RMD-72', html:`
+  <h2>Reports the Guideline asks for</h2><p class="sub">Taken from the records, never retyped (RMD-23). Choose the period and download.</p>
+  ${list(['Report', 'Guideline', ''], [['Sample collection against targets', 'p.2'], ['Manufacturer inspections, monthly', 'p.30'], ['Storage and sale centre inspections, by the 5th of each month', 'p.38']].map((r, i) => ({ cells:[esc(r[0]), esc(r[1]), `<button type="button" class="lnk" data-act="s-dl" data-i="${i}" data-f="pdf">PDF</button> · <button type="button" class="lnk" data-act="s-dl" data-i="${i}" data-f="xlsx">Excel</button>`] })))}
+  <p class="hint">The monthly grade-wise fertiliser sales report (p.21) waits for the fertiliser availability module (as RMD-39).</p>` });
+SCREENS.dash = () => (S.role === 'DQC' ? { id:'S-14', title:'Dashboard', refs:'K7 · UXD-150 · RMD-07', html:`
+  <h2>State dashboard · Maharashtra</h2>
+  <div class="chips"><button type="button" aria-pressed="true">Plan year 2026-27</button><button type="button" aria-pressed="false">Rabi 2026</button><button type="button" aria-pressed="false">November 2026</button></div>
+  <div class="sim">Sample figures. Each figure's written definition and source are settled before it is built (brief 13.1). The Commissioner reads the same dashboard (RMD-07).</div>
+  ${sstateTable()}
+  <h3>Your decisions</h3><div class="figs">${fig(sdue().refs, 'State-level referrals waiting', 'srefs')}${fig(S.empty ? 0 : S.D.sorders.length, 'Orders issued', 'sorders')}${fig(sdue().cfg, 'Configuration changes waiting', 'scfgs')}</div>` } : dashJ());
+SCREENS.people = () => (S.role === 'DQC' ? { id:'S-10a', title:'Inspectors in your area', refs:'K5 · RMD-79', html:`
+  <h2>Inspectors in your area · the State</h2><p class="sub">Read only, division by division (sample figures). Changes are made in <button type="button" class="lnk" data-go="sppl">Officers and posts</button>.</p>
+  ${list(['Division', 'Inspector posts', 'Vacant, with a charge held', 'Inspections overdue'], SDIVS.map(([v, ds]) => ({ go:`sdiv:${v}`, cells:[esc(v), ds.length * 22, (sh(v) % 5) + 1, sdivSum(v).ov] })))}` } : peopleJ());
+SCREENS.ann = () => {
+  if (S.role !== 'DQC') return annJ();
+  const a = S.D.annDraft && S.D.annDraft.divs ? S.D.annDraft : null;
+  if (!a) return { id:'D-16', title:'Announcements', refs:'K8 · J-S7 · RMD-17 to RMD-19, RMD-72', html:`
+    <h2>Announcements</h2><p class="sub">Information to groups across the State. Never a notice or an order, never one named shop.</p>
+    <button type="button" class="btn main" data-act="s-ann-new">New announcement</button>
+    ${list(['Title', 'To', 'SMS', 'Published'], S.D.sann.map((x) => ({ cells:[esc(x.title), esc(x.to), x.sms ? 'Sent' : 'No', esc(x.when)] })), { empty:'No announcements yet.' })}` };
+  const n = sannCount(a), ok = a.title.trim() && a.text.trim() && n > 0;
+  return { id:'D-17', title:'New announcement', refs:'K8 · J-S7 · RMD-17 to RMD-19, RMD-72', html:`
+    <h2>New announcement</h2><p class="sub">Published on your own post, within the State; no approval needed (RMD-17).</p>
+    <label class="f">Title</label><input class="t" value="${esc(a.title)}" data-bind="sa.title">
+    <label class="f">Text</label><textarea class="t" data-bind="sa.text">${esc(a.text)}</textarea>
+    <h3>Who receives it (RMD-19)</h3>
+    <div class="chips">${[['sellers', 'Sellers'], ['officers', 'Officers'], ['both', 'Both']].map(([v, t]) => `<button type="button" data-sannto="${v}" aria-pressed="${a.to === v}">${t}</button>`).join('')}</div>
+    ${a.to !== 'officers' ? `<label class="f">Sellers whose licence is for</label>${[['S', 'Seeds'], ['F', 'Fertiliser'], ['I', 'Insecticides']].map(([v, t]) => `<label class="chk"><input type="checkbox" data-annin="${v}" ${a.inputs.includes(v) ? 'checked' : ''}> ${t}</label>`).join('')}` : ''}
+    <label class="f">Divisions (a division can be narrowed to districts and talukas in the portal)</label>${SDIVS.map(([v]) => `<label class="chk"><input type="checkbox" data-sanndiv="${v}" ${a.divs.includes(v) ? 'checked' : ''}> ${v}</label>`).join('')}
+    <div class="msg ${n ? 'note' : 'err'}" id="s-ann-n">${n ? `${n.toLocaleString('en-IN')} will receive it (sample count).` : 'No one is chosen.'}</div>
+    ${a.to !== 'officers' ? `<label class="chk"><input type="checkbox" data-bind="sa.sms" ${a.sms && S.sms ? 'checked' : ''} ${S.sms ? '' : 'disabled'}> Also send an SMS to sellers ${S.sms ? '' : '<span class="tag">Waiting on the SMS gateway</span>'}</label>` : ''}
+    ${S.err ? `<div class="msg err">${esc(S.err)}</div>` : ''}
+    <button type="button" class="btn main" id="s-publish" data-act="s-publish" ${ok ? '' : 'disabled'}>Publish</button><button type="button" class="btn alt" data-act="ann-cancel">Cancel</button>` };
+};
+function sannCount(a) { const sellers = a.to === 'officers' ? 0 : a.divs.length * Math.round(6500 * a.inputs.length / 3); const officers = a.to === 'sellers' ? 0 : a.divs.length * 70; return sellers + officers; }
+// acts that open forms (no server act)
+const qactSBase = qact;
+qact = function (a, t) {
+  if (a === 's-import' || a === 's-blank') { stgtFill(a === 's-import' ? 'import' : 'blank'); log(a === 's-import' ? 'The circular\'s district-wise figures imported (simulated); the enclosure attached' : 'District targets started blank for the Director QC to enter'); render(); return true; }
+  if (a === 's-ann-new') { S.D.annDraft = { title:'', text:'', to:'sellers', inputs:['S', 'F', 'I'], divs:SDIVS.map((x) => x[0]), sms:false, talukas:[] }; render(); return true; }
+  if (a === 's-mobreq') { S.modal = { kind:'mob', to:'', num:'', ok:false, why:'' }; render(); return true; }
+  return qactSBase(a, t);
+};
+// acts the simulated server takes
+const qactCommitSBase = qactCommit;
+qactCommit = function (a, t) {
+  const D = S.D;
+  if (a === 'decide' && S.role === 'DQC') {
+    const r = D.referrals.find((x) => x.id === t.dataset.id), d = dec(r); if (missingFor(r).length) return true;
+    r.reasons = d.reasons;
+    if (d.out === 'none') { r.status = 'closed'; log(`No action on ${r.firm} (State-level): referral closed; seller and ${r.inspector} told`); toast('Closed with no action.'); render(); return true; }
+    if (d.out === 'back') { r.status = 'back'; r.missing = d.missing; log(`Sent back to ${r.inspector}: ${d.missing}`); toast(`Sent back to ${r.inspector}.`); render(); return true; }
+    const no = String(D.snextOrder++).padStart(4, '0');
+    const status = d.out === 'cancel' ? (d.scope === 'variety' ? `Variety ${d.variety} cancelled` : 'Cancelled') : `${d.scope === 'variety' ? `Variety ${d.variety}` : 'Licence'} suspended until ${d.kind === 'date' ? fmt(d.date) : d.cond}`;
+    D.sorders.push({ no, firm:r.firm, district:r.district || 'Pune', lic:r.lic, out:d.out, kind:d.kind, cond:d.cond, end:fmt(d.date), scope:d.scope, variety:d.variety, date:TODAY, reasons:d.reasons, status, met:'', checked:'', open:d.out === 'suspend' });
+    r.status = 'decided'; r.orderNo = no; r.outcome = `Order ${no} issued: ${status}`;
+    log(`Order DQC-MH/2026/${no} issued (hash fixed): ${status}; takes effect ${TODAY}; names the Commissioner as the appeal authority; seller told; ${r.inspector} told; the DSAOs where the firm operates see it`);
+    toast(`Order ${no} issued.`); go('sorder', no); return true;
+  }
+  if (a === 's-lift') { const o = D.sorders.find((x) => x.no === t.dataset.no); o.open = false; o.lifted = TODAY; o.status = 'In force again (suspension lifted)'; log(`Order DQC-MH/2026/${o.no}: suspension lifted (hash fixed); seller and inspector told`); toast('Suspension lifted.'); render(); return true; }
+  if (a === 's-issue') { const T = D.stgt; if (!stgtOk()) return true; T.status = 'issued'; T.when = TODAY; T.reason = ''; log(`District targets ${T.year} version ${T.version} issued (fixed) to the 8 DJDAs${T.enclosure ? ' with the enclosure' : ''}; each DJDA's "Targets to finalise" opened; binding, no Accept or Return (RMD-75)`); toast('District targets issued.'); render(); return true; }
+  if (a === 's-newver') { const T = D.stgt; if (!T.reason.trim()) return true; T.version += 1; T.status = 'draft'; log(`District targets ${T.year}: version ${T.version} started (reason: ${T.reason}); the DJDAs will see what changed`); T.reason = ''; render(); return true; }
+  if (a === 's-cfg-ok') { const c = D.scfg.find((x) => x.id === t.dataset.id); if (c.mine) return true; c.status = 'approved'; c.when = TODAY; log(`Configuration change approved: ${c.what} ${c.was} → ${c.becomes}, from ${c.from}; ${c.by} told`); S.Q = {}; toast('Approved.'); render(); return true; }
+  if (a === 's-cfg-ret') { const c = D.scfg.find((x) => x.id === t.dataset.id); if (!(S.Q.reasons || '').trim()) return true; c.status = 'returned'; c.when = TODAY; c.reasons = S.Q.reasons.trim(); log(`Configuration change returned to ${c.by}: ${c.reasons}`); S.Q = {}; toast('Returned.'); render(); return true; }
+  if (a === 's-mob-ok') { const m = D.smob.find((x) => x.id === t.dataset.id); m.status = 'done'; const o = D.sofficers.find((x) => x.name === m.who); if (o) o.mobile = m.newNo; log(`Mobile of ${m.who} changed to ${m.newNo} (on the request of ${m.by}); sessions and remembered devices signed out; old and new numbers audited`); toast('Mobile changed.'); render(); return true; }
+  if (a === 's-mob-ret') { const m = D.smob.find((x) => x.id === t.dataset.id); m.status = 'returned'; log(`Mobile-change request for ${m.who} returned to ${m.by}`); toast('Returned to the district office.'); render(); return true; }
+  if (a === 's-prop-ok' || a === 's-prop-no') { const p = D.sprop.find((x) => x.id === t.dataset.id); p.status = a === 's-prop-ok' ? 'confirmed' : 'rejected'; log(a === 's-prop-ok' ? `Transfer confirmed: ${p.who} (${p.code}) to ${p.now}; in effect at once` : `Proposed transfer rejected: ${p.who} stays ${p.was}`); toast(a === 's-prop-ok' ? 'Transfer confirmed.' : 'Rejected.'); render(); return true; }
+  if (a === 's-transfer') { const o = D.sofficers.find((x) => x.id === t.dataset.id); o.post = S.Q.tpost; log(`Transfer recorded: ${o.name} to ${S.Q.tpost} from ${fmt(S.Q.tdate)}; in effect at once`); S.Q = {}; toast('Transfer recorded.'); render(); return true; }
+  if (a === 's-charge') { const o = D.sofficers.find((x) => x.id === t.dataset.id); o.charge = `Additional charge: ${S.Q.cpost}`; log(`Additional charge recorded: ${o.name} holds ${S.Q.cpost}`); S.Q = {}; toast('Additional charge recorded.'); render(); return true; }
+  if (a === 's-units') { const o = D.sofficers.find((x) => x.id === t.dataset.id); o.units = S.Q.units; log(`Units of ${o.name} changed: ${o.units}`); S.Q = {}; toast('Units changed.'); render(); return true; }
+  if (a === 's-deact') { const o = D.sofficers.find((x) => x.id === t.dataset.id); o.state = 'Deactivated'; log(`${o.name} deactivated (${S.Q.why}); sessions and remembered devices signed out`); S.Q = {}; toast('Deactivated.'); render(); return true; }
+  if (a === 's-remind') { D.sreminded[t.dataset.who] = TODAY; log(`Reminder sent to ${t.dataset.who}`); toast(`Reminder sent to ${t.dataset.who}.`); render(); return true; }
+  if (a === 's-find') { const i = D.sacts.findIndex((x) => x.id === t.dataset.id); const l = D.sacts.splice(i, 1)[0]; D.sfound.push({ who:l.who, step:l.step, v:t.dataset.v + (l.moreV ? ` · more time ${l.moreV}` : '') }); log(`Finding on ${l.who}: ${t.dataset.v}; counted in the Time limits figures; ${l.who} told`); toast(`Found ${t.dataset.v.toLowerCase()}.`); render(); return true; }
+  if (a === 's-more') { const l = D.sacts.find((x) => x.id === t.dataset.id); l.moreV = t.dataset.v; l.more = ''; log(`${l.who}: request for more time ${t.dataset.v}`); toast(`More time ${t.dataset.v}.`); render(); return true; }
+  if (a === 's-dl') { log(`Downloaded ${['sample-collection-against-targets', 'manufacturer-inspections', 'storage-and-sale-centre-inspections'][+t.dataset.i]}-maharashtra-2026-11.${t.dataset.f} (simulated)`); toast('Downloaded (simulated).'); render(); return true; }
+  if (a === 's-publish') {
+    const an = S.D.annDraft, n = sannCount(an); if (!(an.title.trim() && an.text.trim() && n)) return true;
+    const to = `${an.to === 'officers' ? 'Officers' : an.to === 'sellers' ? 'Sellers' : 'Sellers and officers'} · ${an.divs.length === SDIVS.length ? 'all divisions' : an.divs.join(', ')} · ${n.toLocaleString('en-IN')} recipients (sample)`;
+    S.D.sann.unshift({ title:an.title, to, sms:!!(an.sms && S.sms), when:TODAY }); S.D.annDraft = null; log(`Announcement published by the Director QC: "${an.title}" to ${to}`); toast('Published.'); render(); return true;
+  }
+  if (a === 's-mob-send') {
+    const m = S.modal; if (!(m.to && m.num.trim() && m.ok)) return true;
+    D.smob.push({ id:`MB${D.smob.length + 1}`, who:m.to, post:'Inspector (Pune)', now:'on record', newNo:m.num.trim(), by:ROLE_NAME[S.role] === 'DSAO' ? 'DSAO, Pune' : 'D.Q.C.I., Pune', why:m.why.trim() || 'Identity confirmed at the district office', when:TODAY, status:'waiting' });
+    D.salerts.unshift([`Mobile-change request: ${m.to} (from the ${ROLE_NAME[S.role]}, Pune)`, 'sppl']);
+    log(`Mobile-change request for ${m.to} sent to the Director QC (identity confirmed by the ${ROLE_NAME[S.role]})`); S.modal = null; toast('Sent to the Director QC.'); render(); return true;
+  }
+  return qactCommitSBase(a, t);
+};
+const modalHtmlS = modalHtml;
+modalHtml = function () {
+  const m = S.modal;
+  if (m && m.kind === 'mob') return `<div class="shade"><div class="dialog" role="dialog" aria-label="Request a mobile change"><h2>Request a mobile change</h2>
+    <label class="f">Inspector</label><select class="t" data-bind="mob.to"><option value="">Choose an inspector of the district</option>${INSPECTORS.map((p) => `<option ${m.to === p ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select>
+    <label class="f">New mobile number</label><input class="t" value="${esc(m.num)}" data-bind="mob.num" placeholder="10 digits">
+    <label class="f">What happened (optional)</label><input class="t" value="${esc(m.why)}" data-bind="mob.why" placeholder="e.g. phone lost on 20 Nov 2026">
+    <label class="chk"><input type="checkbox" data-bind="mob.ok" ${m.ok ? 'checked' : ''}> I have confirmed in person who the inspector is (UXD-10)</label>
+    <button type="button" class="btn main" id="s-mob-send" data-act="s-mob-send" ${m.to && m.num.trim() && m.ok ? '' : 'disabled'}>Send to the Director QC</button><button type="button" class="btn alt" data-act="close">Cancel</button></div></div>`;
+  return modalHtmlS();
+};
+const bindSBase = bind;
+bind = function (el, changed) {
+  const b = el.dataset && el.dataset.bind;
+  if (el.dataset && el.dataset.st) { const [d, i] = el.dataset.st.split('.'); S.D.stgt.fig[d][i] = +el.value || 0; if (changed) { render(); return; } const fb = document.getElementById('s-issue'); if (fb) fb.disabled = !stgtOk(); return; }
+  if (b === 's.enclosure') { S.D.stgt.enclosure = el.checked; return; }
+  if (b === 's.reason') { S.D.stgt.reason = el.value; const nb = document.getElementById('s-newver'); if (nb) nb.disabled = !el.value.trim(); return; }
+  if (b && b.startsWith('sa.')) { const a = S.D.annDraft, f = b.slice(3); a[f] = el.type === 'checkbox' ? el.checked : el.value; const p = document.getElementById('s-publish'); if (p) p.disabled = !(a.title.trim() && a.text.trim() && sannCount(a)); return; }
+  if (b && b.startsWith('mob.')) { const m = S.modal, f = b.slice(4); m[f] = el.type === 'checkbox' ? el.checked : el.value; const s = document.getElementById('s-mob-send'); if (s) s.disabled = !(m.to && m.num.trim() && m.ok); return; }
+  if (b === 'q.reasons' && S.role === 'DQC') { S.Q.reasons = el.value; const r = document.getElementById('s-cfg-ret'); if (r) r.disabled = !el.value.trim(); return; }
+  if (S.role === 'DQC' && S.route === 'sofc' && b && b.startsWith('q.')) { S.Q[b.slice(2)] = el.value; if (changed || el.tagName === 'SELECT' || el.type === 'date') render(); else { const dz = document.querySelector('[data-act="s-deact"]'); if (dz) dz.disabled = !(S.Q.why || '').trim(); } return; }
+  return bindSBase(el, changed);
+};
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-schip],[data-soff],[data-sannto]'); if (!t) return;
+  if (t.dataset.schip) S.D.schip = t.dataset.schip; if (t.dataset.soff) S.D.soff = t.dataset.soff; if (t.dataset.sannto) S.D.annDraft.to = t.dataset.sannto;
+  render();
+});
+document.addEventListener('change', (e) => {
+  const el = e.target; if (!el.dataset || !el.dataset.sanndiv) return;
+  const a = S.D.annDraft; a.divs = el.checked ? [...a.divs, el.dataset.sanndiv] : a.divs.filter((x) => x !== el.dataset.sanndiv); render();
+});
+const fireEventSBase = fireEvent;
+fireEvent = function (ev) {
+  const D = S.D;
+  if (ev === 'reset') { S.D = fresh(); S.dec = {}; S.back = []; S.chip = 'all'; S.Q = {}; log('All sample data reset'); go('home', null, false); return; }
+  if (ev === 's-cfg') { D.scfg.push({ id:`C${D.scfg.length + 1}`, what:'Service level SMP-02, send a sample to the laboratory', was:'7 days', becomes:'5 days', by:'State administrator (sample)', why:'Laboratories ask for fresher samples (sample).', from:'01 Jan 2027', status:'waiting' }); D.salerts.unshift(['Configuration change to approve: SMP-02', 'scfgs']); log('State administrator prepared a configuration change (SMP-02, 7 to 5 days)'); render(); return; }
+  if (ev === 's-prop') { D.sprop.push({ id:`PT${D.sprop.length + 1}`, who:'A.O.(TAO) Ausa (sample)', code:'141120', was:'Inspector, Nilanga (Latur)', now:'Inspector, Ausa (Latur)', when:TODAY, status:'waiting' }); log('Re-import of the Department\'s officer list: one code shows a new taluka; proposed transfer listed'); render(); return; }
+  return fireEventSBase(ev);
+};
+(() => { const g = document.querySelector('[data-ev="reset"]'); if (g) g.insertAdjacentHTML('beforebegin', '<button type="button" class="sc" data-dqc-only data-ev="s-cfg">State administrator prepares a change</button><button type="button" class="sc" data-dqc-only data-ev="s-prop">Officer list re-import proposes a transfer</button>'); })();
+const SJUMP = [['home', 'S-01 Home: Waiting on you'], ['sdiv:Nashik', 'S-02 A division'], ['srefs', 'S-03 State-level licences'], ['sref:SR1', 'S-04 A State-level referral'], ['sorders', 'S-05 Orders and suspensions'], ['sorder:0021', 'S-06 Order with condition met'], ['stgt', 'S-07 District targets'], ['scfgs', 'S-08 Configuration changes'], ['scfg:C1', 'S-09 A change to approve'], ['scfg:C3', 'S-09 One you prepared (refused)'], ['sppl', 'S-10 Officers and posts'], ['sofc:O1', 'S-11 An inspector'], ['slate', 'S-12 Late acts and legal limits'], ['srep', 'S-13 Reports (downloads)'], ['dash', 'S-14 State dashboard'], ['inspect', 'S-15 Inspect'], ['alerts', 'S-16 Alerts'], ['people', 'Inspectors in your area (the State)'], ['ann', 'D-16 Announcements (shared)'], ['refs', 'A DSAO screen (refused)'], ['jcons', 'A DJDA screen (refused)']];
+
 /* ---------- controls ---------- */
 function renderControls() {
   document.getElementById('roles').innerHTML = ROLES.map(([r, on]) => {
-    const key = r === 'D.Q.C.I.' ? 'DQCI' : r;
+    const key = r === 'D.Q.C.I.' ? 'DQCI' : r === 'Director QC' ? 'DQC' : r;
     const title = r === 'Inspector' ? `title="Opens the inspector prototype as its sample field inspector (${FIELD_INSPECTOR_CODE}); the inspector screens are the inspector workstream's"` : (on ? '' : 'title="Not designed yet: its Gate 2 has not started"');
     return `<button type="button" ${on ? `data-role="${key}"` : 'disabled'} aria-pressed="${key === S.role}" ${title}>${esc(r)}${on ? '' : ' · not yet'}</button>`;
   }).join('');
   document.getElementById('c-empty-label').textContent = `Nothing waits on the ${ROLE_NAME[S.role]} (empty states)`;
-  document.getElementById('jump').innerHTML = (S.role === 'DQCI' ? QJUMP : S.role === 'DJDA' ? JJUMP : DJUMP).map(([g, t]) => `<button type="button" class="sc" data-go="${esc(g)}">${esc(t)}</button>`).join('');
+  document.getElementById('jump').innerHTML = (S.role === 'DQCI' ? QJUMP : S.role === 'DJDA' ? JJUMP : S.role === 'DQC' ? SJUMP : DJUMP).map(([g, t]) => `<button type="button" class="sc" data-go="${esc(g)}">${esc(t)}</button>`).join('');
   document.querySelectorAll('[data-dsao-only]').forEach((el) => { el.style.display = S.role === 'DSAO' ? '' : 'none'; });
+  document.querySelectorAll('[data-dqc-only]').forEach((el) => { el.style.display = S.role === 'DQC' ? '' : 'none'; });
 }
 const QJUMP = [['home', 'Q-01 Home: Due for you'], ['mfg', 'Q-02 Manufacturers due'], ['unit:M5', 'Q-03 An overdue unit'], ['grades', 'Q-04 Sampling by company and grade'], ['forum', 'Q-05 Consumer-forum register'], ['fcase:C1', 'Q-06 A case with a hearing soon'], ['inspect', 'Q-07 Inspect'], ['alerts', 'Q-08 Alerts'], ['dash', 'D-18 Dashboard (shared)'], ['people', 'D-19 Inspectors in your area (shared)'], ['who:A.O.(TAO) Baramati', 'D-11 An inspector\'s items (shared)'], ['ann', 'D-16 Announcements (shared)'], ['refs', 'A DSAO screen (refused)']];
 const DJUMP = [['home', 'D-01 Home'], ['refs', 'D-02 Licence referrals'], ['ref:R1', 'D-03 Referral (Patil Traders)'], ['ref:R5', 'D-03 State-level licence (exception)'], ['orders', 'D-04 Orders and suspensions'], ['order:0139', 'D-05 Order with condition met'], ['divs', 'D-06 Shop divisions'], ['div:Baramati', 'D-07 Division to approve'], ['late', 'D-08 Late steps'], ['insp', 'D-09 Inspections'], ['who:A.O.(TAO) Baramati', 'D-11 An inspector\'s items'], ['samp', 'D-12 Sampling watch'], ['court', 'D-13 Court cases'], ['seized', 'D-14 Seized stock'], ['intel', 'D-15 Intelligence sent'], ['ann', 'D-16 Announcements'], ['dash', 'D-18 Dashboard'], ['people', 'D-19 Inspectors in your area'], ['inspect', 'D-20 Inspect'], ['alerts', 'D-21 Alerts']];
