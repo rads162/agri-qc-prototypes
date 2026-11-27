@@ -89,6 +89,7 @@ button.card { display:block; width:100%; text-align:left; cursor:pointer; }
 .kv dt { color:var(--soft); } .kv dd { margin:0; }
 .ghost { color:var(--soft); }
 .getapp { display:flex; justify-content:space-between; align-items:center; gap:8px; border:1px dashed var(--line); border-radius:6px; padding:6px 10px; margin-top:12px; font-size:12px; }
+.tl .card.tlp { margin-top:6px; padding:6px 10px; }
 /* the panel beside the phone */
 .panel { background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:14px 16px; }
 .panel h2 { font-size:16px; } .panel h3 { border-top:1px solid var(--fill); padding-top:12px; }
@@ -273,7 +274,7 @@ const W = {
   getApp: ['Get the app', 'ॲप मिळवा'], getAppLine: ['Use the seller portal as an app on this phone.', 'हे पोर्टल या फोनवर ॲप म्हणून वापरा.'],
   otherItems: ['{n} other items need your attention', 'आणखी {n} बाबींकडे लक्ष द्यायचे आहे'], oneOther: ['1 other item needs your attention', 'आणखी 1 बाबीकडे लक्ष द्यायचे आहे'],
   what: ['What it is', 'हे काय आहे'], why: ['Why', 'का'], must: ['What you must do', 'आपण काय करायचे'], byWhen: ['By when', 'कधीपर्यंत'], next: ['What happens next', 'पुढे काय होईल'],
-  papersIn: ['Papers in this matter', 'या प्रकरणातील कागदपत्रे'], happened: ['What happened', 'काय घडले'], contact: ['Who to contact', 'संपर्क'],
+  happened: ['What happened', 'काय घडले'], contact: ['Who to contact', 'संपर्क'],
   reply: ['Reply', 'उत्तर द्या'], submitReply: ['Submit reply', 'उत्तर सादर करा'], addReply: ['Add to my reply', 'माझ्या उत्तरात भर घाला'],
   contest: ['Give contest notice', 'हरकतीची सूचना द्या'], daysLeft: ['by {d} · {n} days left', '{d} पर्यंत · {n} दिवस बाकी'], dayLeft: ['by {d} · last day', '{d} पर्यंत · शेवटचा दिवस'],
   late: ['Late: the period ended on {d}. You can still reply; it will be marked late.', 'उशीर: मुदत {d} रोजी संपली. आपण अजूनही उत्तर देऊ शकता; ते उशिराचे म्हणून नोंदवले जाईल.'],
@@ -767,15 +768,19 @@ SCR.matter = function () {
   <dt>${t('must')}</dt><dd>${esc(f.must)}</dd>
   ${f.by && withBy ? `<dt>${t('byWhen')}</dt><dd>${dateBanner(f.by)}</dd>` : ''}
   <dt>${t('next')}</dt><dd>${esc(f.next)}</dd></dl>`;
-  const papersH = m.papers.length ? `<h3>${t('papersIn')}</h3>${m.papers.map((p) => `<button class="card" data-act="openPaper" data-p="${p.id}"><b>${esc(p.form)}</b><span class="hint">${esc(p.no)} · ${fd(p.date)}${p.esign ? ' · eSign' : ''}</span></button>`).join('')}` : '';
-  const tm = tlMap(m);
-  const tlH = `<h3>${t('happened')}</h3><ul class="tl">${m.tl.map(([d, en, mr], i) => `<li><span>${fd(d)}</span><br>${esc(bi(en, mr))}${tm[i].length ? `<br>${tm[i].map((id) => { const p = m.papers.find((x) => x.id === id); return `<button class="lnk" data-act="openPaper" data-p="${id}">${esc(pShort(p))} ›</button>`; }).join(' · ')}` : ''}</li>`).join('')}</ul>`;
+  // SXD-32: one timeline. Each paper is a card on the line of the event that issued it; a paper with no line of its own
+  // date gets a line "{paper} issued" in date order, so no paper is ever left out (the separate "Papers in this matter" block is gone)
+  const tm = tlMap(m); const placed = new Set(tm.flat());
+  const lines = [...m.tl.map(([d, en, mr], i) => ({ d, txt: bi(en, mr), ids: tm[i] })), ...m.papers.filter((p) => !placed.has(p.id)).map((p) => ({ d: p.date, txt: p.kind === 'report' ? bi(`${pShort(p)} released by the laboratory`, `${pShort(p)} प्रयोगशाळेने प्रसिद्ध केला`) : bi(`${pShort(p)} issued`, `${pShort(p)} जारी`), ids: [p.id] }))]
+    .map((x, k) => ({ ...x, k })).sort((x, y) => day(x.d) - day(y.d) || x.k - y.k);
+  const pCard = (id) => { const p = m.papers.find((x) => x.id === id); return `<button class="card tlp" data-act="openPaper" data-p="${id}"><b>${esc(pShort(p))}</b><span class="hint">${esc(p.no)}${p.esign ? ' · eSign' : ''} ›</span></button>`; };
+  const tlH = `<h3>${t('happened')}</h3><ul class="tl">${lines.map((x) => `<li><span>${fd(x.d)}</span><br>${esc(x.txt)}${x.ids.map(pCard).join('')}</li>`).join('')}</ul>`;
   const contactH = `<h3>${t('contact')}</h3><p style="margin:2px 0">${esc(o.office)}<br><span class="hint">${esc(o.name)}, ${esc(o.des)}</span></p><p class="hint">${t('noPhone')}</p>`;
-  // desktop: the matter and its papers on the left; by when, the action, the timeline and the contact on the right (`10` section 8)
-  if (desk()) return chrome(two(`${head}${fiveH(false)}${sampleInfo}${upInfo}${reply}${outcome}${papersH}`, `${f.by ? `<h3 style="margin-top:4px">${t('byWhen')}</h3>${dateBanner(f.by)}` : ''}${btn}${addBtn}${fertPanel}${tlH}${contactH}`), { title: kindWord(m.kind), back: true, wide: true });
+  // desktop: the matter on the left; by when, the action, the timeline with its papers and the contact on the right (`10` section 8)
+  if (desk()) return chrome(two(`${head}${fiveH(false)}${sampleInfo}${upInfo}${reply}${outcome}`, `${f.by ? `<h3 style="margin-top:4px">${t('byWhen')}</h3>${dateBanner(f.by)}` : ''}${btn}${addBtn}${fertPanel}${tlH}${contactH}`), { title: kindWord(m.kind), back: true, wide: true });
   return chrome(`${head}${fiveH(true)}
   ${btn}${addBtn}${fertPanel}${sampleInfo}${upInfo}${reply}${outcome}
-  ${papersH}${tlH}${contactH}`, { title: kindWord(m.kind), back: true });
+  ${tlH}${contactH}`, { title: kindWord(m.kind), back: true });
 };
 
 /* SXD-28: which timeline line each paper belongs to. A line may name its papers (a fourth element); otherwise a paper goes
