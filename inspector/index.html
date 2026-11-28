@@ -7502,6 +7502,95 @@ function dlLayout() {
 const dlRender = render;
 render = function (...a) { const r = dlRender.apply(this, a); try { dlLayout(); } catch (e) { console.error(e); } return r; };
 
+/* ---------------- UXD-242: who the person present is. Picked from the names on the licence (e-Parwana; shown once the
+   Department allows, D-135, DQ-295) or "Someone else" with a name and a role; the mobile as given. Where they eSign, the
+   name the eSign carries (as Aadhaar holds it) is shown beside the name given. Where nobody signs (start, notice,
+   seizure), the code goes to the registered mobile; when that phone is not at the shop, to the person present's mobile,
+   and the licence holder is told. No photo of an identity card. ---------------- */
+const FIRM_PEOPLE = { F1: [['Suresh Jadhav', 'Proprietor']], F2: [['Mohsin Shaikh', 'Proprietor']], F3: [['Rajesh Patil', 'Proprietor'], ['Anil Patil', 'Partner']], F4: [['Vinod Patil', 'Proprietor']] };
+const PP_ROLES = ['Owner', 'Manager', 'Employee', 'Family member', 'Other'];
+const ppOf = (j) => j.pp || (j.pp = { pick: '', name: '', role: '', mobile: '' });
+const ppLic = (j) => FIRM_PEOPLE[j.firm] || [];
+const ppName = (j) => { const p = ppOf(j); const l = ppLic(j); return p.pick !== '' && p.pick !== 'other' && l[+p.pick] ? l[+p.pick][0] : (p.name || '').trim(); };
+const ppText = (j) => { const p = ppOf(j); const l = ppLic(j); const nm = ppName(j); if (!nm) return '';
+  const r = p.pick !== '' && p.pick !== 'other' && l[+p.pick] ? `${l[+p.pick][1]}, on the licence` : (p.role || 'role not given');
+  return `${nm} (${r})${/^\d{10}$/.test(p.mobile || '') ? ` · mobile ending ${p.mobile.slice(-2)}` : ''}`; };
+function ppField(j, needMobile) {
+  const p = ppOf(j); const l = ppLic(j); const other = p.pick === 'other' || !l.length;
+  return `<div class="ppf"><label class="f">Person present${needMobile ? ' *' : ''}</label>
+    ${l.length ? `<div class="chips" style="flex-wrap:wrap">${l.map(([nm, r], i) => `<button data-act="ppPick" data-i="${i}" aria-pressed="${p.pick === String(i)}">${esc(nm)} · ${esc(r)}</button>`).join('')}<button data-act="ppPick" data-i="other" aria-pressed="${p.pick === 'other'}">Someone else</button></div><span class="hint">Names on the licence (e-Parwana).</span>` : ''}
+    ${other ? `<label class="f" for="pp_name">Name *</label><input class="t" id="pp_name" data-ppx="name" value="${esc(p.name)}">
+      <label class="f">Role *</label><div class="chips" style="flex-wrap:wrap">${PP_ROLES.map((r) => `<button data-act="ppRole" data-r="${r}" aria-pressed="${p.role === r}">${r}</button>`).join('')}</div>` : ''}
+    <label class="f" for="pp_mob">Mobile${needMobile ? ' *' : ' (if they give it)'}</label><input class="t" id="pp_mob" data-ppx="mobile" inputmode="numeric" maxlength="10" value="${esc(p.mobile)}"></div>`;
+}
+const ppReady = (j) => !!ppName(j) && (ppOf(j).pick !== 'other' && ppLic(j).length ? true : !!ppOf(j).role) && /^\d{10}$/.test(ppOf(j).mobile || '');
+Object.assign(ACT, {
+  ppPick: (b) => { const p = ppOf(J()); p.pick = b.dataset.i; if (p.pick !== 'other') { p.name = ''; p.role = ''; } render(); },
+  ppRole: (b) => { ppOf(J()).role = b.dataset.r; render(); },
+});
+// Review: the person present (replaces the free-text field)
+const ppReview = PLACES.review;
+PLACES.review = (...a) => ppReview(...a).replace(/<label class="f" for="rv_pp">Person present<\/label><input class="t" id="rv_pp"[^>]*>/, () => `${ppField(J(), false)}<span class="hint" style="display:block">Left empty, the notice names the licence holder.</span>`);
+// the start's code: the registered mobile; when that phone is not here, the person present's
+const ppCode = codeCard;
+codeCard = function (k, title, msg) {
+  const j = J(); let h = ppCode(k, title, msg); if (!h) return h; const c = j.codes[k];
+  const toPp = c.to === 'pp' || !regMobile(j);
+  if (toPp) {
+    h = h.replace("A code goes to the licence holder's registered mobile:", "A code goes to the mobile of the person present; the licence holder is told by SMS:");
+    if (!c.code) h = h.replace(/(<button class="btn main" data-act="scSend"[^>]*>)[^<]*/, `${ppField(j, true)}$1Send the code to this mobile`);
+  } else if (!c.code && !c.why) h = h.replace(/(<button class="btn main" data-act="scSend"[^>]*>)[^<]*(<\/button>)/, `$1Send the code to the registered mobile (ending ${esc(regMobile(j).slice(-2))})$2<button class="lnk" data-act="scToPp" data-k="${k}">The registered phone is not at the shop: send it to the person present</button>`);
+  return h;
+};
+const ppScSend = ACT.scSend;
+ACT.scToPp = (b) => { J().codes[b.dataset.k].to = 'pp'; render(); };
+ACT.scSend = (b) => {
+  const j = J(); const c = j.codes[b.dataset.k]; if (!(c.to === 'pp' || !regMobile(j))) return ppScSend(b);
+  if (!ppReady(j)) { c.err = 'Choose the person present (name and role) and give their 10-digit mobile.'; return render(); }
+  if (noSignal()) { c.err = 'The code needs signal. Your entries are saved.'; return render(); }
+  c.err = ''; c.code = String(Math.floor(100000 + Math.random() * 899999)); c.ppTo = ppText(j);
+  log(`one-time code sent to the person present, ${ppText(j)} (${b.dataset.k}); the licence holder told by SMS (UXD-242)`); render();
+};
+// the notice's and the seizure's dealer screens: the same rule
+const ppNd = PLACES.ndealer;
+PLACES.ndealer = (...a) => {
+  const d = S.ndl; const j = J(); let h = ppNd(...a); if ((d.view && d.view !== 'code') || anyFirm(j.firm).unlisted) return h;
+  if (!d.sent && !d.toPp) return h.replace('<button class="btn alt" data-act="j6send">Send the code to my mobile</button>', `<button class="btn alt" data-act="j6send">Send the code to the registered mobile (ending ${esc(regMobile(j).slice(-2))})</button><button class="lnk" data-act="ppDlTo" data-k="n">The registered phone is not here: send it to my mobile</button>`);
+  if (!d.sent) return h.replace('<button class="btn alt" data-act="j6send">Send the code to my mobile</button>', `${ppField(j, true).replace('Person present *', 'Who you are *')}<button class="btn alt" data-act="j6send">Send the code to this mobile</button><p class="hint">The licence holder is told by SMS on the registered mobile.</p>`);
+  return h;
+};
+const ppJ7 = PLACES.j7dealer;
+PLACES.j7dealer = (...a) => {
+  const d = S.j7d; const j = J(); let h = ppJ7(...a); if (d.view !== 'code') return h;
+  if (!d.sent && !d.toPp) return h.replace('<button class="btn alt" data-act="j7send">Send the code to my mobile</button>', `<button class="btn alt" data-act="j7send">Send the code to the registered mobile (ending ${esc((regMobile(j) || '10').slice(-2))})</button><button class="lnk" data-act="ppDlTo" data-k="z">The registered phone is not here: send it to my mobile</button>`);
+  if (!d.sent) return h.replace('<button class="btn alt" data-act="j7send">Send the code to my mobile</button>', `${ppField(j, true).replace('Person present *', 'Who you are *')}<button class="btn alt" data-act="j7send">Send the code to this mobile</button><p class="hint">The licence holder is told by SMS on the registered mobile.</p>`);
+  return d.toPp ? h.replace('Code sent to the mobile ending 10', `Code sent to the mobile ending ${esc((ppOf(j).mobile || '').slice(-2))}`) : h;
+};
+ACT.ppDlTo = (b) => { (b.dataset.k === 'n' ? S.ndl : S.j7d).toPp = true; render(); };
+const ppJ6send = ACT.j6send;
+ACT.j6send = (b) => { const d = S.ndl; const j = J(); if (!d.toPp) return ppJ6send(b); if (!ppReady(j)) { d.err = 'Choose who you are (name and role) and give your 10-digit mobile.'; return render(); } d.mobile = ppOf(j).mobile; if (noSignal()) { d.err = 'The code needs signal.'; return render(); } d.sent = true; d.err = ''; d.code = String(Math.floor(100000 + Math.random() * 899999)); log(`notice code sent to the person present, ${ppText(j)}; the licence holder told by SMS (UXD-242)`); render(); };
+const ppJ7send = ACT.j7send;
+ACT.j7send = (b) => { const d = S.j7d; const j = J(); if (!d.toPp) return ppJ7send(b); if (!ppReady(j)) { d.err = 'Choose who you are (name and role) and give your 10-digit mobile.'; return render(); } if (noSignal()) { d.err = 'The code needs signal.'; return render(); } d.sent = true; d.err = ''; d.code = String(Math.floor(100000 + Math.random() * 899999)); log(`${d.kind} code sent to the person present, ${ppText(j)}; the licence holder told by SMS (UXD-242)`); render(); };
+// the visit card names the person present and who received the start's code
+const ppVisit = visitCard;
+visitCard = function (j) {
+  let h = ppVisit(j); if (!h) return h; const t = ppText(j); const c = (j.codes || {}).start;
+  if (c && c.done === 'code' && c.ppTo) h = h.replace("confirmed by the shop's code", `confirmed by the code sent to ${esc(c.ppTo.split(' (')[0])}`);
+  return t ? h.replace(/(<b>The visit<\/b><br>)/, `$1Person present: ${esc(t)}<br>`) : h;
+};
+// eSign: the name the eSign carries (as Aadhaar holds it), beside the name given
+const esAsOf = (who) => { const m = /\(([^)]+)\)/.exec(who || ''); const nm = m ? m[1] : (/dealer|seller|representative/i.test(who || '') && S.j ? ppName(S.j) : ''); return nm ? nm.toUpperCase() : ''; };
+const ppEsText = esText;
+esText = function (key) { const e = ES[key]; if (e && e.state === 'esigned' && e.as === undefined) e.as = esAsOf(e.who); const t = ppEsText(key); return e && e.state === 'esigned' && e.as ? t.replace(/^eSigned (\S+)/, `eSigned $1 as ${e.as}`) : t; };
+// keep the typed fields
+const ppRender = render;
+render = function (...a) {
+  const j = S.j; if (j && S.place === 'review' && typeof rvDraft === 'function') { const nm = ppName(j); if (nm) rvDraft(j).person = nm; }
+  const r = ppRender.apply(this, a);
+  document.querySelectorAll('#phone [data-ppx]').forEach((el) => el.addEventListener('input', () => { if (S.j) ppOf(S.j)[el.dataset.ppx] = el.value; }));
+  return r;
+};
+
 // The owner of the shared page sees the prototype controls; everyone else only the phone screen.
 (async () => {
   try {
