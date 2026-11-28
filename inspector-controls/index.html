@@ -330,6 +330,8 @@ html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:cente
       <label><input type="checkbox" id="cLocOff"> Location off on the phone</label>
       <label><input type="checkbox" id="cNoFix"> Phone cannot find a position (location on)</label>
       <label><input type="checkbox" id="cAway"> Away from the shop at completion (about 12 km)</label>
+      <label><input type="checkbox" id="cESDown"> eSign service (C-DAC) down</label>
+      <div class="row" style="gap:6px;margin:4px 0"><button type="button" class="sc" id="esDay">A day passes (eSign links)</button><button type="button" class="sc" id="esFirmSigns">The firm signs its waiting links</button></div>
     </div>
     <div class="grid2" style="margin-top:6px">
       <button id="aSkipWait">Skip the 1-minute "Send again" wait</button>
@@ -7278,7 +7280,7 @@ function codeLayout() {
   const ph = $('phone'); if (!ph) return;
   const kill = (sel) => ph.querySelectorAll(sel).forEach((el) => el.remove());
   if (!CODE_ON.notice) kill('[data-act="j6dealer"]');
-  if (!CODE_ON.order) kill('[data-act="j7dealerOpen"][data-k="order"]');
+  /* UXD-236: the stop order is eSigned by the dealer, never a code switch */
   if (!CODE_ON.seizure) kill('[data-act="j7dealerOpen"][data-k="seizure"]');
   // a sample shown without a code reads so, not as "could not confirm"
   const w = document.createTreeWalker(ph, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (/No code asked/.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) });
@@ -7288,6 +7290,151 @@ function codeLayout() {
 }
 const codeRender = render;
 render = function (...a) { const r = codeRender(...a); codeLayout(); return r; };
+render();
+/* ---------------- ESIGN_BLOCK. UXD-236 to UXD-240 (the owner, 2026-11-28): every signature of the as-is process is an eSign
+   (C-DAC, Aadhaar), shown exactly as it will work once integrated (UXD-237): the dealer on the sample (Form VIII line or
+   Form V(C) receipt), the dealer on the stop sale order, the seller or representative on the inspection report at Finish,
+   the persons present (Form VIII) and the witnesses (Form V(C)), the complainant and the company's representative (cotton
+   Form H). On the inspector's phone; or "Sign later by link": a one-day link, sent again each day, 3 counted days at most,
+   days with the eSign service down not counted; then the inspector notes the response as at the shop. Never blocks. The
+   one-time code stays only where nobody signs today (start, notice, seizure receipt: UXD-234 switches). ---------------- */
+const ES = {}; const ESCB = {}; let ESX = null;
+const ES_LIMIT = 3;
+const ES_AT_SHOP = ['Refused to sign', 'Not present', 'No Aadhaar-linked phone with them', 'Other'];
+const ES_AFTER_LINKS = ['Refused to sign', 'Did not respond', 'Other'];
+const esDown = () => $('cESDown') && $('cESDown').checked;
+function esText(key) {
+  const e = ES[key]; if (!e) return 'not yet signed';
+  if (e.state === 'esigned') return `eSigned ${e.at}${e.link ? ' on their own phone (by the link)' : ''}`;
+  if (e.state === 'awaiting') return `eSign awaited · link ${e.links} sent${e.skipped ? ` · ${e.skipped} day${e.skipped > 1 ? 's' : ''} not counted (the eSign service was down)` : ''}`;
+  if (e.state === 'expired') return `Not signed after ${e.counted} links · the inspector is to record the response`;
+  return `not signed: ${e.why}${e.note ? ` (${e.note})` : ''}`;
+}
+function esOpen(key, who, paper, cb, list) { ES[key] = ES[key] && ES[key].state === 'esigned' ? ES[key] : (ES[key] || { who, paper }); ES[key].who = who; ES[key].paper = paper; ESCB[key] = cb; ESX = { key, who, paper, step: list === 'after' ? 'cannot' : 'page', list: list || 'shop', aad: '', otp: '', code: '', why: '', note: '', err: '' }; render(); }
+function esFinish(state, extra) {
+  const k = ESX.key; ES[k] = { ...ES[k], ...extra, state }; const cb = ESCB[k]; ESX = null;
+  log(`eSign · ${ES[k].who} · ${ES[k].paper}: ${esText(k)} (UXD-236)`); if (cb) cb(ES[k]); render();
+}
+function esPanel() {
+  if (!ESX) return '';
+  const x = ESX; const sim = '<div class="sim">SIMULATED: the C-DAC eSign page. The portal never sees the Aadhaar number.</div>';
+  let body = '';
+  if (x.step === 'page') body = `<b id="dh">eSign · C-DAC</b><p style="font-size:13px">${esc(x.who)} signs: ${esc(x.paper)}.</p>${sim}
+    ${x.err ? `<div class="msg err">${esc(x.err)}</div>` : ''}<label class="f" for="es_aad">Aadhaar number or Virtual ID</label><input class="t" id="es_aad" inputmode="numeric" maxlength="16" value="${esc(x.aad)}">
+    <button class="btn main" data-act="esOtp">Get the one-time password</button>
+    <button class="btn alt" data-act="esLink">Sign later by link</button><button class="lnk" data-act="esCannot">Cannot sign now</button><button class="lnk" data-act="esClose">Back</button>`;
+  else if (x.step === 'otp') body = `<b id="dh">eSign · C-DAC</b><p style="font-size:13px">A one-time password has gone to the mobile linked with this Aadhaar.</p><div class="sim">SIMULATED: the password on the signer's phone: <b>${x.code}</b></div>
+    ${x.err ? `<div class="msg err">${esc(x.err)}</div>` : ''}<label class="f" for="es_otp">One-time password</label><input class="t otp" id="es_otp" inputmode="numeric" maxlength="6" value="${esc(x.otp)}">
+    <button class="btn main" data-act="esSign">Sign</button><button class="lnk" data-act="esOtp">Send it again</button><button class="btn alt" data-act="esLink">Sign later by link</button>`;
+  else if (x.step === 'down') body = `<b id="dh">eSign could not be completed</b><p style="font-size:13px">The eSign service is not available right now. Try again, or send the link so ${esc(x.who.toLowerCase())} signs later.</p>
+    <button class="btn main" data-act="esRetry">Try again</button><button class="btn alt" data-act="esLink">Sign later by link</button><button class="lnk" data-act="esClose">Back</button>`;
+  else if (x.step === 'cannot') { const opts = x.list === 'after' ? ES_AFTER_LINKS : ES_AT_SHOP; body = `<b id="dh">${x.list === 'after' ? 'Record the response' : 'Cannot sign now'}</b><p style="font-size:13px">${esc(x.who)} · ${esc(x.paper)}${x.list === 'after' ? ': not signed after the links.' : ''}</p>
+    <div class="chips" style="flex-wrap:wrap">${opts.map((o) => `<button data-act="esWhy" data-o="${o}" aria-pressed="${x.why === o}">${o}</button>`).join('')}</div>
+    <label class="f" for="es_note">Note${x.why === 'Other' ? ' *' : ' (optional)'}</label><input class="t" id="es_note" value="${esc(x.note)}">
+    <p class="hint">Recorded with the paper, as a refusal to sign is noted today. It never stops the act.</p>
+    <button class="btn main" data-act="esRecord" ${x.why ? '' : 'disabled'}>Record</button><button class="lnk" data-act="${x.list === 'after' ? 'esClose' : 'esBack'}">Back</button>`; }
+  return `<div class="shade"><div class="dialog" role="dialog" aria-labelledby="dh">${body}</div></div>`;
+}
+Object.assign(ACT, {
+  esClose: () => { ESX = null; render(); },
+  esBack: () => { ESX.step = 'page'; render(); },
+  esCannot: () => { ESX.step = 'cannot'; render(); },
+  esOtp: () => {
+    const el = $('es_aad'); if (el) ESX.aad = el.value.trim();
+    if (ESX.step === 'page' && !/^(\d{12}|\d{16})$/.test(ESX.aad)) { ESX.err = 'Give the 12-digit Aadhaar number or the 16-digit Virtual ID.'; return render(); }
+    if (esDown()) { ESX.step = 'down'; ESX.err = ''; log('eSign: the C-DAC service did not answer (UXD-240)'); return render(); }
+    ESX.err = ''; ESX.code = String(Math.floor(100000 + Math.random() * 899999)); ESX.step = 'otp'; render();
+  },
+  esRetry: () => { ESX.step = 'page'; ACT.esOtp(); },
+  esSign: () => { const el = $('es_otp'); if (el) ESX.otp = el.value.trim(); if (ESX.otp !== ESX.code) { ESX.err = 'Not right. Check the password on the signer\'s phone.'; return render(); } esFinish('esigned', { at: hhmm(), link: false }); },
+  esLink: () => esFinish('awaiting', { links: 1, counted: 0, skipped: 0, firstDown: esDown() }),
+  esWhy: (b) => { const n = $('es_note'); if (n) ESX.note = n.value; ESX.why = b.dataset.o; render(); },
+  esRecord: () => { const n = $('es_note'); if (n) ESX.note = n.value.trim(); if (!ESX.why) return; if (ESX.why === 'Other' && !ESX.note) { ESX.err = 'Say why.'; return render(); } esFinish('not', { why: ESX.why, note: ESX.note }); },
+  esRespond: (b) => { const e = ES[b.dataset.key]; esOpen(b.dataset.key, e.who, e.paper, null, 'after'); },
+  esEnd: () => { const j = J(); esOpen(`end:${j.no}`, 'The seller or representative', `the inspection report of ${anyFirm(j.firm).name}`, () => { S.esEndOpen = false; ACT.recFinish(); }); },
+});
+// the link's days (controls)
+function esDay() {
+  const down = esDown(); let n = 0;
+  Object.keys(ES).forEach((k) => {
+    const e = ES[k]; if (e.state !== 'awaiting') return; n++;
+    if (down || e.firstDown) { e.skipped = (e.skipped || 0) + 1; e.firstDown = false; e.links += 1; log(`${e.paper}: that day not counted (the eSign service was down); link ${e.links} sent`); return; }
+    e.counted += 1;
+    if (e.counted >= ES_LIMIT) { e.state = 'expired'; log(`${e.paper}: not signed after ${e.counted} links; on the inspector's My work`); return; }
+    e.links += 1; log(`${e.paper}: link ${e.links} sent (firm portal and SMS)`);
+  });
+  if (!n) toast('No eSign link is waiting.'); render();
+}
+function esFirmSigns() { let n = 0; Object.keys(ES).forEach((k) => { const e = ES[k]; if (e.state === 'awaiting') { e.state = 'esigned'; e.at = 'next day 15:20'; e.link = true; n++; log(`${e.paper}: eSigned by the link`); } }); if (!n) toast('No eSign link is waiting.'); render(); }
+(() => { const d = $('esDay'); if (d) d.addEventListener('click', esDay); const f = $('esFirmSigns'); if (f) f.addEventListener('click', esFirmSigns); })();
+// remove the code switches that are now eSigns (UXD-236)
+['end', 'sample', 'order'].forEach((k) => { CODE_ON[k] = false; const el = document.querySelector(`#codePoints [data-code="${k}"]`); if (el) el.closest('label').remove(); });
+(() => { const i = CODE_POINTS.findIndex(([k]) => k === 'end'); if (i >= 0) CODE_POINTS.splice(i, 1); ['sample', 'order'].forEach((k) => { const x = CODE_POINTS.findIndex(([y]) => y === k); if (x >= 0) CODE_POINTS.splice(x, 1); }); })();
+// 1. the dealer on the sample (the dealer's screen)
+const esDealer = PLACES.dealer;
+PLACES.dealer = (...a) => {
+  let h = esDealer(...a); const m = S.smp; if (!m || m.dv === 'back' || m.dv === 'refuse') return h;
+  const btn = `<button class="btn main" data-act="esDealer">Sign with eSign</button><p class="hint">${m.input === 'Seeds' ? 'Your eSign confirms portion 2 and signs this sample\'s line of the memorandum (Form VIII).' : m.input === 'Insecticides' ? 'Your eSign confirms the sealed portion and signs the intimation (Form V(C)) and the receipt.' : 'Your eSign confirms portion 2.'}</p>`;
+  h = h.replace(/<button class="btn main" data-act="dcNoCode">[^<]*<\/button>/, btn).replace('<button class="btn alt" data-act="j5dealerSend">Send the code to my mobile</button>', btn)
+    .replace('<div style="text-align:right"><button class="lnk" data-act="j5refuse">Dealer cannot confirm</button></div>', '');
+  return h;
+};
+ACT.esDealer = () => { const m = S.smp; const key = `smp:${J().no}:${m.k}`; const at = ` · ${J().prods[m.k].name} at ${anyFirm(J().firm).name}`; esOpen(key, 'The dealer', (m.input === 'Seeds' ? 'portion 2 and the memorandum line (Form VIII)' : m.input === 'Insecticides' ? 'the sealed portion, the intimation (Form V(C)) and the receipt' : 'portion 2') + at, () => { m.dsigned = false; m.refusal = `ES:${key}`; m.dv = 'back'; }); };
+// 2. the stop sale order
+const esJ7Open = ACT.j7dealerOpen;
+ACT.j7dealerOpen = (b) => {
+  if (b.dataset.k !== 'order') return esJ7Open(b);
+  const o = S.j.order; const key = `order:${o.no}`; esOpen(key, 'The dealer', `the stop sale order ${o.no} · ${anyFirm(S.j.firm).name}`, () => { o.dealer = `ES:${key}`; });
+};
+// 3. the end of the inspection: the inspection report at Finish
+const esFinishAct = ACT.recFinish;
+ACT.recFinish = (b, e) => { const j = S.j; if (j && !ES[`end:${j.no}`]) { S.esEndOpen = true; return go('inside', { info: 'The seller or representative eSigns the inspection report, as on the paper form today.' }); } return esFinishAct(b, e); };
+const esRecord = PLACES.record;
+PLACES.record = (...a) => {
+  const h = esRecord(...a); const j = S.j; if (!j || !S.esEndOpen || ES[`end:${j.no}`]) return h;
+  const card = `<div class="card" style="text-align:left"><b>The inspection report: the seller or representative signs</b>Every inspection form ends with the seller's or representative's signature. Hand the phone over for the eSign, or send the link.<button class="btn main" data-act="esEnd">Hand the phone over: eSign</button></div>`;
+  return h.replace(/(<\/h2>)/, (m) => m + card);
+};
+// 4. persons present (Form VIII), witnesses (Form V(C)), cotton Form H
+const esWt = ACT.wtSign;
+ACT.wtSign = (b) => { const w = wtOf(S.smp); const i = b.dataset.k; if (!String(w[`p${i}`] || '').trim()) return esWt(b); esOpen(`wt:${J().no}:${S.smp.k}:${i}`, `Person present ${i} (${String(w[`p${i}`]).split(',')[0]})`, `the memorandum (Form VIII) · ${anyFirm(J().firm).name}`, () => esWt(b)); };
+const esVc = ACT.vcSign;
+ACT.vcSign = (b) => { const vc = S.smp.vc || {}; const i = b.dataset.k; if (!String(vc[`w${i}`] || '').trim()) return esVc(b); esOpen(`vc:${J().no}:${S.smp.k}:${i}`, `Witness ${i} (${String(vc[`w${i}`]).split(',')[0]})`, `the intimation (Form V(C)) · ${anyFirm(J().firm).name}`, () => esVc(b)); };
+const esFh = ACT.f8chSig;
+ACT.f8chSig = (b) => { const k = b.dataset.k; esOpen(`fh:${k}`, k === 'sigF' ? 'The complainant' : 'The seed company\'s representative', `the preliminary inspection report (Form H) · complaint ${CG.ref}`, () => esFh(b)); };
+// My work: signatures awaited, and those to record
+const esMyWork = PLACES.mywork;
+PLACES.mywork = (...a) => {
+  const h = esMyWork(...a); const keys = Object.keys(ES); const wait = keys.filter((k) => ES[k].state === 'awaiting'); const due = keys.filter((k) => ES[k].state === 'expired');
+  if (!wait.length && !due.length) return h;
+  const sec = `<div class="secc"><b>Signatures by eSign link</b>${due.map((k) => `<div class="card" style="text-align:left"><b>${esc(ES[k].paper)}</b><br>${esc(ES[k].who)}: ${esc(esText(k))}<button class="btn main" data-act="esRespond" data-key="${k}">Record the response</button></div>`).join('')}
+    ${wait.map((k) => `<div class="hint">${esc(ES[k].paper)} · ${esc(ES[k].who)}: ${esc(esText(k))}</div>`).join('')}</div>`;
+  return h.includes('<div class="secc"><b>Start something else</b>') ? h.replace('<div class="secc"><b>Start something else</b>', sec + '<div class="secc"><b>Start something else</b>') : h + sec;
+};
+function esLayout() {
+  const ph = $('phone'); if (!ph) return;
+  if (ESX) { ph.insertAdjacentHTML('beforeend', esPanel()); const a = $('es_aad'); if (a) a.addEventListener('input', () => { ESX.aad = a.value; }); const o = $('es_otp'); if (o) o.addEventListener('input', () => { ESX.otp = o.value; }); const n = $('es_note'); if (n) n.addEventListener('input', () => { ESX.note = n.value; }); }
+  // labels: every signature is an eSign
+  ph.querySelectorAll('[data-act="wtSign"], [data-act="vcSign"]').forEach((b) => { if (/Hand the phone over: sign here/.test(b.textContent)) b.textContent = 'Hand the phone over: eSign'; });
+  ph.querySelectorAll('[data-act="wtSign"], [data-act="vcSign"]').forEach((b) => {
+    if (!/Sign again/.test(b.textContent)) return; const kind = b.dataset.act === 'wtSign' ? 'wt' : 'vc'; const e = ES[`${kind}:${J().no}:${S.smp ? S.smp.k : ''}:${b.dataset.k}`];
+    if (e && e.state === 'esigned') b.style.display = 'none'; else b.textContent = 'Sign now on this phone';
+  });
+  ph.querySelectorAll('[data-act="f8chSig"]').forEach((b) => { b.textContent = b.textContent.replace(/hand the phone over, sign here|sign here/, 'eSign'); });
+  ph.querySelectorAll('[data-act="j7dealerOpen"][data-k="order"]').forEach((b) => { b.textContent = 'The dealer signs the order: eSign'; });
+  // texts: the live state of each signature
+  const walker = document.createTreeWalker(ph, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (/ES:|Signed the (memorandum|intimation) at|signed on the phone/.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) });
+  const ns = []; while (walker.nextNode()) ns.push(walker.currentNode);
+  ns.forEach((n) => {
+    n.nodeValue = n.nodeValue.replace(/(\(?)(?:could not confirm|not confirmed)?[ :]*\(?ES:([A-Za-z0-9:._/-]+)\)?/g, (m, br, k) => `${br ? '(' : ' '}${esText(k)}${br ? ')' : ''}`).replace(/\(\s+/g, '(');
+    const card = n.parentElement && n.parentElement.closest('.card'); const btn = card && card.querySelector('[data-act="wtSign"], [data-act="vcSign"]');
+    if (btn && /Signed the (memorandum|intimation) at/.test(n.nodeValue)) { const kind = btn.dataset.act === 'wtSign' ? 'wt' : 'vc'; n.nodeValue = `${esText(`${kind}:${J().no}:${S.smp ? S.smp.k : ''}:${btn.dataset.k}`)} `; }
+    if (/of the complainant: signed on the phone/.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace('of the complainant: signed on the phone', `of the complainant: ${esText('fh:sigF')}`);
+    if (/seed company: signed on the phone/.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace('seed company: signed on the phone', `seed company: ${esText('fh:sigP')}`);
+  });
+}
+const esRender = render;
+render = function (...a) { const r = esRender(...a); esLayout(); return r; };
 render();
 
 // The owner of the shared page sees the prototype controls; everyone else only the phone screen.
