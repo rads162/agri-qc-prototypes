@@ -295,9 +295,9 @@ html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:cente
 
     <h3>Release</h3>
     <div class="seg" role="group" aria-label="Release shown">
-      <button data-rel="mvp">MVP</button><button data-rel="p2">MVP + Phase 2</button><button data-rel="all">Everything</button>
+      <button data-rel="mvp">Phase 1</button><button data-rel="all">Phase 2</button>
     </div>
-    <p class="where">Phase 2 adds eSign for signing legal acts. Everything also shows single sign-on (Later).</p>
+    <p class="where">Phase 1: the process as inspectors follow it today, with only the additions it needs (integrations, evidence). Phase 2 adds the new and advanced features. Which features are Phase 2 is being sorted with the owner (UXD-226).</p>
 
     <h3>Try a scenario</h3>
     <div class="grid2" id="scenarios"></div>
@@ -305,8 +305,8 @@ html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:cente
 
     <h3>Made-up officers</h3>
     <table class="k">
-      <tr><th>Seat code</th><th>Officer</th><th>Password</th><th>Posts</th></tr>
-      <tr><td>101101</td><td>A. Officer, field inspector</td><td>Field@2026x</td><td>Inspector, Baramati</td></tr>
+      <tr><th>User name</th><th>Officer</th><th>Password</th><th>Posts</th></tr>
+      <tr><td>101101 or a.officer</td><td>A. Officer, field inspector</td><td>Field@2026x</td><td>Inspector, Baramati</td></tr>
       <tr><td>101201</td><td>B. Officer, field inspector</td><td>Charge@2026x</td><td>Inspector, Indapur + additional charge Baramati</td></tr>
       <tr><td>101301</td><td>C. Officer, new</td><td>none set yet</td><td>Inspector, Daund</td></tr>
       <tr><td>150028</td><td>D. Officer, supervisory (DSAO)</td><td>Desk@2026xx</td><td>DSAO, Pune district</td></tr>
@@ -318,12 +318,19 @@ html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:cente
     </table>
     <p class="where">Any other code gets the same answers as a real one would (nothing tells which seats exist), but never signs in.</p>
 
+    <h3>State admin settings (simulated)</h3>
+    <p class="where">Every paper below reaches the firm in its firm portal (UXD-228). Which of them also go to the firm's registered mobile by SMS is set by the State admin in the state admin portal; tick to switch SMS on.</p>
+    <div id="smsPapers"></div>
+    <p class="where">One-time code from the shop (UXD-234): where the person present confirms with a code sent to the licence holder's registered mobile; tick to ask it. Never blocks: without the code a reason is recorded.</p>
+    <div id="codePoints"></div>
     <h3>Conditions</h3>
     <div class="grid2">
       <label><input type="checkbox" id="cNoSignal"> No signal</label>
       <label><input type="checkbox" id="cNoSms"> SMS does not arrive</label>
       <label><input type="checkbox" id="cWaiting"> 2 entries waiting to send</label>
       <label><input type="checkbox" id="cLocOff"> Location off on the phone</label>
+      <label><input type="checkbox" id="cNoFix"> Phone cannot find a position (location on)</label>
+      <label><input type="checkbox" id="cAway"> Away from the shop at completion (about 12 km)</label>
     </div>
     <div class="grid2" style="margin-top:6px">
       <button id="aSkipWait">Skip the 1-minute "Send again" wait</button>
@@ -400,7 +407,10 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const now = () => Date.now();
 const mmss = (s) => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.max(0, Math.floor(s)) % 60).padStart(2, '0')}`;
-const officer = (c) => DIR[String(c).trim()];
+/* UXD-227 (the owner, 2026-11-27): the sign-in takes any user name (a seat code, an officer code or a name the Department
+   sets); the prototype shows one that is not a number, a.officer, for A. Officer (101101). */
+const USER_ALIAS = { 'a.officer': '101101' };
+const officer = (c) => DIR[String(c).trim()] || DIR[USER_ALIAS[String(c).trim().toLowerCase()]];
 function log(line) { const el = $('log'); el.textContent += `SIMULATED  ${new Date().toLocaleTimeString()}  ${line}\n`; el.scrollTop = el.scrollHeight; }
 function logClear() { $('log').textContent = 'The prototype\'s stand-in for the server. Nothing leaves this page.\n'; }
 function toast(t) { S.toast = t; render(); setTimeout(() => { if (S.toast === t) { S.toast = ''; render(); } }, 3200); }
@@ -489,8 +499,8 @@ function msgs() {
     (S.info ? `<div class="msg ok" role="status">${esc(S.info)}</div>` : '');
 }
 function codeField() {
-  return `<label class="f" for="code">Your seat code</label><input class="t" id="code" autocomplete="username" value="${esc(S.code)}" ${S.err && !S.code ? 'aria-invalid="true"' : ''}>
-  <div class="hint">The code allotted to your post. Your own officer code also works.</div>`;
+  return `<label class="f" for="code">User name</label><input class="t" id="code" autocomplete="username" value="${esc(S.code)}" ${S.err && !S.code ? 'aria-invalid="true"' : ''}>
+  <div class="hint">Your seat code, your officer code, or the user name the Department gave you.</div>`;
 }
 function pwField(id, auto, label) {
   return `<label class="f" for="${id}">${label}</label><div class="pw"><input class="t" id="${id}" type="password" autocomplete="${auto}"><button type="button" data-act="eye" data-for="${id}">Show</button></div>`;
@@ -529,10 +539,10 @@ const SCREENS = {
       <form data-form="signin" novalidate>${codeField()}${otpWay ? '' : pwField('pw', 'current-password', 'Password')}
       <div class="check"><input type="checkbox" id="remember" ${S.remember ? 'checked' : ''}><label for="remember">Remember this device for ${CFG.rememberDays} days<br><span class="hint">Not your own phone or computer? Leave this unticked.</span></label></div>
       <button class="btn main" type="submit">${otpWay ? 'Send one-time OTP' : 'Sign in'}</button></form>
-      <div class="sim">Not part of the portal. Try seat code ${TRY_CODES}. No SMS goes out: the one-time OTP appears in a dashed box like this one. A licence holder has no seat code: "Licence holder? Sign in here" at the foot (the registered mobile and a one-time code, seller portal).</div>
+      <div class="sim">Not part of the portal. Try the user name ${TRY_CODES}, or <b>a.officer</b> (the same A. Officer: a user name need not be a number, UXD-227). No SMS goes out: the one-time OTP appears in a dashed box like this one. A licence holder has no user name here: "Licence holder? Sign in here" at the foot (the registered mobile and a one-time code, seller portal).</div>
       <button class="lnk" data-act="${otpWay ? 'usePw' : 'useOtp'}">${otpWay ? 'Use your password instead' : 'Use a one-time OTP instead'}</button>
-      <div class="row"><button class="lnk" data-act="forgotPw">Forgot password?</button><button class="lnk" data-act="forgotCode">Forgot your code?</button></div>
-      ${S.release === 'all' ? '<div class="card ghost">Sign in with single sign-on <span class="tag">LATER</span></div>' : ''}
+      <div class="row"><button class="lnk" data-act="forgotPw">Forgot password?</button><button class="lnk" data-act="forgotCode">Forgot your user name?</button></div>
+      ${S.release === 'all' ? '<div class="card ghost">Sign in with single sign-on <span class="tag">PHASE 2</span></div>' : ''}
       </div><div class="foot"><button class="lnk" data-act="firm">Licence holder? Sign in here</button></div>`;
   },
   otp() {
@@ -559,10 +569,10 @@ const SCREENS = {
       <button class="lnk" data-act="back">Back</button></div>`;
   },
   forgotCode() {
-    return `${GOV}<div class="scr">${msgs()}<h2 id="h" tabindex="-1">Forgot your code</h2>
+    return `${GOV}<div class="scr">${msgs()}<h2 id="h" tabindex="-1">Forgot your user name</h2>
       <form data-form="forgotCode" novalidate><label class="f" for="mob">Registered mobile number</label>
       <input class="t" id="mob" inputmode="numeric" autocomplete="tel" maxlength="10">
-      <button class="btn main" type="submit">Send my code</button></form><button class="lnk" data-act="back">Back</button></div>`;
+      <button class="btn main" type="submit">Send my user name</button></form><button class="lnk" data-act="back">Back</button></div>`;
   },
   lost() {
     const d = S.district;
@@ -734,7 +744,7 @@ function keepCode() { const c = $('code'); if (c) S.code = c.value; const r = $(
 const FORMS = {
   signin: () => {
     keepCode(); const code = S.code.trim(); S.reason = ''; S.info = '';
-    if (!code) return go('signin', { err: 'Enter your seat code.' });
+    if (!code) return go('signin', { err: 'Enter your user name.' });
     if (S.way === 'otp') {
       const r = srvRequestOtp(code, 'sign-in');
       if (r.net) return go('signin', { err: NET });
@@ -747,7 +757,7 @@ const FORMS = {
     if (r.net) return go('signin', { err: NET });
     if (r.locked) return go('signin', { err: `Password sign-in is locked for ${r.locked} minutes after several wrong tries. You can <button class="lnk" data-act="useOtp">use a one-time OTP</button>, or <button class="lnk" data-act="forgotPw">reset your password</button>.` });
     if (r.nopw) return go('signin', { err: 'You have not set a password yet. <button class="lnk" data-act="useOtp">Use a one-time OTP</button> to sign in and set one.' });
-    if (r.wrong) return go('signin', { err: 'The code or the password is not right.' });
+    if (r.wrong) return go('signin', { err: 'The user name or the password is not right.' });
     startSession(r.ok, code, 'password');
   },
   otp: () => {
@@ -769,7 +779,7 @@ const FORMS = {
   },
   forgot1: () => {
     keepCode(); const code = S.code.trim();
-    if (!code) return go('forgot', { err: 'Enter your seat code.' });
+    if (!code) return go('forgot', { err: 'Enter your user name.' });
     const r = srvRequestOtp(code, 'password reset');
     if (r.net) return go('forgot', { err: NET });
     if (r.many) return go('forgot', { err: 'Too many one-time OTPs asked for. Try again later.' });
@@ -792,7 +802,7 @@ const FORMS = {
     const m = $('mob').value.trim();
     if (!/^\d{10}$/.test(m)) return go('forgotCode', { err: 'Give the ten-digit registered mobile number.' });
     const r = srvCodeReminder(m); if (r.net) return go('forgotCode', { err: NET });
-    go('forgotCode', { info: 'If this number is registered, the codes held against it are sent to it by SMS.' });
+    go('forgotCode', { info: 'If this number is registered, the user names held against it are sent to it by SMS.' });
   },
   sign: () => {
     const v = $('otp').value.trim();
@@ -1162,7 +1172,7 @@ PLACES.firm = () => {
     ${sec('prem', 'Premises', d.prem.length, d.prem.map((p) => { const ok = S.acting === 'DSAO' || p[2] === S.acting; return `<div class="card"><b>${esc(p[0])}</b>${esc(p[1])} · ${({ BAR: 'Baramati taluka', IND: 'Indapur taluka', DAU: 'Daund taluka' })[p[2]] || ''}${ok ? '' : '<br><span class="ghost">Outside your area</span>'}</div>`; }).join(''))}
     ${sec('prod', 'Authorised products', d.prod ? `${d.prod.length} · ${d.prod.filter((p) => p[3]).length} flags` : '—', d.prod ? `<div class="row"><input class="t" id="pq" placeholder="Search product or grade" value="${esc(S.pq)}" style="flex:1;min-width:120px"><label class="check" style="margin:0"><input type="checkbox" id="flagsOnly" ${S.flagsOnly ? 'checked' : ''}>Flags only</label></div>
       ${prods.map((p) => `<div class="card"><b>${esc(p[0])}</b>${esc(p[1])} · ${p[3] ? `<span class="tag" style="margin-left:0;border-width:2px">${esc(p[3])}</span> ` : ''}${esc(p[2])}</div>`).join('') || '<p class="hint">No product matches.</p>'}
-      ${S.release === 'mvp' ? '<p class="hint">Source-licence warnings are Phase 2; switch the release to see them counted on the Overview.</p>' : ''}` : '<p class="hint">Not supplied by e-Parwana yet.</p>')}
+      ${S.release === 'mvp' ? '<p class="hint">Source-licence warnings are Phase 2; switch the release to Phase 2 to see them counted on the Overview.</p>' : ''}` : '<p class="hint">Not supplied by e-Parwana yet.</p>')}
     ${sec('hist', 'History', d.hist.length, d.hist.map((h) => `<div class="card"><b>${esc(h[1])}</b>${esc(h[0])} · ${esc(h[2])}</div>`).join('') || '<p class="hint">Nothing yet.</p>')}
     <p class="hint">Licences, premises and products: from e-Parwana, as of 07 Nov 2026. The licence holder's personal details are not shown (D-135).</p>`;
 };
@@ -2438,7 +2448,7 @@ PLACES.profile = () => {
   const conf = c ? `<div class="msg note" role="alertdialog"><b>${c === 'all' ? 'Every remembered device, this one included, must sign in again.' : c === 'd1' ? 'You will be signed out here.' : 'That device must sign in again with a password or a one-time OTP.'}</b>
       <div class="row"><button class="btn main" data-act="j9devOk" style="flex:1">${c === 'all' ? 'Sign out all' : 'Sign out'}</button><button class="btn alt" data-act="j9devNo" style="flex:1">Cancel</button></div></div>` : '';
   return `<h2 id="h" tabindex="-1">${esc(S.me.name)}</h2>
-    <p class="hint">Seat ${esc(S.me.code)} · ${esc(POSTS[S.acting].name)} · mobile ending 10 · signed in with password</p>
+    <p class="hint">User name ${esc(S.me.code)} · ${esc(POSTS[S.acting].name)} · mobile ending 10 · signed in with password</p>
     <p class="hint">Name, mobile and posts are changed by your controlling office.</p>
     <button class="btn alt" data-act="j9pw">Change the password</button>
     <h3>Devices that stay signed in</h3>${conf}
@@ -5407,7 +5417,7 @@ PLACES.form6 = () => {
     <div class="card" style="background:#fff"><b>FORM VI</b> <span class="ghost">(See rule 34) · Notice for drawing samples</span><br>
       To<br>${esc(f.name)}<br>${esc(f.village)}<br><br>I hereby give you the notice of my intention of taking a sample of seed from your stocks for the purposes of tests or analysis.<br><br>
       Date ${SMP_TODAY}<span style="float:right;text-align:right">${esc(S.me.name)}<br>Seed Inspector, ${esc((POSTS[S.acting] || {}).area || '')}</span><br style="clear:both"></div>
-    <p class="hint">The firm gets it in the firm portal and by SMS; a printed copy can be handed over.</p>
+    <p class="hint">The firm gets it in the firm portal and by SMS.</p>
     <button class="btn main" data-act="f6Give">Give the notice (Form VI)</button>`;
 };
 ACT.f6Give = () => {
@@ -6457,12 +6467,12 @@ ACT.j5sign = (b, e) => {
 /* ---------------- UXD-197 (the owner, 2026-11-24): Form VIII's last two points. (1) The persons present sign below the
    party's line, as built ("Persons present (Seeds Act s.14(4)): ..."), the printed wording left untouched. (2) The shop
    gets the memorandum once, when the inspector taps Finish at this shop, in the firm portal and by SMS, with every
-   sample's line on it; a printed copy can be handed over if asked. Until then the paper says when it goes. ---------------- */
+   sample's line on it (UXD-229: no printed copy). Until then the paper says when it goes. ---------------- */
 const m8dBase = m8Paper;
 m8Paper = function (d) {
   const j = J(); const s = j && j.m8sent;
-  const line = s ? `<br><span class="hint">Delivered at ${esc(s.at)}, at Finish at this shop: in the firm portal and by SMS (${s.n} sample${s.n > 1 ? 's' : ''}); a printed copy can be handed over.</span>`
-    : '<br><span class="hint">Goes to the shop once, when you tap Finish at this shop: in the firm portal and by SMS, with every sample\'s line; a printed copy can be handed over if asked.</span>';
+  const line = s ? `<br><span class="hint">Delivered at ${esc(s.at)}, at Finish at this shop: in the firm portal and by SMS (${s.n} sample${s.n > 1 ? 's' : ''}).</span>`
+    : '<br><span class="hint">Goes to the shop once, when you tap Finish at this shop: in the firm portal and by SMS, with every sample\'s line.</span>';
   return m8dBase(d).replace(/<\/div>\s*$/, `${line}</div>`);
 };
 const m8dFinish = ACT.recFinish;
@@ -6478,7 +6488,7 @@ ACT.recFinish = (b, e) => {
    sample form (particulars the form does not hold yet stay blank); the two witnesses each sign on the phone, names
    prefilled from the visit's previous V(C); below it the s.22(3) receipt (no form prescribed; wording after the
    section). On the dealer's screen the same paper: "Received one sealed portion ..." is the dealer's code. Delivered
-   when the dealer confirms (firm portal and SMS; a printed copy if asked). On the sample record both open as issued.
+   when the dealer confirms (firm portal and SMS; UXD-229: no printed copy). On the sample record both open as issued.
    ---------------- */
 const vcFmt = (x) => (x ? esc(String(x).split('-').reverse().join('/')) : '');
 function vcPaper(d) {
@@ -6550,7 +6560,7 @@ const vcRec = PLACES.srecord;
 PLACES.srecord = () => {
   const h = vcRec(); const p = J().prods[S.smpOpen]; if (!p || p.input !== 'Insecticides') return h; const r = p.rec || {}; const pp = r.papers || {};
   const d = { p, v: pp.v || { lot_no: r.lot }, vc: pp.vc || {}, party: pp.dealer ? 'received; confirmed by code' : 'receipt not confirmed (reason recorded)' };
-  const papers = `${vcPaper(d)}${vcReceipt(d)}<p class="hint">Delivered on the dealer's confirmation: in the firm portal and by SMS; a printed copy can be handed over.</p>`;
+  const papers = `${vcPaper(d)}${vcReceipt(d)}<p class="hint">Delivered on the dealer's confirmation: in the firm portal and by SMS.</p>`;
   return h.replace(/<div class="card"><b>Intimation of the sample taken \(Form V\(C\)\)<\/b>[\s\S]*?<\/div>\s*<div class="card"><b>Receipt for the sample \(s\.22\(3\)\)<\/b>[\s\S]*?<\/div>/, () => papers);
 };
 const vcRender = render;
@@ -7102,6 +7112,184 @@ render();
 });
 /* UXD-224: "English" is the language in use, so pressing it does nothing; "मराठी" says what the portal will do */
 (() => { const lang224 = ACT.lang; ACT.lang = (b, ...r) => (b && b.dataset && b.dataset.l === 'en' ? undefined : lang224(b, ...r)); })();
+/* ---------------- UXD-228 (the owner, 2026-11-27: "Let the prototype reflect the real proposed application"): every paper for
+   the firm reaches its firm portal; whether an SMS also goes is set per kind of paper by the State admin. The prototype
+   starts with every SMS off (nothing assumed) and the controls panel holds the State admin's switches, simulated. Each
+   delivery line on any screen, and the simulated server's log, follows the switch of its kind of paper. ---------------- */
+const SMS_PAPERS = [
+  ['notice', 'Notice to the firm'], ['stoporder', 'Stop sale order'], ['seizure', 'Seizure receipt'], ['release', 'Release of a stop sale'],
+  ['vi', 'Notice of intention (Form VI)'], ['viii', 'Memorandum (Form VIII)'], ['vc', 'Intimation and receipt (Form V(C))'],
+  ['guard', 'Notice to produce the guard sample'], ['followup', 'Follow-up notice'],
+];
+const SMS_ON = {};
+const smsKind = (t) => (/Form VI(?!I)|notice of intention/i.test(t) ? 'vi' : /Form VIII|memorandum/i.test(t) ? 'viii' : /V\(C\)|intimation|s\.22\(3\)/i.test(t) ? 'vc'
+  : /guard/i.test(t) ? 'guard' : /follow-up/i.test(t) ? 'followup' : /seizure/i.test(t) ? 'seizure' : /releas|revok/i.test(t) ? 'release'
+  : /\bnotice\b/i.test(t) ? 'notice' : /stop (order|sale)/i.test(t) ? 'stoporder' : 'notice');
+const SMS_RE = /firm portal and (by )?SMS( delivery)?( to the registered mobile)?( \(logged\))?/g;
+const smsStrip = (txt, ctx) => (SMS_ON[smsKind(ctx || txt)] ? txt : txt.replace(SMS_RE, (m, by, del) => `firm portal${del ? ' delivery' : ''}`));
+function smsLayout() {
+  const box = document.getElementById('smsPapers');
+  if (box && !box.childElementCount) {
+    box.innerHTML = SMS_PAPERS.map(([k, t]) => `<label><input type="checkbox" data-sms="${k}"> SMS for: ${t}</label>`).join('');
+    box.addEventListener('change', (e) => { const c = e.target.closest('[data-sms]'); if (!c) return; SMS_ON[c.dataset.sms] = c.checked; log(`State admin (simulated): SMS to the firm for "${SMS_PAPERS.find(([k]) => k === c.dataset.sms)[1]}" ${c.checked ? 'on' : 'off'}`); render(); });
+  }
+  const ph = $('phone'); if (!ph) return;
+  const w = document.createTreeWalker(ph, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (/firm portal and (by )?SMS/.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) });
+  const nodes = []; while (w.nextNode()) nodes.push(w.currentNode);
+  nodes.forEach((n) => {
+    const el = n.parentElement; const blk = el.closest('.card, .hint, .msg, p, li, div') || el;
+    const p1 = blk.previousElementSibling; const p2 = p1 && p1.previousElementSibling; const prev = `${p1 ? p1.textContent.slice(0, 400) : ''} ${p2 ? p2.textContent.slice(0, 400) : ''}`;
+    const card = el.closest('.card'); n.nodeValue = smsStrip(n.nodeValue, card ? card.textContent : `${blk.textContent} ${prev}`);
+  });
+}
+const smsLog = log;
+log = function (line) { return smsLog(/firm portal and (by )?SMS/.test(line) ? smsStrip(line) : line); };
+const smsRender = render;
+render = function (...a) { const r = smsRender(...a); smsLayout(); return r; };
+render();
+/* ---------------- UXD-232, UXD-233, UXD-234 (the owner, 2026-11-27): evidence at the start and the end of a visit, and the
+   shop's one-time code as a State admin setting. UXD-232: location on but no position found: Try again, or carry on
+   without a position with a reason, shown on the record. UXD-233: the time and position at each submit and at Finish at
+   this shop; "away from the shop" when more than 500 m from the start (a setting). UXD-234: one switch per point where
+   the person present confirms with a code (start, end, notice, sample, stop order, seizure receipt), all off to start;
+   off, the point asks no code; on, it asks it and, without it, records a reason; never blocks. ---------------- */
+const CODE_POINTS = [['start', 'Start of the inspection'], ['end', 'End of the inspection (Finish at this shop)'], ['notice', 'Notice received'],
+  ['sample', 'Sample portion received (the dealer\'s screen; also the Form VIII line or Form V(C) and its receipt)'], ['order', 'Stop sale order received'], ['seizure', 'Seizure receipt received']];
+const CODE_ON = {};
+const AWAY_M = 500;
+const hhmm = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const noFix = () => $('cNoFix') && $('cNoFix').checked;
+const awayNow = () => $('cAway') && $('cAway').checked;
+const NOPOS_WHY = ['Inside a building', 'No satellite signal here', 'The phone\'s location is not working', 'Other'];
+const CODE_WHY = ['Not present', 'Refused', 'No phone with them', 'Other'];
+const posWord = (away, none) => (none ? 'no position' : away ? `away from the shop (about 12 km; more than ${AWAY_M} m from the start)` : 'at the shop (within 15 m)');
+function codeCard(k, title, msg) {
+  const j = J(); const c = (j.codes || (j.codes = {}))[k] || (j.codes[k] = {});
+  if (c.done) return '';
+  return `<div class="card" style="text-align:left"><b>${title}</b>A code goes to the licence holder's registered mobile: "${esc(msg)}"
+    ${c.err ? `<div class="msg err">${esc(c.err)}</div>` : ''}
+    ${c.code ? `<div class="sim">The SMS is not sent in the prototype. The code on the shop's phone: <b>${c.code}</b></div>
+      <input class="t otp" id="sc_${k}" data-sc-in="${k}" inputmode="numeric" maxlength="6" placeholder="• • • • • •" value="${esc(c.typed || '')}">
+      <button class="btn main" data-act="scOk" data-k="${k}">Confirm with the code</button>` : `<button class="btn main" data-act="scSend" data-k="${k}">Send the code to the shop's mobile</button>`}
+    ${c.why ? `<div class="chips">${CODE_WHY.map((o) => `<button data-act="scWhy" data-k="${k}" data-o="${o}" aria-pressed="${c.reason === o}">${o}</button>`).join('')}</div>
+      <button class="btn alt" data-act="scRecord" data-k="${k}" ${c.reason ? '' : 'disabled'}>Record and continue</button>` : `<button class="lnk" data-act="scCannot" data-k="${k}">The code cannot be given</button>`}
+    <p class="hint">It never stops the inspection; without the code the reason is recorded (UXD-234).</p></div>`;
+}
+const codeLine = (k) => { const c = (J().codes || {})[k]; return c && c.done ? (c.done === 'code' ? 'confirmed by the shop\'s code' : `the shop's code not given: ${c.done}`) : ''; };
+function visitCard(j) {
+  const rows = [];
+  if (j.startAt) rows.push(`Started ${j.startAt} · ${j.noPos ? `<b>No position: ${esc(j.noPos)}</b>` : 'position recorded (within 12 m)'}${CODE_ON.start && codeLine('start') ? ` · ${codeLine('start')}` : ''}`);
+  (j.subs || []).forEach((x) => rows.push(`Submitted ${esc(x.inp)} ${x.at} · ${posWord(x.away)}`));
+  if (j.doneAt) rows.push(`Completed ${j.doneAt.at} · ${j.doneAt.away ? `<b>${posWord(true)}</b>` : posWord(false)}${CODE_ON.end && codeLine('end') ? ` · ${codeLine('end')}` : ''}`);
+  return rows.length ? `<div class="card" style="text-align:left"><b>The visit</b>${rows.join('<br>')}<span class="hint" style="display:block">Seen by you and your supervisor; never by the shop (UXD-233).</span></div>` : '';
+}
+// UXD-232: no position found
+const v232Start = ACT.j4start;
+ACT.j4start = (b, e) => {
+  const j = J(); if (j && j.loc === 'nofix') j.loc = null;
+  if (S.place === 'before' && noFix() && !(typeof locOff === 'function' && locOff()) && j && j.inputs.length && j.addr !== null && !(S.source === 'squad' && !S.squad)) {
+    j.loc = 'finding'; j.cur = j.inputs[0]; render();
+    setTimeout(() => { if (S.j && S.j.loc === 'finding') { S.j.loc = 'nofix'; log('location on, but no position found (UXD-232)'); render(); } }, 900);
+    return;
+  }
+  return v232Start(b, e);
+};
+const v232Before = PLACES.before;
+PLACES.before = (...a) => {
+  const j = S.j;
+  if (j && j.loc === 'nofix' && j.firm === S.firm) {
+    return `<h2 id="h" tabindex="-1">No position found</h2><p>Your location is on, but the phone could not find where you are. Step outside or near a door, then Try again.</p>
+      <button class="btn main" data-act="j4start">Try again</button>
+      <h3>Or carry on without a position</h3><div class="chips">${NOPOS_WHY.map((o) => `<button data-act="npWhy" data-o="${o}" aria-pressed="${j.npWhy === o}">${o}</button>`).join('')}</div>
+      <p class="hint">The inspection record will show "No position" with your reason, for your supervisor to see (UXD-232).</p>
+      <button class="btn alt" data-act="npCarry" ${j.npWhy ? '' : 'disabled'}>Carry on without a position</button><button class="lnk" data-act="j4locCancel">Cancel</button>
+      <div class="sim">Untick "Phone cannot find a position" in the controls, then Try again, to get a position.</div>`;
+  }
+  return v232Before(...a);
+};
+// the start time, once started; the start code; the visit card
+const v233Check = PLACES.check;
+PLACES.check = (...a) => {
+  const j = S.j; if (j && j.started && !j.startAt) j.startAt = hhmm();
+  const h = v233Check(...a);
+  if (!j || !j.started || !CODE_ON.start) return h;
+  const card = codeCard('start', 'The shop confirms the start of the inspection', `Inspection started at ${anyFirm(j.firm).name} by ${POSTS[S.acting] ? POSTS[S.acting].name : 'the inspector'}, ${j.startAt}.`);
+  return card ? h.replace(/(<h2[^>]*>[\s\S]*?<\/h2>)/, (m) => m + card) : h;
+};
+const v233Record = PLACES.record;
+PLACES.record = (...a) => {
+  const h = v233Record(...a); const j = S.j; if (!j || !j.started) return h;
+  const end = S.codeEndOpen && CODE_ON.end ? codeCard('end', 'The shop confirms the end of the inspection', `Inspection completed at ${anyFirm(j.firm).name}, ${hhmm()}.`) : '';
+  const card = visitCard(j) + end;
+  return card ? h.replace(/(<\/h2>(?:\s*<p class="hint">[\s\S]*?<\/p>)?)/, (m) => m + card) : h;
+};
+// UXD-233: each submit and Finish record the time and position
+['j4submit', 'rvSubmitNone', 'rvSubmitIssue'].forEach((k) => {
+  const prev = ACT[k]; if (typeof prev !== 'function') return;
+  ACT[k] = (b, e) => {
+    const j = S.j; const inp = j && j.cur; const r = prev(b, e);
+    const jj = S.j; if (jj && inp && (jj.submitted || S.place === 'record') && !(jj.subs || []).some((x) => x.inp === inp)) {
+      (jj.subs || (jj.subs = [])).push({ inp, at: hhmm(), away: awayNow() }); log(`${inp} submitted at ${hhmm()} · ${posWord(awayNow())} (UXD-233)`);
+    }
+    return r;
+  };
+});
+const v233Finish = ACT.recFinish;
+ACT.recFinish = (b, e) => {
+  const j = S.j;
+  if (j && CODE_ON.end && !((j.codes || {}).end || {}).done) { S.codeEndOpen = true; return go('inside', { info: 'The shop confirms the end with its code, or record why it cannot (UXD-234).' }); }
+  S.codeEndOpen = false;
+  if (j) { j.doneAt = { at: hhmm(), away: awayNow() }; log(`inspection completed at ${j.doneAt.at} · ${posWord(j.doneAt.away)} (UXD-233)`); }
+  const r = v233Finish(b, e);
+  if (j && S.info) S.info = `${S.info} Completed ${j.doneAt.at} · ${posWord(j.doneAt.away)}.`;
+  render(); return r;
+};
+Object.assign(ACT, {
+  npWhy: (b) => { J().npWhy = b.dataset.o; render(); },
+  npCarry: () => {
+    const j = J(); if (!j.npWhy) return;
+    j.noPos = j.npWhy; j.loc = null; j.started = true; S.jcarry = null; j.startAt = hhmm();
+    entryMade(`inspection ${j.no} started (${j.inputs.join(', ')}) · NO POSITION: ${j.noPos} (UXD-232)`);
+    S.place = 'check'; go('inside', { info: '' });
+  },
+  scSend: (b) => { const c = J().codes[b.dataset.k]; if (noSignal()) { c.err = 'The code needs signal. Your entries are saved.'; return render(); } c.err = ''; c.code = String(Math.floor(100000 + Math.random() * 899999)); log(`one-time code sent to the shop's registered mobile (${b.dataset.k}, UXD-234)`); render(); },
+  scOk: (b) => {
+    const k = b.dataset.k; const c = J().codes[k]; const el = $(`sc_${k}`); if (el) c.typed = el.value;
+    if ((c.typed || '').trim() !== c.code) { c.err = 'Not right. Check the code on the shop\'s phone.'; return render(); }
+    c.done = 'code'; c.err = ''; log(`the shop confirmed with its code (${k})`); if (k === 'end') return ACT.recFinish(); render();
+  },
+  scCannot: (b) => { J().codes[b.dataset.k].why = true; render(); },
+  scWhy: (b) => { J().codes[b.dataset.k].reason = b.dataset.o; render(); },
+  scRecord: (b) => { const k = b.dataset.k; const c = J().codes[k]; if (!c.reason) return; c.done = c.reason; log(`the shop's code not given (${k}): ${c.reason}`); if (k === 'end') return ACT.recFinish(); render(); },
+  dcNoCode: () => { const m = S.smp; m.dsigned = false; m.refusal = 'No code asked'; m.dv = 'back'; log('dealer\'s screen shown; no code asked (State admin setting, UXD-234)'); render(); },
+});
+// UXD-234: the dealer's screen without the code when the sample switch is off
+const v234Dealer = PLACES.dealer;
+PLACES.dealer = (...a) => {
+  const h = v234Dealer(...a); if (CODE_ON.sample || !S.smp || S.smp.dv === 'back' || S.smp.dv === 'refuse') return h;
+  return h.replace('<button class="btn alt" data-act="j5dealerSend">Send the code to my mobile</button>', '<button class="btn main" data-act="dcNoCode">Seen · hand the phone back</button>')
+    .replace('<div style="text-align:right"><button class="lnk" data-act="j5refuse">Dealer cannot confirm</button></div>', '');
+};
+function codeLayout() {
+  const box = document.getElementById('codePoints');
+  if (box && !box.childElementCount) {
+    box.innerHTML = CODE_POINTS.map(([k, t]) => `<label><input type="checkbox" data-code="${k}"> Code at: ${t}</label>`).join('');
+    box.addEventListener('change', (e) => { const c = e.target.closest('[data-code]'); if (!c) return; CODE_ON[c.dataset.code] = c.checked; log(`State admin (simulated): the shop's code at "${CODE_POINTS.find(([k]) => k === c.dataset.code)[1]}" ${c.checked ? 'on' : 'off'}`); render(); });
+  }
+  const ph = $('phone'); if (!ph) return;
+  const kill = (sel) => ph.querySelectorAll(sel).forEach((el) => el.remove());
+  if (!CODE_ON.notice) kill('[data-act="j6dealer"]');
+  if (!CODE_ON.order) kill('[data-act="j7dealerOpen"][data-k="order"]');
+  if (!CODE_ON.seizure) kill('[data-act="j7dealerOpen"][data-k="seizure"]');
+  // a sample shown without a code reads so, not as "could not confirm"
+  const w = document.createTreeWalker(ph, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (/No code asked/.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) });
+  const ns = []; while (w.nextNode()) ns.push(w.currentNode);
+  ns.forEach((n) => { n.nodeValue = n.nodeValue.replace(/could not confirm:?\s*\(?No code asked\)?/gi, 'shown on the dealer\'s screen; no code asked').replace(/No code asked/g, 'no code asked (State admin setting)'); });
+  ph.querySelectorAll('[data-sc-in]').forEach((el) => el.addEventListener('input', () => { const c = (J().codes || {})[el.dataset.scIn]; if (c) c.typed = el.value; }));
+}
+const codeRender = render;
+render = function (...a) { const r = codeRender(...a); codeLayout(); return r; };
+render();
 
 // The owner of the shared page sees the prototype controls; everyone else only the phone screen.
 (async () => {
