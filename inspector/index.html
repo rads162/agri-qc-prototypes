@@ -1342,7 +1342,7 @@ function pointHtml(p, j) {
 }
 PLACES.check = () => {
   const j = J(); const [g, ps] = CHECKLISTS[j.cur][gi(j)];
-  return `<p class="hint">${esc(j.cur)} · group ${gi(j) + 1} of ${CHECKLISTS[j.cur].length}</p><h2 id="h" tabindex="-1">${esc(g)}</h2>
+  return `<h2 id="h" tabindex="-1">${esc(g)}</h2>
     ${ps.map((p) => pointHtml({ ...p, g, gi: gi(j), inp: j.cur, key: j.cur + ':' + p.n }, j)).join('')}
     <button class="lnk" data-act="j4sheet" data-s="points">All points</button>`;
 };
@@ -1673,7 +1673,7 @@ PLACES.sform = () => {
 // S-58 Dealer's screen: nothing of the portal around it
 PLACES.dealer = () => {
   const m = S.smp; const p = J().prods[m.k]; const f = anyFirm(J().firm);
-  if (m.dv === 'back') return `<div style="text-align:center;padding-top:40px"><h2 id="h" tabindex="-1">Back with the officer</h2><p>Please hand the phone back.</p><button class="btn main" data-act="j5dealerDone">Continue</button></div>`;
+  if (m.dv === 'back') return `<div style="text-align:center;padding-top:40px"><h2 id="h" tabindex="-1">Thank you</h2><p>Please hand the phone back to the officer.</p><button class="btn main" data-act="j5dealerDone">Continue</button></div>`;
   if (m.dv === 'refuse') return `<h2 id="h" tabindex="-1">Dealer cannot confirm</h2>
     <div class="chips">${['Refused', 'Not present', 'No phone', 'Other'].map((o) => `<button data-act="j5refuseWhy" data-o="${o}" aria-pressed="${m.refusal === o}">${o}</button>`).join('')}</div>
     ${m.refusal === 'Other' ? '<label class="f" for="j5why">Reason</label><input class="t" id="j5why" data-why="1">' : ''}
@@ -1694,7 +1694,8 @@ PLACES.sreview = () => {
   return `<h2 id="h" tabindex="-1">Review the sample</h2>
     <div class="secc"><b>${esc(p.name)} · lot ${esc(m.v.lot_no || '—')} · ${esc(m.v.quantity || '—')} ${esc(unitOf(m))}</b>
       Source: ${esc(m.v.source === 'other' ? m.v.source_other : (m.v.source || '').replace('_', ' '))} · ${esc(m.v.dealer_name)}<br>Licence: ${esc(m.v.licence_no)}<br>
-      Portions: 3 · seals: ${m.seals.filter(Boolean).length ? esc(m.seals.filter(Boolean).join(', ')) : 'none given'}<br>Barcode: ${esc(m.barcode || 'made when signed')}<br>
+      Portions: 3 · seals: ${m.seals.filter(Boolean).length ? esc(m.seals.filter(Boolean).join(', ')) : 'none given'}<br>Barcode: ${esc(m.barcode || 'made when recorded')}<br>
+      ${m.input === 'Seeds' && (wtOf(m).p1 || wtOf(m).p2) ? `Persons present: ${[1, 2].filter((i) => wtOf(m)[`p${i}`]).map((i) => `${esc(String(wtOf(m)[`p${i}`]).split(',')[0])} (${wtOf(m)[`s${i}`] ? esc(wtOf(m)[`s${i}`]) : 'not signed yet'})`).join('; ')}<br>` : ''}
       Dealer: ${m.dsigned ? 'receipt confirmed by code ✓' : m.refusal ? `could not confirm (${esc(m.refusal === 'Other' ? (m.why || 'Other') : m.refusal)})` : 'not yet'}</div>
     ${m.locErr ? '<div class="msg err">Turn on location to record this sample. Then tap Record the sample again (UXD-52).</div>' : ''}
     <button class="btn main" data-act="j5sign">Record the sample</button>
@@ -1704,7 +1705,7 @@ PLACES.sreview = () => {
 PLACES.srecord = () => {
   const p = J().prods[S.smpOpen]; const r = p.rec;
   return `<h2 id="h" tabindex="-1">${esc(p.name)} · lot ${esc(r.lot || '—')}</h2>
-    <p class="hint">${esc(r.no)} · Barcode ${esc(r.barcode)} · ${esc(anyFirm(J().firm).name)} · Drawn at 16:12, within 15 m</p>
+    <p class="hint">${esc(r.no)} · Barcode ${esc(r.barcode)} · ${esc(anyFirm(J().firm).name)} · Drawn at ${esc(String(r.at || '').split(' ').pop())}, within 15 m</p>
     <div class="card"><span class="tag" style="margin-left:0">${esc(stageWord(r))}</span></div>
     ${r.due && !r.sent ? `<div class="card"><b>Time limit: reach the laboratory</b>By ${esc(r.due)} · ${esc(limWord(r.due))}. ${p.input === 'Insecticides' ? 'An insecticide sample goes to its laboratory at once, and within 7 days of being taken.' : 'Within 7 days of being taken.'}<br><span class="hint">Basis: ${esc(basisWord(p.input))}</span></div>` : ''}
     ${r.sent ? '' : `<button class="btn main" data-act="j5sendOpen">Send to the laboratory</button>${r.later ? '' : '<button class="btn alt" data-act="j5later">Send later</button>'}`}
@@ -1741,7 +1742,7 @@ SCREENS.inside = function () {
     : `<div class="top" style="flex-wrap:wrap;padding:4px 8px;gap:4px"><button class="topbtn" data-act="j4go" data-place="record">‹ Record</button><b class="grow" style="font-size:13px">Draw a sample</b><span class="tag">${noSignal() ? 'Waiting to send' : 'Saved on this phone'}</span>
        <div class="hint" style="width:100%;margin:0">${esc(J().no)} · ${esc(anyFirm(J().firm).name)} · ${esc(p.name)}${S.place === 'sform' ? ` · part ${m.part} of 4` : ''}</div></div>`;
   const bar = S.place === 'sform' ? `<div class="row" style="border-top:2px solid var(--ink);padding:6px 8px;align-items:center;flex-wrap:nowrap;flex:none;background:#fff">
-      <button class="topbtn" data-act="j5back">Back</button><button class="btn main" style="margin:0;min-height:44px;flex:1" data-act="j5next">${m.part === 3 ? 'Portions' : m.part === 4 ? 'Hand the phone to the dealer' : 'Next part'}</button></div>` : '';
+      <button class="topbtn" data-act="j5back">‹ Previous</button><button class="btn main" style="margin:0;min-height:44px;flex:1" data-act="j5next">${m.part === 3 ? 'Portions' : m.part === 4 ? 'Hand the phone to the dealer' : 'Next part'}</button></div>` : '';
   return `${head}<div class="scr">${msgs()}${body}</div>${bar}${S.jsheet ? j5Sheet() : ''}${S.menu ? menuHtml() : ''}${S.dialog ? dialogHtml() : ''}`;
 };
 const j4RenderJ5 = render;
@@ -1749,7 +1750,7 @@ render = function () {
   if (S && S.smp && S.smp.signing && S.done.includes(S.smp.key)) {         // signed: the sample is drawn
     const m = S.smp; const j = J(); const p = j.prods[m.k];
     j.count += 1; const n = j.prods.filter((x) => x.rec).length + 1;
-    p.rec = { no: `S/2026/${j.no.slice(-3)}-${n}`, barcode: m.barcode || `${Math.floor(1000 + Math.random() * 8999)} ${Math.floor(1000 + Math.random() * 8999)}`, lot: m.v.lot_no, at: '20 Nov 16:12', dealer: m.dsigned ? 'confirmed by code' : `could not confirm: ${m.refusal === 'Other' ? (m.why || 'Other') : m.refusal}`, later: false, sent: null, due: sendDue(p.input, '20 Nov') };
+    p.rec = { no: `S/2026/${j.no.slice(-3)}-${n}`, barcode: m.barcode || `${Math.floor(1000 + Math.random() * 8999)} ${Math.floor(1000 + Math.random() * 8999)}`, lot: m.v.lot_no, at: `20 Nov ${hhmm()}`, dealer: m.dsigned ? 'confirmed by code' : `could not confirm: ${m.refusal === 'Other' ? (m.why || 'Other') : m.refusal}`, later: false, sent: null, due: sendDue(p.input, '20 Nov') };
     p.sample = p.rec.no; m.signing = false; S.smpOpen = m.k; S.smp = null; S.place = 'srecord';
     log(`sample ${p.rec.no} drawn and signed · position recorded within 15 m · ${j.count} of 7 this year at this shop`);
   }
@@ -1891,7 +1892,7 @@ PLACES.ndone = () => {
 // S-68 the dealer's confirmation (bare)
 PLACES.ndealer = () => {
   const n = j6n(S.ncur); const d = S.ndl; const f = anyFirm(J().firm);
-  if (d.view === 'back') return `<div style="text-align:center;padding-top:40px"><h2 id="h" tabindex="-1">Back with the officer</h2><p>Please hand the phone back.</p><button class="btn main" data-act="j6dealerDone">Continue</button></div>`;
+  if (d.view === 'back') return `<div style="text-align:center;padding-top:40px"><h2 id="h" tabindex="-1">Thank you</h2><p>Please hand the phone back to the officer.</p><button class="btn main" data-act="j6dealerDone">Continue</button></div>`;
   if (d.view === 'cannot') return `<h2 id="h" tabindex="-1">Dealer cannot confirm</h2><div class="chips">${['Not present', 'Refused', 'No phone', 'Other'].map((o) => `<button data-act="j6why" data-o="${o}" aria-pressed="${d.reason === o}">${o}</button>`).join('')}</div>
     <p class="hint">Recorded with the notice. It never blocks; the firm portal and SMS delivery stand (UXD-55).</p><button class="btn main" data-act="j6cannotOk" ${d.reason ? '' : 'disabled'}>Record and continue</button><button class="lnk" data-act="j6back">Back to the code</button>`;
   const pts = j6cs(J()).filter((p) => p.inp === S.ncur);
@@ -2149,7 +2150,7 @@ PLACES.actform = () => {
 // the dealer's code for an order or a seizure receipt (S-73, the S-68 pattern)
 PLACES.j7dealer = () => {
   const d = S.j7d; const f = anyFirm(J().firm); const what = d.kind === 'order' ? `Stop order ${S.j.order.no}` : `Seizure receipt ${S.j.seizure.no}`;
-  if (d.view === 'back') return `<div style="text-align:center;padding-top:40px"><h2 id="h" tabindex="-1">Back with the officer</h2><button class="btn main" data-act="j7dealerDone">Continue</button></div>`;
+  if (d.view === 'back') return `<div style="text-align:center;padding-top:40px"><h2 id="h" tabindex="-1">Thank you</h2><p>Please hand the phone back to the officer.</p><button class="btn main" data-act="j7dealerDone">Continue</button></div>`;
   if (d.view === 'cannot') return `<h2 id="h" tabindex="-1">Dealer cannot confirm</h2><div class="chips">${['Not present', 'Refused', 'No phone', 'Other'].map((o) => `<button data-act="j7why" data-o="${o}" aria-pressed="${d.reason === o}">${o}</button>`).join('')}</div><button class="btn main" data-act="j7cannotOk" ${d.reason ? '' : 'disabled'}>Record and continue</button>`;
   return `<div style="font-size:16px;line-height:1.5"><b style="font-size:20px">${esc(f.name)}</b><br>${esc(what)}<div class="card" style="font-size:15px">${d.kind === 'order' ? `Do not sell or move until ${esc(S.j.order.until)}` : esc(S.j.seizure.what)}</div>
     ${d.err ? `<div class="msg err">${esc(d.err)}</div>` : ''}
@@ -5264,7 +5265,7 @@ const nvInside = SCREENS.inside;
 SCREENS.inside = function () {
   let h = nvInside.call(SCREENS);
   h = h.replace(/(data-place="record">)‹ (Record|Inspection)</g, '$1‹ Inspection record<').replace(/(data-p="record">)‹ (Record|Inspection)</g, '$1‹ Inspection record<');
-  if (S.place === 'sform' && S.smpFromPick) h = h.replace('data-act="j4go" data-place="record">‹ Inspection record<', 'data-act="j4go" data-place="sampick">‹ Products<');
+  if (S.place === 'sform' && S.smpFromPick) h = h.replace('data-act="j4go" data-place="record">‹ Inspection record<', 'data-act="j4go" data-place="sampick">‹ Samples<');
   return h;
 };
 const nvSample = ACT.j4sample;
@@ -5472,7 +5473,7 @@ render = function () {
   if (S.screen === 'inside' && S.place === 'form6') $('where').textContent = 'Screen: S-56a Notice of intention to take a sample (Form VI) (UXD-172)';
 };
 const pfSignAct = ACT.j5sign;
-ACT.j5sign = (b, e) => { const m = S.smp; const j = J(); if (m && j) (j.papersByK || (j.papersByK = {}))[m.k] = { input: m.input, cost: m.cost ? { ...m.cost } : null, vc: m.vc ? { ...m.vc } : null, form6: j.form6 || null, dealer: m.dsigned }; return pfSignAct(b, e); };
+ACT.j5sign = (b, e) => { const m = S.smp; const j = J(); if (m && j) (j.papersByK || (j.papersByK = {}))[m.k] = { input: m.input, cost: m.cost ? { ...m.cost } : null, vc: m.vc ? { ...m.vc } : null, form6: j.form6 || null, dealer: m.dsigned, esKey: m.refusal && String(m.refusal).startsWith('ES:') ? m.refusal : null }; return pfSignAct(b, e); };
 const pfRecord = PLACES.srecord;
 PLACES.srecord = () => {
   const h = pfRecord(); const p = J().prods[S.smpOpen]; const r = p.rec; const pp = r.papers || {}; const f = anyFirm(J().firm);
@@ -5510,7 +5511,7 @@ ACT.j5sendSave = (b, e) => {
 const pfInside = SCREENS.inside;
 SCREENS.inside = function () {
   if (S.place !== 'form6') return pfInside.call(SCREENS);
-  const back = S.f6From === 'sampick' ? '<button class="topbtn" data-act="j4go" data-place="sampick">‹ Products</button>' : '<button class="topbtn" data-act="j4go" data-place="record">‹ Inspection record</button>';
+  const back = S.f6From === 'sampick' ? '<button class="topbtn" data-act="j4go" data-place="sampick">‹ Samples</button>' : '<button class="topbtn" data-act="j4go" data-place="record">‹ Inspection record</button>';
   return `<div class="top">${back}<span class="grow"></span><b style="font-size:13px">Draw a sample</b></div><div class="scr">${msgs()}${PLACES.form6()}</div>`;
 };
 
@@ -5713,7 +5714,7 @@ PLACES.sform = () => {
   return `${h}<h3>Persons present</h3><p class="hint" style="margin:0">Call at least two persons to be present, as far as possible; they sign the memorandum (Form VIII) (Seeds Act s.14(4); Rules r.39).</p>
     ${people}<label class="check" style="margin-top:6px"><input type="checkbox" data-act="wtNone" ${w.none ? 'checked' : ''}><span>Two persons could not be found</span></label>`;
 };
-ACT.wtSign = (b) => { const w = wtOf(S.smp); const i = b.dataset.k; if (!String(w[`p${i}`] || '').trim()) return go('inside', { err: `Give the name and address of person ${i} first.` }); w[`s${i}`] = `16:1${i}`; S.err = ''; render(); };
+ACT.wtSign = (b) => { const w = wtOf(S.smp); const i = b.dataset.k; if (!String(w[`p${i}`] || '').trim()) return go('inside', { err: `Give the name and address of person ${i} first.` }); w[`s${i}`] = hhmm(); S.err = ''; render(); };
 ACT.wtNone = () => { const w = wtOf(S.smp); w.none = !w.none; S.err = ''; render(); };
 const wtNext = ACT.j5next;
 ACT.j5next = (b, e) => {
@@ -6332,7 +6333,7 @@ PLACES.szfill = (...a) => rcSzfill(...a).replace(/(data-act="j7szSign"[^>]*>)Che
 function m8Paper(d) {
   const f = anyFirm(J().firm); const blank = '<span class="ghost">______</span>'; const c = d.cost || {}; const w = d.wit;
   const persons = !w ? blank : w.none ? `none could be found (${esc(w.why || '')})`
-    : [1, 2].map((i) => (w[`p${i}`] ? `${esc(w[`p${i}`])}${w[`s${i}`] ? ` (signed ${esc(w[`s${i}`])})` : ' (not signed yet)'}` : blank)).join('; ');
+    : [1, 2].map((i) => (w[`p${i}`] ? `${esc(w[`p${i}`])}${w[`s${i}`] ? (String(w[`s${i}`]).startsWith('ES:') ? ` (${esc(w[`s${i}`])})` : ` (signed ${esc(w[`s${i}`])})`) : ' (not signed yet)'}` : blank)).join('; ');
   return `<div class="card" style="background:#fff;font-size:13px">${d.draft ? '<span class="tag" style="margin-left:0">Draft</span> ' : ''}<b>FORM VIII</b> <span class="ghost">(See rule 39) · Memorandum for drawing the seed sample</span><br>
     To<br>${esc(f.name)}<br>${esc(f.village || '')}<br><br>
     I have this day taken from the premises of <b>${esc(f.name)}</b> situated at ${esc(f.village || '')} samples of seeds specified below to have the same tested/analysed by Seed Analyst.<br><br>
@@ -6351,19 +6352,19 @@ PLACES.sform = () => {
   return `${h}<h3>The memorandum (Form VIII)</h3><p class="hint" style="margin:0">Left with the dealer. It fills in as you enter the cost and the persons present.</p>
     <div id="f8paper">${m8Draft(m)}</div>`;
 };
-function m8Draft(m) { const p = J().prods[m.k] || {}; return m8Paper({ draft: true, cost: m.cost, wit: wtOf(m), what: m8What(p, (m.v && m.v.lot_no) || p.lot), party: 'by the dealer\'s code, on the dealer\'s screen' }); }
+function m8Draft(m) { const p = J().prods[m.k] || {}; return m8Paper({ draft: true, cost: m.cost, wit: wtOf(m), what: m8What(p, (m.v && m.v.lot_no) || p.lot), party: 'by the dealer\'s eSign, on the dealer\'s screen' }); }
 const m8Dealer = PLACES.dealer;
 PLACES.dealer = () => {
   const h = m8Dealer(); const m = S.smp; if (!m || m.dv !== 'sign' || m.input !== 'Seeds') return h;
   const p = J().prods[m.k] || {};
-  const paper = m8Paper({ cost: m.cost, wit: wtOf(m), what: m8What(p, (m.v && m.v.lot_no) || p.lot), party: 'your code below is your signature' });
+  const paper = m8Paper({ cost: m.cost, wit: wtOf(m), what: m8What(p, (m.v && m.v.lot_no) || p.lot), party: 'your eSign below is your signature' });
   return h.replace(/<div class="card" style="font-size:15px">Memorandum \(Form VIII\)[\s\S]*?<\/div>/, () => paper)
     .replace('Sample drawn today, 08 Nov 2026', `Sample drawn today, ${dmyNow()}`);   // the same date as the memorandum
 };
 const m8Rec = PLACES.srecord;
 PLACES.srecord = () => {
   const h = m8Rec(); const p = J().prods[S.smpOpen]; if (!p || p.input !== 'Seeds') return h; const r = p.rec || {}; const pp = r.papers || {};
-  const paper = m8Paper({ cost: pp.cost, wit: pp.wit, what: m8What(p, r.lot, r.no), party: pp.dealer ? 'confirmed by code' : 'did not confirm (reason recorded)' });
+  const paper = m8Paper({ cost: pp.cost, wit: pp.wit, what: m8What(p, r.lot, r.no), party: pp.esKey || (pp.dealer ? 'confirmed by code' : 'did not confirm (reason recorded)') });
   return h.replace(/<div class="card"><b>Memorandum for drawing the sample \(Form VIII\)<\/b>[\s\S]*?<\/div>/, () => paper);
 };
 const m8Render = render;
@@ -6429,14 +6430,14 @@ setTimeout(() => {
    sample's line. Portions, the dealer's screen and the sample record show the one memorandum, the line in hand marked.
    ---------------- */
 const m8Lines = () => { const j = J(); if (!j) return []; return j.prods.map((p, k) => [p, k]).filter(([p]) => p.input === 'Seeds' && p.rec && p.rec.papers)
-  .map(([p, k]) => ({ k, what: m8What(p, p.rec.lot, p.rec.no), cost: p.rec.papers.cost || {}, party: p.rec.papers.dealer ? 'confirmed by code' : 'did not confirm (reason recorded)' })); };
+  .map(([p, k]) => ({ k, what: m8What(p, p.rec.lot, p.rec.no), cost: p.rec.papers.cost || {}, party: p.rec.papers.esKey || (p.rec.papers.dealer ? 'confirmed by code' : 'did not confirm (reason recorded)') })); };
 const m8CostTxt = (c, blank) => `cost demanded: <b>${c.asked ? esc(c.asked) : blank}</b>${c.asked === 'Yes' ? ` · cost ${c.cost ? `₹${esc(c.cost)}` : blank} · paid ${c.paid ? `₹${esc(c.paid)}` : blank}` : ''}`;
 m8Paper = function (d) {
   const j = J(); const f = anyFirm(j.firm); const blank = '<span class="ghost">______</span>';
   const lines = m8Lines(); if (!lines.some((l) => l.what === d.what)) lines.push({ k: -1, what: d.what, cost: d.cost || {}, party: d.party, now: true });
   const w = j.wit8 || d.wit;
   const persons = !w ? blank : w.none ? `none could be found (${esc(w.why || '')})`
-    : [1, 2].map((i) => (w[`p${i}`] ? `${esc(w[`p${i}`])}${w[`s${i}`] ? ` (signed ${esc(w[`s${i}`])})` : ' (not signed yet)'}` : blank)).join('; ');
+    : [1, 2].map((i) => (w[`p${i}`] ? `${esc(w[`p${i}`])}${w[`s${i}`] ? (String(w[`s${i}`]).startsWith('ES:') ? ` (${esc(w[`s${i}`])})` : ` (signed ${esc(w[`s${i}`])})`) : ' (not signed yet)'}` : blank)).join('; ');
   const rows = lines.map((l, i) => { const mine = l.now || l.what === d.what;
     return `<div style="margin:4px 0;padding:4px 6px;${mine ? 'border-left:4px solid var(--ink);background:var(--fill2)' : ''}">${i + 1}. ${esc(l.what)}${mine && lines.length > 1 ? ' <b>· this sample</b>' : ''}<br><span style="font-size:12px">${m8CostTxt(l.cost, blank)} · party: ${esc(l.party)}</span></div>`; }).join('');
   return `<div class="card" style="background:#fff;font-size:13px">${d.draft ? '<span class="tag" style="margin-left:0">Draft</span> ' : ''}<b>FORM VIII</b> <span class="ghost">(See rule 39) · Memorandum for drawing the seed sample</span><br>
@@ -6444,7 +6445,7 @@ m8Paper = function (d) {
     I have this day taken from the premises of <b>${esc(f.name)}</b> situated at ${esc(f.village || '')} samples of seeds specified below to have the same tested/analysed by Seed Analyst.<br><br>
     <b>Details of samples taken</b>${rows}<br>
     Date ${esc(dmyNow())}${fmSign('Seed Inspector')}
-    Signature of the party from whose premises samples taken and payment made: <span class="ghost">by the dealer's code, sample by sample (above)</span><br>
+    Signature of the party from whose premises samples taken and payment made: <span class="ghost">by the dealer's eSign, sample by sample (above)</span><br>
     Persons present (Seeds Act s.14(4)): ${persons}${j.wit8 ? ' <span class="ghost">· named and signed at the first sample of this visit</span>' : ''}</div>`;
 };
 const m8vForm = PLACES.sform;
@@ -6498,7 +6499,7 @@ function vcPaper(d) {
   const f = anyFirm(J().firm); const p = d.p || {}; const v = d.v || {}; const c = d.vc || {}; const blank = '<span class="ghost">______</span>';
   const val = (x) => (x !== undefined && x !== null && String(x).trim() !== '' ? esc(x) : blank);
   const unit = v.quantity_unit ? ` ${esc(v.quantity_unit)}` : '';
-  const wit = (i) => `${i}. Signature of witness: ${c[`w${i}`] ? `${esc(c[`w${i}`])}${c[`s${i}`] ? ` · signed ${esc(c[`s${i}`])}` : ' · <span class="ghost">not signed yet</span>'}` : blank} <span class="ghost">(Date, name and address)</span>`;
+  const wit = (i) => `${i}. Signature of witness: ${c[`w${i}`] ? `${esc(c[`w${i}`])}${c[`s${i}`] ? (String(c[`s${i}`]).startsWith('ES:') ? ` · ${esc(c[`s${i}`])}` : ` · signed ${esc(c[`s${i}`])}`) : ' · <span class="ghost">not signed yet</span>'}` : blank} <span class="ghost">(Date, name and address)</span>`;
   const dw = fmDayWords();
   return `<div class="card" style="background:#fff;font-size:13px">${d.draft ? '<span class="tag" style="margin-left:0">Draft</span> ' : ''}<b>V(C): INTIMATION TO PERSON/LICENSEE FROM WHOM SAMPLE IS TAKEN</b> <span class="ghost">[See rule 33]</span><br>
     To<br>M/s. ${esc(f.name)}<br>${esc(f.village || '')} · PIN: ${val(v.pincode)}<br><br>
@@ -6530,7 +6531,7 @@ PLACES.sform = () => {
   const papers = `<h3>The intimation (Form V(C)) and the receipt</h3><p class="hint" style="margin:0">One for this sample. It fills in as you enter the sample and the witnesses.${pre}</p><div id="vcpaper">${vcPaper(d)}</div>${vcReceipt(d)}`;
   return h.replace(/<div class="card"><b>Receipt for the sample<\/b><br>The fair price of this sample will be tendered[\s\S]*?<\/div>/, () => papers);
 };
-ACT.vcSign = (b) => { const vc = S.smp.vc || (S.smp.vc = {}); const i = b.dataset.k; if (!String(vc[`w${i}`] || '').trim()) return go('inside', { err: `Give the name and address of witness ${i} first.` }); vc[`s${i}`] = `16:2${i}`; S.err = ''; render(); };
+ACT.vcSign = (b) => { const vc = S.smp.vc || (S.smp.vc = {}); const i = b.dataset.k; if (!String(vc[`w${i}`] || '').trim()) return go('inside', { err: `Give the name and address of witness ${i} first.` }); vc[`s${i}`] = hhmm(); S.err = ''; render(); };
 const vcNext = ACT.j5next;
 ACT.j5next = (b, e) => {
   const m = S.smp;
@@ -6562,7 +6563,7 @@ ACT.j5sign = (b, e) => {
 const vcRec = PLACES.srecord;
 PLACES.srecord = () => {
   const h = vcRec(); const p = J().prods[S.smpOpen]; if (!p || p.input !== 'Insecticides') return h; const r = p.rec || {}; const pp = r.papers || {};
-  const d = { p, v: pp.v || { lot_no: r.lot }, vc: pp.vc || {}, party: pp.dealer ? 'received; confirmed by code' : 'receipt not confirmed (reason recorded)' };
+  const d = { p, v: pp.v || { lot_no: r.lot }, vc: pp.vc || {}, party: pp.esKey || (pp.dealer ? 'received; confirmed by code' : 'receipt not confirmed (reason recorded)') };
   const papers = `${vcPaper(d)}${vcReceipt(d)}<p class="hint">Delivered on the dealer's confirmation: in the firm portal and by SMS.</p>`;
   return h.replace(/<div class="card"><b>Intimation of the sample taken \(Form V\(C\)\)<\/b>[\s\S]*?<\/div>\s*<div class="card"><b>Receipt for the sample \(s\.22\(3\)\)<\/b>[\s\S]*?<\/div>/, () => papers);
 };
@@ -6657,7 +6658,7 @@ const tlNewest = (rows) => rows.slice().sort((a, b) => tlDate(b[0]) - tlDate(a[0
 const tlBefore = PLACES.before;
 PLACES.before = (...a) => {
   const h = tlBefore(...a); const j = J(); const id = (j && j.firm) || S.firm; const rows = bysHist(id);
-  const box = `<div class="secc"><b>Before you start</b>${rows.length ? tlHtml(tlNewest(rows).map(([d, i, x]) => [d, `${esc(i)} · ${esc(x)}`])) : '<div class="hint">No earlier inspection, sample or notice.</div>'}</div>`;
+  const box = `<div class="secc"><b>Earlier at this firm</b>${rows.length ? tlHtml(tlNewest(rows).map(([d, i, x]) => [d, `${esc(i)} · ${esc(x)}`])) : '<div class="hint">No earlier inspection, sample or notice.</div>'}</div>`;
   return h.replace(/<div class="secc"><b>Before you start<\/b>(?:<div[^>]*>[^<]*<\/div>)*<\/div>/, () => box);
 };
 // (2) the firm record's History
@@ -7404,9 +7405,9 @@ PLACES.record = (...a) => {
 };
 // 4. persons present (Form VIII), witnesses (Form V(C)), cotton Form H
 const esWt = ACT.wtSign;
-ACT.wtSign = (b) => { const w = wtOf(S.smp); const i = b.dataset.k; if (!String(w[`p${i}`] || '').trim()) return esWt(b); esOpen(`wt:${J().no}:${S.smp.k}:${i}`, `Person present ${i} (${String(w[`p${i}`]).split(',')[0]})`, `the memorandum (Form VIII) · ${anyFirm(J().firm).name}`, () => esWt(b)); };
+ACT.wtSign = (b) => { const w = wtOf(S.smp); const i = b.dataset.k; if (!String(w[`p${i}`] || '').trim()) return esWt(b); const key = `wt:${J().no}:${S.smp.k}:${i}`; esOpen(key, `Person present ${i} (${String(w[`p${i}`]).split(',')[0]})`, `the memorandum (Form VIII) · ${anyFirm(J().firm).name}`, () => { w[`s${i}`] = `ES:${key}`; S.err = ''; }); };
 const esVc = ACT.vcSign;
-ACT.vcSign = (b) => { const vc = S.smp.vc || {}; const i = b.dataset.k; if (!String(vc[`w${i}`] || '').trim()) return esVc(b); esOpen(`vc:${J().no}:${S.smp.k}:${i}`, `Witness ${i} (${String(vc[`w${i}`]).split(',')[0]})`, `the intimation (Form V(C)) · ${anyFirm(J().firm).name}`, () => esVc(b)); };
+ACT.vcSign = (b) => { const vc = S.smp.vc || {}; const i = b.dataset.k; if (!String(vc[`w${i}`] || '').trim()) return esVc(b); const key = `vc:${J().no}:${S.smp.k}:${i}`; esOpen(key, `Witness ${i} (${String(vc[`w${i}`]).split(',')[0]})`, `the intimation (Form V(C)) · ${anyFirm(J().firm).name}`, () => { (S.smp.vc || (S.smp.vc = {}))[`s${i}`] = `ES:${key}`; S.err = ''; }); };
 const esFh = ACT.f8chSig;
 ACT.f8chSig = (b) => { const k = b.dataset.k; esOpen(`fh:${k}`, k === 'sigF' ? 'The complainant' : 'The seed company\'s representative', `the preliminary inspection report (Form H) · complaint ${CG.ref}`, () => esFh(b)); };
 // My work: signatures awaited, and those to record
@@ -7433,7 +7434,7 @@ function esLayout() {
   const walker = document.createTreeWalker(ph, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (/ES:|Signed the (memorandum|intimation) at|signed on the phone/.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) });
   const ns = []; while (walker.nextNode()) ns.push(walker.currentNode);
   ns.forEach((n) => {
-    n.nodeValue = n.nodeValue.replace(/(\(?)(?:could not confirm|not confirmed)?[ :]*\(?ES:([A-Za-z0-9:._/-]+)\)?/g, (m, br, k) => `${br ? '(' : ' '}${esText(k)}${br ? ')' : ''}`).replace(/\(\s+/g, '(');
+    n.nodeValue = n.nodeValue.replace(/(could not confirm|not confirmed)[ :]*\((ES:[A-Za-z0-9:._/-]+)\)/g, '$2').replace(/\(ES:([A-Za-z0-9:._/-]+)\)/g, (m, k) => `(${esText(k)})`).replace(/(?:(?:could not confirm|not confirmed)[ :]*)?ES:([A-Za-z0-9:._/-]+)/g, (m, k) => esText(k));
     const card = n.parentElement && n.parentElement.closest('.card'); const btn = card && card.querySelector('[data-act="wtSign"], [data-act="vcSign"]');
     if (btn && /Signed the (memorandum|intimation) at/.test(n.nodeValue)) { const kind = btn.dataset.act === 'wtSign' ? 'wt' : 'vc'; n.nodeValue = `${esText(`${kind}:${J().no}:${S.smp ? S.smp.k : ''}:${btn.dataset.k}`)} `; }
     if (/of the complainant: signed on the phone/.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace('of the complainant: signed on the phone', `of the complainant: ${esText('fh:sigF')}`);
@@ -7590,6 +7591,52 @@ render = function (...a) {
   document.querySelectorAll('#phone [data-ppx]').forEach((el) => el.addEventListener('input', () => { if (S.j) ppOf(S.j)[el.dataset.ppx] = el.value; }));
   return r;
 };
+
+/* ---------------- UXD-244: the inspection and sample journeys walked end to end (the owner, 2026-11-28: "Ensure best
+   UX UI ... Ensure back button appropriately"). Every sheet has a Close; the dealer's screens give the phone back to the
+   officer without signing; the dealer reads what applies to the dealer; "Describe the source" only for Other. ---------------- */
+ACT.sheetX = () => { S.jsheet = null; S.sheet = false; S.jlocErr = false; render(); };
+ACT.dlrBack = () => { const k = S.place; if (k === 'dealer') { if (S.smp) S.smp.dv = 'sign'; S.place = 'sform'; } else if (k === 'ndealer') S.place = 'nrec'; else if (k === 'j7dealer') S.place = S.j7d && S.j7d.kind === 'order' ? 'sorec' : 'szrec'; log('the phone handed back to the officer before signing'); go('inside', { info: '' }); };
+const uxDealer = PLACES.dealer;
+PLACES.dealer = (...a) => { const h = uxDealer(...a); return S.smp && ['back', 'refuse'].includes(S.smp.dv) ? h : `${h}<div style="text-align:center;margin-top:10px"><button class="lnk" data-act="dlrBack">Something is not right: hand the phone back to the officer</button></div>`; };
+const uxNd = PLACES.ndealer;
+PLACES.ndealer = (...a) => { const h = uxNd(...a); return S.ndl && S.ndl.view && S.ndl.view !== 'code' ? h : `${h}<div style="text-align:center;margin-top:10px"><button class="lnk" data-act="dlrBack">Hand the phone back to the officer</button></div>`; };
+const uxJ7 = PLACES.j7dealer;
+PLACES.j7dealer = (...a) => { const h = uxJ7(...a); return S.j7d && S.j7d.view !== 'code' ? h : `${h}<div style="text-align:center;margin-top:10px"><button class="lnk" data-act="dlrBack">Hand the phone back to the officer</button></div>`; };
+const UX_J45 = ['tstart', 'shop', 'findprod', 'places', 'before', 'check', 'review', 'record', 'sampick', 'form6', 'sform', 'dealer', 'sreview', 'srecord'];
+function uxLayout() {
+  const ph = $('phone'); if (!ph) return;
+  if (S.jsheet) ph.querySelectorAll('.sheet').forEach((sh) => {
+    if (sh.querySelector('[data-act="sheetX"]')) return; const first = sh.firstElementChild || sh;
+    const x = document.createElement('button'); x.className = 'lnk'; x.dataset.act = 'sheetX'; x.setAttribute('aria-label', 'Close'); x.textContent = 'Close ✕';
+    x.style.cssText = 'float:right;margin:0 0 0 8px'; first.insertBefore(x, first.firstChild);
+  });
+  if (S.place === 'dealer') {
+    const w = document.createTreeWalker(ph, NodeFilter.SHOW_TEXT); const nodes = []; while (w.nextNode()) nodes.push(w.currentNode);
+    nodes.forEach((n) => { if (/Goes to the shop once, when you tap Finish at this shop/.test(n.nodeValue)) n.nodeValue = 'It comes to your firm portal when the inspection is finished, with every sample\'s line.'; });
+  }
+  // UXD-101 and UXD-98 on the inspection and sample screens: no design notes on the phone, no title said twice
+  if (UX_J45.includes(S.place)) {
+    const tw = document.createTreeWalker(ph, NodeFilter.SHOW_TEXT); const tn = []; while (tw.nextNode()) tn.push(tw.currentNode);
+    tn.forEach((n) => {
+      const el = n.parentElement; let t = n.nodeValue;
+      if (/draft wording \(DQ-|Sealing and labelling rules are not settled yet/.test(t)) { const blk = el.closest('p, .hint, div') || el; if (blk !== ph) blk.style.display = 'none'; return; }
+      t = t.replace(' (the lists are provisional)', '').replace(/Not a signed act\.\s*/, '').replace(/\s*Photos are optional for now \(UXD-78\)\.?/, '')
+        .replace('it waits and is sent later (UXD-14)', 'it waits and is sent when the signal is back')
+        .replace(/\s*\((?:UXD|DQ|RQ|FD|SMP|D)-\d+[^()]*\)/g, '');
+      if (t !== n.nodeValue) n.nodeValue = t;
+    });
+    const top = ph.querySelector('.top b'); const h2 = ph.querySelector('.scr h2');
+    if (top && h2 && top.textContent.trim() === h2.textContent.trim()) h2.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)';
+  }
+  const src = $('sv_source'); const oth = $('sv_source_other');
+  if (src && oth && src.value !== 'other') { const lab = ph.querySelector('label[for="sv_source_other"]'); oth.style.display = 'none'; if (lab) lab.style.display = 'none'; }
+}
+// the seed sample keeps where it came from across the notice of intention (Form VI)
+const uxF6Give = ACT.f6Give;
+ACT.f6Give = (b, e) => { const from = S.f6From; const r = uxF6Give(b, e); if (S.place === 'sform' && from === 'sampick') { S.smpFromPick = true; render(); } return r; };
+const uxRender = render;
+render = function (...a) { const r = uxRender.apply(this, a); try { uxLayout(); } catch (e) { console.error(e); } return r; };
 
 // The owner of the shared page sees the prototype controls; everyone else only the phone screen.
 (async () => {
