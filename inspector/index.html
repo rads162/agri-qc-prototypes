@@ -323,6 +323,7 @@ html.simple .wrap { grid-template-columns:minmax(0,380px); justify-content:cente
     <div id="smsPapers"></div>
     <p class="where">One-time code from the shop (UXD-234): where the person present confirms with a code sent to the licence holder's registered mobile; tick to ask it. Never blocks: without the code a reason is recorded.</p>
     <div id="codePoints"></div>
+    <p class="where">eSign links (UXD-240, UXD-241): each link is valid for <input id="esValid" type="number" min="1" max="7" value="1" style="width:3.5em"> day(s); after <input id="esLimit" type="number" min="1" max="10" value="3" style="width:3.5em"> unanswered link(s) the inspector records the response. The link always goes to the firm portal and by SMS.</p>
     <h3>Conditions</h3>
     <div class="grid2">
       <label><input type="checkbox" id="cNoSignal"> No signal</label>
@@ -7122,9 +7123,11 @@ const SMS_PAPERS = [
   ['notice', 'Notice to the firm'], ['stoporder', 'Stop sale order'], ['seizure', 'Seizure receipt'], ['release', 'Release of a stop sale'],
   ['vi', 'Notice of intention (Form VI)'], ['viii', 'Memorandum (Form VIII)'], ['vc', 'Intimation and receipt (Form V(C))'],
   ['guard', 'Notice to produce the guard sample'], ['followup', 'Follow-up notice'],
+  ['report', 'The inspection report (signed at Finish)'], ['analysis', 'The analysis report of a sample'], ['decision', 'The decision on the firm\'s reply'],
 ];
 const SMS_ON = {};
-const smsKind = (t) => (/Form VI(?!I)|notice of intention/i.test(t) ? 'vi' : /Form VIII|memorandum/i.test(t) ? 'viii' : /V\(C\)|intimation|s\.22\(3\)/i.test(t) ? 'vc'
+const smsKind = (t) => (/report to the manufacturer|analysis report|Give the report|Report given/i.test(t) ? 'analysis' : /Result of the verification|sees the result/i.test(t) ? 'decision'
+  : /The inspection report[:·]|the inspection report of /.test(t) ? 'report' : /Form VI(?!I)|notice of intention/i.test(t) ? 'vi' : /Form VIII|memorandum/i.test(t) ? 'viii' : /V\(C\)|intimation|s\.22\(3\)/i.test(t) ? 'vc'
   : /guard/i.test(t) ? 'guard' : /follow-up/i.test(t) ? 'followup' : /seizure/i.test(t) ? 'seizure' : /releas|revok/i.test(t) ? 'release'
   : /\bnotice\b/i.test(t) ? 'notice' : /stop (order|sale)/i.test(t) ? 'stoporder' : 'notice');
 const SMS_RE = /firm portal and (by )?SMS( delivery)?( to the registered mobile)?( \(logged\))?/g;
@@ -7183,7 +7186,7 @@ function visitCard(j) {
   if (j.startAt) rows.push(`Started ${j.startAt} · ${j.noPos ? `<b>No position: ${esc(j.noPos)}</b>` : 'position recorded (within 12 m)'}${CODE_ON.start && codeLine('start') ? ` · ${codeLine('start')}` : ''}`);
   (j.subs || []).forEach((x) => rows.push(`Submitted ${esc(x.inp)} ${x.at} · ${posWord(x.away)}`));
   if (j.doneAt) rows.push(`Completed ${j.doneAt.at} · ${j.doneAt.away ? `<b>${posWord(true)}</b>` : posWord(false)}${CODE_ON.end && codeLine('end') ? ` · ${codeLine('end')}` : ''}`);
-  return rows.length ? `<div class="card" style="text-align:left"><b>The visit</b>${rows.join('<br>')}<span class="hint" style="display:block">Seen by you and your supervisor; never by the shop (UXD-233).</span></div>` : '';
+  return rows.length ? `<div class="card" style="text-align:left"><b>The visit</b><br>${rows.join('<br>')}<span class="hint" style="display:block">Seen by you and your supervisor; never by the shop (UXD-233).</span></div>` : '';
 }
 // UXD-232: no position found
 const v232Start = ACT.j4start;
@@ -7300,15 +7303,15 @@ render();
    days with the eSign service down not counted; then the inspector notes the response as at the shop. Never blocks. The
    one-time code stays only where nobody signs today (start, notice, seizure receipt: UXD-234 switches). ---------------- */
 const ES = {}; const ESCB = {}; let ESX = null;
-const ES_LIMIT = 3;
+let ES_LIMIT = 3; let ES_VALID = 1;
 const ES_AT_SHOP = ['Refused to sign', 'Not present', 'No Aadhaar-linked phone with them', 'Other'];
 const ES_AFTER_LINKS = ['Refused to sign', 'Did not respond', 'Other'];
 const esDown = () => $('cESDown') && $('cESDown').checked;
 function esText(key) {
   const e = ES[key]; if (!e) return 'not yet signed';
   if (e.state === 'esigned') return `eSigned ${e.at}${e.link ? ' on their own phone (by the link)' : ''}`;
-  if (e.state === 'awaiting') return `eSign awaited · link ${e.links} sent${e.skipped ? ` · ${e.skipped} day${e.skipped > 1 ? 's' : ''} not counted (the eSign service was down)` : ''}`;
-  if (e.state === 'expired') return `Not signed after ${e.counted} links · the inspector is to record the response`;
+  if (e.state === 'awaiting') return `eSign awaited · link ${e.links} sent${e.skipped ? ` · ${e.skipped} ${ES_VALID > 1 ? 'link' : 'day'}${e.skipped > 1 ? 's' : ''} not counted (the eSign service was down)` : ''}`;
+  if (e.state === 'expired') return `Not signed after ${e.links} link${e.links > 1 ? 's' : ''}${e.skipped ? ` (${e.skipped} not counted: the eSign service was down)` : ''} · the inspector is to record the response`;
   return `not signed: ${e.why}${e.note ? ` (${e.note})` : ''}`;
 }
 function esOpen(key, who, paper, cb, list) { ES[key] = ES[key] && ES[key].state === 'esigned' ? ES[key] : (ES[key] || { who, paper }); ES[key].who = who; ES[key].paper = paper; ESCB[key] = cb; ESX = { key, who, paper, step: list === 'after' ? 'cannot' : 'page', list: list || 'shop', aad: '', otp: '', code: '', why: '', note: '', err: '' }; render(); }
@@ -7359,10 +7362,13 @@ function esDay() {
   const down = esDown(); let n = 0;
   Object.keys(ES).forEach((k) => {
     const e = ES[k]; if (e.state !== 'awaiting') return; n++;
-    if (down || e.firstDown) { e.skipped = (e.skipped || 0) + 1; e.firstDown = false; e.links += 1; log(`${e.paper}: that day not counted (the eSign service was down); link ${e.links} sent`); return; }
+    e.age = (e.age || 0) + 1; if (down || e.firstDown) { e.lost = true; e.firstDown = false; }
+    if (e.age < ES_VALID) { log(`${e.paper}: link ${e.links} still valid (day ${e.age} of ${ES_VALID})`); return; }
+    e.age = 0;
+    if (e.lost) { e.lost = false; e.skipped = (e.skipped || 0) + 1; e.links += 1; log(`${e.paper}: that link not counted (the eSign service was down); link ${e.links} sent (in the firm portal, with an SMS to the signer)`); return; }
     e.counted += 1;
-    if (e.counted >= ES_LIMIT) { e.state = 'expired'; log(`${e.paper}: not signed after ${e.counted} links; on the inspector's My work`); return; }
-    e.links += 1; log(`${e.paper}: link ${e.links} sent (firm portal and SMS)`);
+    if (e.counted >= ES_LIMIT) { e.state = 'expired'; log(`${e.paper}: not signed after ${e.links} link${e.links > 1 ? 's' : ''}; on the inspector's My work`); return; }
+    e.links += 1; log(`${e.paper}: link ${e.links} sent (in the firm portal, with an SMS to the signer)`);
   });
   if (!n) toast('No eSign link is waiting.'); render();
 }
@@ -7437,6 +7443,64 @@ function esLayout() {
 const esRender = render;
 render = function (...a) { const r = esRender(...a); esLayout(); return r; };
 render();
+
+/* ---------------- UXD-241: every paper the firm receives has its SMS switch; the eSign link and the shop's code are
+   not switched; every record says how and when the paper reached the firm (in the firm portal, and the SMS when it
+   went). The two eSign limits are State admin settings. ---------------- */
+(() => {
+  const num = (id, lo, hi, set) => { const el = $(id); if (!el) return; el.addEventListener('change', () => { const v = Math.max(lo, Math.min(hi, parseInt(el.value, 10) || lo)); el.value = v; set(v); log(`State admin (simulated): ${id === 'esLimit' ? `the inspector records the response after ${v} unanswered link${v > 1 ? 's' : ''}` : `each eSign link valid for ${v} day${v > 1 ? 's' : ''}`}`); render(); }); };
+  num('esLimit', 1, 10, (v) => { ES_LIMIT = v; }); num('esValid', 1, 7, (v) => { ES_VALID = v; });
+})();
+const dlSms = (kind, j, at) => (SMS_ON[kind] ? (regMobile(j) ? ` · SMS ${at} to the mobile ending ${regMobile(j).slice(-2)}` : ' · no registered mobile, so no SMS') : '');
+const dlCard = (kind, j, at) => `<div class="card" style="text-align:left"><b>Delivered</b><br>In the firm portal ${esc(at)}${esc(dlSms(kind, j, at))}</div>`;
+// the seizure receipt and the stop sale order: a Delivered card; with the code off, no "Dealer: not asked" line
+const dlSz = PLACES.szrec;
+PLACES.szrec = (...a) => {
+  const z = S.j.seizure; if (z && !z.at) z.at = `20 Nov ${hhmm()}`; let h = dlSz(...a);
+  if (!CODE_ON.seizure) h = h.replace(/<div class="card"><b>Dealer<\/b><br>Not asked to confirm yet<\/div>/, '');
+  return h.replace(/(<b>Seized<\/b>[\s\S]*?<\/div>)/, (m) => m + dlCard('seizure', S.j, z.at));
+};
+const dlSo = PLACES.sorec;
+PLACES.sorec = (...a) => {
+  const o = S.j.order; if (o && !o.at) o.at = `08 Nov ${hhmm()}`; const h = dlSo(...a).replace('<b>Dealer</b><br>Not asked to confirm yet', '<b>Dealer</b><br>Not signed yet');
+  return h.replace(/(<b>Stopped<\/b>[\s\S]*?<\/div>)/, (m) => m + dlCard('stoporder', S.j, o.at));
+};
+// the notice record: the SMS with its time; with the code off, no "Dealer: not asked" card
+const dlN = PLACES.nrec;
+PLACES.nrec = (...a) => {
+  const n = j6n(S.ncur); let h = dlN(...a); const m = regMobile(J());
+  if (SMS_ON.notice && m) h = h.replace('<br>SMS delivered</div>', `<br>SMS ${esc(n.on || '08 Nov')} ${esc(n.at)} to the mobile ending ${esc(m.slice(-2))}</div>`);
+  if (!CODE_ON.notice && !n.dealer) h = h.replace('<div class="card"><b>Dealer</b><br>Not asked to confirm yet</div>', '');
+  return h;
+};
+// the inspection report the seller eSigns at Finish: on the record, with its delivery
+const dlRec = PLACES.record;
+PLACES.record = (...a) => {
+  const h = dlRec(...a); const j = S.j; if (!j || !j.doneAt || !ES[`end:${j.no}`]) return h;
+  const card = `<div class="card" style="text-align:left"><b>The inspection report</b><br>The seller or representative: ${esc(esText(`end:${j.no}`))}<br>In the firm portal ${esc(j.doneAt.at)}${esc(dlSms('report', j, j.doneAt.at))}</div>`;
+  return h.includes('<b>The visit</b>') ? h.replace('<div class="card" style="text-align:left"><b>The visit</b>', card + '<div class="card" style="text-align:left"><b>The visit</b>') : h.replace(/(<\/h2>)/, (m) => m + card);
+};
+// the notice and the follow-up: the SMS line only when its switch is on; the code lines only when the code is asked
+function dlLayout() {
+  const ph = $('phone'); if (!ph) return;
+  const w = document.createTreeWalker(ph, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (/SMS sent to the mobile ending|SMS delivered|No registered mobile|Dealer not asked to confirm|Already in the seller’s firm portal|sees the result in the firm portal|^Firm portal \d/.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) });
+  const nodes = []; while (w.nextNode()) nodes.push(w.currentNode);
+  nodes.forEach((n) => {
+    const card = n.parentElement.closest('.card') || n.parentElement; const kind = smsKind(card.textContent);
+    let t = n.nodeValue;
+    if (/Already in the seller’s firm portal/.test(t)) { if (SMS_ON.analysis) t = t.replace('Already in the seller’s firm portal (sent automatically on', 'Already in the seller’s firm portal and sent by SMS (automatically on'); n.nodeValue = t; return; }
+    if (/^Firm portal \d/.test(t)) { if (SMS_ON.analysis) n.nodeValue = t.replace(/^Firm portal/, 'Firm portal and SMS'); return; }
+    if (/sees the result in the firm portal/.test(t)) { if (SMS_ON.decision) n.nodeValue = t.replace('in the firm portal', 'in the firm portal and by SMS'); return; }
+    if (/Dealer not asked to confirm/.test(t)) { if (!CODE_ON.notice) { const el = n.parentElement; if (el.tagName === 'SPAN' && el.textContent.trim() === t.trim()) el.remove(); else n.nodeValue = ''; } return; }
+    const smsOn = SMS_ON[kind === 'followup' ? 'followup' : kind === 'vi' || kind === 'viii' || kind === 'vc' ? kind : 'notice'];
+    if (/No registered mobile yet: the code step/.test(t)) { if (!CODE_ON.notice && !smsOn) { const br = n.previousSibling; if (br && br.nodeName === 'BR') br.remove(); n.nodeValue = ''; } return; }
+    if (smsOn) return;
+    if (/^\s*(SMS sent to the mobile ending \d+|SMS delivered|No registered mobile: the notice is in the firm portal only)\s*$/.test(t)) { const br = n.previousSibling; if (br && br.nodeName === 'BR') br.remove(); n.nodeValue = ''; return; }
+    n.nodeValue = t.replace(/ · (SMS delivered|No registered mobile)/, '');
+  });
+}
+const dlRender = render;
+render = function (...a) { const r = dlRender.apply(this, a); try { dlLayout(); } catch (e) { console.error(e); } return r; };
 
 // The owner of the shared page sees the prototype controls; everyone else only the phone screen.
 (async () => {
