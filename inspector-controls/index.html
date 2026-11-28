@@ -7166,7 +7166,7 @@ const noFix = () => $('cNoFix') && $('cNoFix').checked;
 const awayNow = () => $('cAway') && $('cAway').checked;
 const NOPOS_WHY = ['Inside a building', 'No satellite signal here', 'The phone\'s location is not working', 'Other'];
 const CODE_WHY = ['Not present', 'Refused', 'No phone with them', 'Other'];
-const posWord = (away, none) => (none ? 'no position' : away ? `away from the shop (about 12 km; more than ${AWAY_M} m from the start)` : 'at the shop (within 15 m)');
+const posWord = (away, none) => (none ? 'no position' : away ? 'away from the shop: about 12 km from where the inspection started' : 'at the shop (within 15 m)');
 function codeCard(k, title, msg) {
   const j = J(); const c = (j.codes || (j.codes = {}))[k] || (j.codes[k] = {});
   if (c.done) return '';
